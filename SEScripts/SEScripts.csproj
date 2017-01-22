@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{3CFC0D17-F514-459C-BA65-073EC0D5C836}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SEScripts</RootNamespace>
+    <AssemblyName>SEScripts</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Sandbox.Common">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Sandbox.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Game">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Sandbox.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="SpaceEngineers.Game">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\SpaceEngineers.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="VRage">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Game">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Library">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Math">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Math.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Lib\DataStorage.cs" />
+    <Compile Include="Lib\Logger.cs" />
+    <Compile Include="Lib\Parser.cs" />
+    <Compile Include="Lib\TextUtils.cs" />
+    <Compile Include="MultiAgentFramework\Build\MAF.cs" />
+    <Compile Include="ParseLib\XML.cs" />
+    <Compile Include="MultiAgentFramework\MAFWRAPPER.cs" />
+    <Compile Include="MultiAgentFramework\MAF\Agents\Agent.cs" />
+    <Compile Include="MultiAgentFramework\MAF\Agents\PlatformAgent.cs" />
+    <Compile Include="MultiAgentFramework\MAF\Agents\RegisteredAgent.cs" />
+    <Compile Include="MultiAgentFramework\MAF\Models\AgentId.cs" />
+    <Compile Include="MultiAgentFramework\MAF\Models\AgentMessage.cs" />
+    <Compile Include="MultiAgentFramework\MAF\Protocols\AgentProtocol.cs" />
+    <Compile Include="MultiAgentFramework\MAF\Protocols\MessageRoutingProtocol.cs" />
+    <Compile Include="MultiAgentFramework\MAF\Protocols\PrintPlatformServicesProtocol.cs" />
+    <Compile Include="MultiAgentFramework\MAF\Protocols\PrintProtocol.cs" />
+    <Compile Include="MultiAgentFramework\MAF\Protocols\ProvideServiceInformationProtocol.cs" />
+    <Compile Include="MultiAgentFramework\MAF\Protocols\ServiceRegistrationProtocol.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XUI\Build\XML.cs" />
+    <Compile Include="XUI\XMLExtensions\XMLMessage.cs" />
+    <Compile Include="XUI\XMLWRAPPER.cs" />
+    <Compile Include="XUI\XML\Break.cs" />
+    <Compile Include="XUI\XML\Container.cs" />
+    <Compile Include="XUI\XML\DataStore.cs" />
+    <Compile Include="XUI\XML\Generic.cs" />
+    <Compile Include="XUI\XML\Hidden.cs" />
+    <Compile Include="XUI\XML\HiddenData.cs" />
+    <Compile Include="XUI\XML\HorizontalLine.cs" />
+    <Compile Include="XUI\XML\Menu.cs" />
+    <Compile Include="XUI\XML\MenuItem.cs" />
+    <Compile Include="XUI\XML\MetaNode.cs" />
+    <Compile Include="XUI\XML\ProgressBar.cs" />
+    <Compile Include="XUI\XML\RootNode.cs" />
+    <Compile Include="XUI\XML\Route.cs" />
+    <Compile Include="XUI\XML\Space.cs" />
+    <Compile Include="XUI\XML\SubmitButton.cs" />
+    <Compile Include="XUI\XML\TextInput.cs" />
+    <Compile Include="XUI\XML\TextNode.cs" />
+    <Compile Include="XUI\XML\UIController.cs" />
+    <Compile Include="XUI\XML\UIControls.cs" />
+    <Compile Include="XUI\XML\UIFactory.cs" />
+    <Compile Include="XUI\XML\XMLParentNode.cs" />
+    <Compile Include="XUI\XML\XMLTree.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
