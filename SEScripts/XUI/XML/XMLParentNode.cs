@@ -30,6 +30,8 @@ namespace SEScripts.XUI.XML
         void FollowRoute(Route route);
 
         bool SelectNext();
+
+        void DetachChild(XMLTree child);
     }
 
     //EMBED SEScripts.XUI.XML.XMLTree

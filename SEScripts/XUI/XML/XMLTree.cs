@@ -49,7 +49,7 @@ namespace SEScripts.XUI.XML
             SetAttribute("aligntext", "left");
             SetAttribute("selected", "false");
             SetAttribute("selectable", "false");
-            SetAttribute("flowdirection", "vertical");
+            SetAttribute("flow", "vertical");
         }
 
         public bool IsSelectable()
@@ -96,10 +96,27 @@ namespace SEScripts.XUI.XML
         {
             Logger.debug(Type + ": AddChild():");
             Logger.IncLvl();
-            Children.Add(child);
+            AddChildAt(Children.Count, child);
+            Logger.DecLvl();
+        }
+
+        public virtual void AddChildAt(int position, XMLTree child)
+        {
+            Logger.debug(Type + ":AddChildAt()");
+            Logger.IncLvl();
+            if( position > Children.Count )
+            {
+                throw new Exception("XMLTree.AddChildAt - Exception: position must be less than number of children!");
+            }
+            Children.Insert(position, child);
             child.SetParent(this as XMLParentNode);
             UpdateSelectability(child);
             Logger.DecLvl();
+        }
+
+        public int NumberOfChildren()
+        {
+            return Children.Count;
         }
 
         public void SetParent(XMLParentNode parent)
@@ -313,6 +330,10 @@ namespace SEScripts.XUI.XML
                 Logger.DecLvl();
                 return Attributes[key];
             }
+            else if( key == "flowdirection" && Attributes.ContainsKey("flow"))
+            {
+                return Attributes["flow"];
+            }
 
             Logger.DecLvl();
             return null;
@@ -339,6 +360,11 @@ namespace SEScripts.XUI.XML
             {
                 bool shouldBeActivated = value == "true";
                 Activated = shouldBeActivated;
+            }
+
+            if (key == "flowdirection")
+            {
+                Attributes["flow"] = value;
             }
 
             Attributes[key] = value;
@@ -421,13 +447,14 @@ namespace SEScripts.XUI.XML
 
         public virtual Dictionary<string, string> GetValues(Func<XMLTree, bool> filter)
         {
-            Logger.debug(Type + ": GetValues()");
+            Logger.log(Type + ": GetValues()");
             Logger.IncLvl();
             Dictionary<string, string> dict = new Dictionary<string, string>();
             string name = GetAttribute("name");
             string value = GetAttribute("value");
             if (name != null && value != null)
             {
+                Logger.log($"Added entry {{{name}: {value}}}");
                 dict[name] = value;
             }
 
@@ -507,7 +534,7 @@ namespace SEScripts.XUI.XML
             Logger.IncLvl();
             for (int i = 0; i < Children.Count; i++)
             {
-                if (GetAttribute("flowdirection") == "vertical")
+                if (GetAttribute("flow") == "vertical")
                 {
                     string childString = RenderChild(Children[i], width);
                     if (childString != null)
@@ -544,7 +571,7 @@ namespace SEScripts.XUI.XML
             Logger.debug(Type + ".PostRender()");
             Logger.IncLvl();
             string renderString = "";
-            string flowdir = GetAttribute("flowdirection");
+            string flowdir = GetAttribute("flow");
             string alignChildren = GetAttribute("alignchildren");
             string alignSelf = GetAttribute("alignself");
             int totalWidth = 0;
@@ -607,6 +634,19 @@ namespace SEScripts.XUI.XML
             Logger.IncLvl();
             Logger.DecLvl();
             return child.Render(availableWidth);
+        }
+
+        public void DetachChild(XMLTree child)
+        {
+            Children.Remove(child);
+        }
+
+        public void Detach()
+        {
+            if(GetParent() != null)
+            {
+                GetParent().DetachChild(this);
+            }
         }
     }
 

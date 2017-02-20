@@ -43,6 +43,7 @@ namespace SEScripts.XUI.XML
 
         protected override string RenderChild(XMLTree child, int width)
         {
+            P.Me.CustomData = Logger.History;
             string renderString = "";
             string prefix = "     ";
             if (child.Type == "menuitem")

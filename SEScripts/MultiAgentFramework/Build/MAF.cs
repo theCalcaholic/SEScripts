@@ -1,1301 +1,124 @@
-﻿class MAF
+﻿public class MAN
 {
+//WRAPPERBODY
 
-public class PlatformAgent : Agent
+public class GridPlatformAgent : PlatformAgent
 {
-public int RefreshInterval;
-public ServiceRegister PlatformServices;
-public List<IMyTextPanel> ReceptionBuffers;
-public PlatformAgent(MyGridProgram program) : base(program)
+List<IMyLaserAntenna> LaserAntennas;
+List<IMyRadioAntenna> RadioAntennas;
+public GridPlatformAgent(MyGridProgram program, List<IMyTerminalBlock> antennas) : base(program)
 {
-PlatformServices = new ServiceRegister();
-ReceptionBuffers = new List<IMyTextPanel>();
-RefreshInterval = 500;
-DataStorage db = DataStorage.Load(program.Storage ?? "");
-string name;
-if (db.Exists<string>("id"))
+LaserAntennas = new List<IMyLaserAntenna>();
+RadioAntennas = new List<IMyRadioAntenna>();
+foreach(IMyTerminalBlock antenna in antennas)
 {
-Id = new AgentId(db.Get<string>("id"));
-List<IMyTerminalBlock> buffers = new List<IMyTerminalBlock>();
-GTS.SearchBlocksOfName("RBUFFER-" + Id.Name, buffers);
-foreach (IMyTerminalBlock buffer in buffers)
+IMyLaserAntenna laser = antenna as IMyLaserAntenna;
+IMyRadioAntenna radio = antenna as IMyRadioAntenna;
+if(laser != null)
 {
-IMyTextPanel tBuffer = buffer as IMyTextPanel;
-if (tBuffer != null)
+LaserAntennas.Add(laser);
+} else if(radio != null)
 {
-ReceptionBuffers.Add(tBuffer);
+RadioAntennas.Add(radio);
 }
 }
-}
-else
-{
-System.Text.RegularExpressions.Regex braceRegex = new System.Text.RegularExpressions.Regex(@"-{.*}$");
-if (braceRegex.IsMatch(program.Me.CustomName))
-{
-name = braceRegex.Replace(program.Me.CustomName, "-{" + PlatformAgent.GenerateSuffix() + "}");
-}
-else
-{
-name = program.Me.CustomName + "-{" + PlatformAgent.GenerateSuffix() + "}";
-}
-Id = new AgentId(name + "@" + name);
-}
+Id = GenerateId(program.Me);
 program.Me.SetCustomName(Id.Name);
-ServiceRegistrationProtocol.Platform.RegisterServices(this);
-MessageRoutingProtocol.RegisterServices(this);
-ProvideServiceInformationProtocol.RegisterServices(this);
 }
-public void RegisterBuffers(List<string> bufferNames)
+public override AgentId GenerateId(IMyProgrammableBlock me)
 {
-foreach (string name in bufferNames)
+if(!Id.Name.Contains("GridMaster"))
 {
-IMyTextPanel buffer = GTS.GetBlockWithName(name) as IMyTextPanel;
-if (buffer != null)
-{
-buffer.SetCustomName("RBUFFER-" + Id.Name);
-buffer.WritePublicText("");
-buffer.WritePrivateText("");
-ReceptionBuffers.Add(buffer);
-}
-}
-}
-public void CollectPlatformMessages()
-{
-foreach (IMyTextPanel buffer in ReceptionBuffers)
-{
-string text = buffer.GetPrivateText();
-buffer.WritePrivateText("");
-List<XML.XMLTree> messages = XML.ParseXML(Parser.UnescapeQuotes(text)).GetAllNodes(node => node.Type == "message");
-foreach (XML.XMLTree message in messages)
-{
-ReceiveMessage((AgentMessage)message);
-}
-}
-}
-public override void ReceiveMessage(AgentMessage message)
-{
-if (message.Receiver.Platform == Id.Name)
-{
-message.Receiver.Platform = "local";
-}
-Logger.log("Looking for agent '" + message.Receiver.Id + "'...");
-AgentMessage.StatusCodes status = AssignMessage(message);
-Logger.log("Status: " + status.ToString());
-ReceiveMessage(message, status);
-}
-public override void ReceiveMessage(AgentMessage message, AgentMessage.StatusCodes status)
-{
-if (message.Receiver.Platform == "local")
-{
-message.Receiver.Platform = Id.Platform;
-}
-bool forwarded = false;
-if (status == AgentMessage.StatusCodes.RECEIVERNOTFOUND)
-{
-Logger.log("no receiver found; looking for service '" + message.Service + "'...");
-if (message.Service != null && PlatformServices.ContainsKey(message.Service))
-{
-Logger.log("service is known.");
-AgentId receiver = null;
-if (message.Receiver == new AgentId("ANY@local") || message.Receiver == new AgentId("ANY@ANY"))
-{
-if (PlatformServices[message.Service].Count > 0)
-{
-receiver = PlatformServices[message.Service][0].Provider;
-}
-else if (message.Receiver.Platform != "ANY")
-{
-receiver = null;
-}
+me.SetCustomName("GridMaster");
+return base.GenerateId(me);
 }
 else
 {
-receiver = PlatformServices[message.Service].Find(service => service.Provider == message.Receiver).Provider;
+return Id;
 }
-if (receiver != null)
+}
+public override bool SendMessage(ref AgentMessage message)
 {
-Logger.log("Capable agent found: '" + receiver.Name + "'");
-message.Receiver = receiver;
-status = AgentMessage.StatusCodes.OK;
-}
-else
-{
-Logger.log("No capable agent found.");
-}
-}
-//TODO: Implement forwarding to other platforms;
-Logger.log("Trying to forward message... to '" + message.Receiver.Id + "'.");
-if (SendMessage(message))
-{
-Logger.log("message forwarded.");
-forwarded = true;
-}
-else
-{
-base.ReceiveMessage(message, status);
-}
-}
-else
-{
-base.ReceiveMessage(message, status);
-}
-}
-public override bool SendMessage(AgentMessage message)
-{
-if (base.SendMessage(message))
-{
-Logger.log("base.SendMessage(message) did succeed.");
+if (base.SendMessage(ref message)) {
 return true;
 }
-else if (message.Sender.Platform == "local")
-{
-message.Sender.Platform = Id.Name;
+return SendToGrid(message);
 }
-if (message.Receiver.Platform != Id.Name)
+public bool SendToGrid(AgentMessage message)
 {
-Logger.log("Calling SendToPlatform(message, platform)...");
-return SendToPlatform(message, message.Receiver.Platform);
-}
-else
+Logger.log("GridPlatformAgent.SendToGrid()");
+Logger.IncLvl();
+if(message.Sender.Platform != Id.Platform)
 {
 return false;
 }
-}
-public bool SendToPlatform(AgentMessage message, string platform)
+foreach(IMyRadioAntenna antenna in RadioAntennas)
 {
-if (platform == "ALL")
+if(antenna.TransmitMessage("message \"" + message.ToString() + "\"", MyTransmitTarget.Everyone))
 {
-List<IMyTerminalBlock> buffers = new List<IMyTerminalBlock>();
-GTS.SearchBlocksOfName("RBUFFER-", buffers,
-(block) => (
-block.CustomName != "RBUFFER-" + Id.Name
-&& (block as IMyTextPanel) != null)
-);
-bool success = false;
-foreach (IMyTerminalBlock buffer in buffers)
-{
-string platformName = buffer.CustomName.Replace("RBUFFER-", "");
-if (platformName != Id.Name)
-{
-success = success || SendToPlatform(message, platformName);
-}
-}
-return success;
-}
-else
-{
-Logger.log("Trying to send to platform '" + platform + "'...");
-IMyTextPanel buffer = GTS.GetBlockWithName("RBUFFER-" + platform) as IMyTextPanel;
-if (buffer == null)
-{
-Logger.log("No corresponding buffer found with name 'RBUFFER-" + platform + "'.");
-return false;
-}
-else
-{
-Logger.log("Writing message to reception buffer of platform '" + platform + "'...");
-buffer.WritePrivateText(message.ToString(), true);
+Logger.DecLvl();
 return true;
 }
 }
-}
-public static string GenerateSuffix()
+ScheduleMessage(message);
+Logger.log("Message scheduled");
+if(ScheduledMessages.Count > 0)
 {
-Logger.debug("PlatformAgent.GenerateSuffix()");
-Logger.IncLvl();
-const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-Random rnd = new Random();
-char[] title = new char[8];
-for (int i = 0; i < 8; i++)
-{
-title[i] = chars[rnd.Next(0, chars.Length)];
-}
-Logger.DecLvl();
-return new string(title);
-}
-public override void Refresh(TimeSpan elapsedTime)
-{
-bool refreshScheduled = RefreshScheduled
-|| (ElapsedTime.Milliseconds + elapsedTime.Milliseconds >= RefreshInterval);
-RefreshScheduled = refreshScheduled;
-if (Timer != null)
-{
-if (RefreshInterval < 1000)
-{
-Timer.GetActionWithName("TriggerNow").Apply(Timer);
-}
-else
-{
-Timer.GetActionWithName("Start").Apply(Timer);
-}
-}
-base.Refresh(elapsedTime);
-if (!refreshScheduled)
-{
-return;
-}
-CollectPlatformMessages();
-}
-}
-
-public class Agent
-{
-protected IMyTimerBlock Timer;
-protected TimeSpan ElapsedTime;
-protected bool RefreshScheduled;
-public AgentId Id;
-protected IMyGridTerminalSystem GTS;
-public Dictionary<string,Service> Services;
-protected Dictionary<int, AgentProtocol> Chats;
-protected List<AgentMessage> ScheduledMessages;
-protected Dictionary<string, List<AgentProtocol>> EventListeners;
-public Agent(MyGridProgram program)
-{
-Logger.debug("Agent constructor");
-Logger.IncLvl();
-DataStorage db = DataStorage.Load(program.Storage ?? "");
-GTS = program.GridTerminalSystem;
-ElapsedTime = new TimeSpan(0);
-Timer = null;
-if (db.Exists<string>("id"))
-{
-Id = new AgentId(db.Get<string>("id"));
-}
-else
-{
-Id = new AgentId(program.Me.CustomName + "@local");
-}
-Services = new Dictionary<string, Service>();
-Chats = new Dictionary<int, AgentProtocol>();
-ScheduledMessages = new List<AgentMessage>();
-EventListeners = new Dictionary<string, List<AgentProtocol>>();
-PrintProtocol.RegisterServices(this);
-Logger.DecLvl();
-}
-public void Save(out string data)
-{
-DataStorage db = DataStorage.GetInstance();
-db.Set<string>("id", Id.Id);
-db.Save(out data);
-}
-public void OnEvent(string eventId, AgentProtocol chat)
-{
-if (!EventListeners.ContainsKey(eventId))
-{
-EventListeners[eventId] = new List<AgentProtocol>();
-}
-EventListeners[eventId].Add(chat);
-}
-public void Event(string eventId)
-{
-if (!EventListeners.ContainsKey(eventId))
-{
-return;
-}
-foreach (AgentProtocol chat in EventListeners[eventId])
-{
-if (chat != null)
-{
-chat.NotifyEvent(eventId);
-}
-}
-}
-public virtual void ReceiveMessage(AgentMessage msg)
-{
-Logger.debug("Agent.ReceiveMessage(AgentMessage)");
-Logger.IncLvl();
-AgentMessage.StatusCodes status = AssignMessage(msg);
-ReceiveMessage(msg, status);
-Logger.DecLvl();
-}
-public virtual void ReceiveMessage(AgentMessage msg, AgentMessage.StatusCodes status)
-{
-Logger.debug("Agent.ReceiveMessage(AgentMessage, AgentMessage.StatusCode)");
-Logger.IncLvl();
-if (
-status == AgentMessage.StatusCodes.UNKNOWNERROR
-|| status == AgentMessage.StatusCodes.CHATNOTFOUND
-|| status == AgentMessage.StatusCodes.SERVICENOTFOUND
-|| status == AgentMessage.StatusCodes.RECEIVERNOTFOUND
-)
-{
-SendMessage(
-msg.MakeResponse(
-this.Id,
-status,
-""
-)
-);
-if (status == AgentMessage.StatusCodes.RECEIVERNOTFOUND)
-{
-Logger.log("WARNING: Message Receiver Id does not conform with this agent's Id!");
-}
-else if (status == AgentMessage.StatusCodes.CHATNOTFOUND)
-{
-Logger.log("WARNING: ChatId not found!");
-}
-else if (status == AgentMessage.StatusCodes.SERVICENOTFOUND)
-{
-Logger.log("WARNING: No service with id '" + msg.Service + "' found!");
-}
-}
-else if (status == AgentMessage.StatusCodes.CHATIDNOTACCEPTED)
-{
-SendMessage(msg.MakeResponse(
-this.Id,
-status,
-"validId:" + AgentProtocol.ChatCount.ToString()
-));
-}
-Logger.DecLvl();
-}
-protected virtual AgentMessage.StatusCodes AssignMessage(AgentMessage message)
-{
-Logger.debug("Agent.AssignMessage()");
-Logger.IncLvl();
-if (message.Receiver != Id)
-{
-Logger.log("receiver does not match this agent.");
-return AgentMessage.StatusCodes.RECEIVERNOTFOUND;
-}
-else if (message.Service == "response")
-{
-if (!Chats.ContainsKey(message.ChatId))
-{
-if (
-message.Status != AgentMessage.StatusCodes.UNKNOWNERROR
-&& message.Status != AgentMessage.StatusCodes.CHATNOTFOUND
-&& message.Status != AgentMessage.StatusCodes.SERVICENOTFOUND
-)
-{
-return AgentMessage.StatusCodes.ABORT;
-}
-Logger.DecLvl();
-return AgentMessage.StatusCodes.CHATNOTFOUND;
-}
-else
-{
-Logger.log("Transmit message to chat " + message.ChatId.ToString());
-Chats[message.ChatId].ReceiveMessage(message);
-return AgentMessage.StatusCodes.OK;
-}
-}
-else if (!Services.ContainsKey(message.Service))
-{
-Logger.log("WARNING: Service not found");
-if (message.Status == AgentMessage.StatusCodes.CHATNOTFOUND)
-{
-Logger.log("WARNING: Requested chat id did not exist on '" + (message.Sender.Id ?? "") + "'.");
-Logger.DecLvl();
-return AgentMessage.StatusCodes.ABORT;
-}
-else if (message.Status == AgentMessage.StatusCodes.SERVICENOTFOUND)
-{
-Logger.log("WARNING: Requested service '" + (message.Service ?? "") + "' did not exist on '" + (message.Sender.Id ?? "") + "'.");
-Logger.DecLvl();
-return AgentMessage.StatusCodes.ABORT;
-}
-else if (message.Status == AgentMessage.StatusCodes.SERVICENOTFOUND)
-{
-Logger.log("WARNING: An unknown error occured at '" + (message.Sender.Id ?? "") + "'.");
-Logger.DecLvl();
-return AgentMessage.StatusCodes.ABORT;
-}
-else
-{
-Logger.DecLvl();
-return AgentMessage.StatusCodes.SERVICENOTFOUND;
-}
-}
-else
-{
-Logger.log("create protocol '" + message.Service + "'.");
-AgentProtocol chat = Services[message.Service].Create(this);
-if (message.ChatId != -1)
-{
-if (!chat.TrySetId(message.ChatId))
-{
-chat.Stop();
-return AgentMessage.StatusCodes.CHATIDNOTACCEPTED;
-}
-}
-Chats[chat.ChatId] = chat;
-Logger.log("Transfer message to chat.");
-chat.ReceiveMessage(message);
-Logger.DecLvl();
-return AgentMessage.StatusCodes.OK;
-}
-}
-public virtual bool SendMessage(AgentMessage msg)
-{
-Logger.debug("Agent.SendMessage");
-Logger.IncLvl();
-Logger.log("Sending message of '" + msg.Sender.Id + "' to '" + msg.Receiver.Id + "'...");
-IMyProgrammableBlock targetBlock;
-Logger.log("comparing receiver platform '" + msg.Receiver.Platform + "' and own platform '" + Id.Platform + "'...");
-if (msg.Receiver.Platform == "local" || msg.Receiver.Platform == Id.Platform)
-{
-targetBlock = GTS.GetBlockWithName(msg.Receiver.Name) as IMyProgrammableBlock;
-if (targetBlock == null)
-{
-Logger.log("WARNING: Receiver with id '" + msg.Receiver.Id + "' not found locally!");
-}
-}
-else
-{
-Logger.log("Receiver not local. Trying to find corresponding platform agent.");
-targetBlock = GTS.GetBlockWithName(msg.Receiver.Platform) as IMyProgrammableBlock;
-if (targetBlock == null)
-{
-if (Id.Platform != Id.Name)
-{
-targetBlock = GTS.GetBlockWithName(Id.Platform) as IMyProgrammableBlock;
-}
-if (targetBlock == null)
-{
-Logger.log("WARNING: Not registered at any platform! Only local communication possible!");
-}
-}
-}
-if (targetBlock == null)
-{
-Logger.DecLvl();
-return false;
-}
-if (msg.Receiver.Platform == "local" && msg.Sender.Platform == Id.Platform)
-{
-msg.Sender.Platform = "local";
-}
-if (!targetBlock.TryRun("message \"" + msg.ToString() + "\""))
-{
-ScheduleMessage(msg);
-}
-if (ScheduledMessages.Count > 0)
-{
+Logger.log("Schedule refresh");
 ScheduleRefresh();
 }
+Logger.log("Sent to grid (finished)");
 Logger.DecLvl();
 return true;
 }
-public void ScheduleMessage(AgentMessage msg)
-{
-Logger.debug("Agent.ScheduleMessage()");
-Logger.IncLvl();
-ScheduledMessages.Add(msg);
-Logger.DecLvl();
 }
-public void SendScheduledMessages()
-{
-Logger.debug("Agent.SendScheduledMessages()");
-Logger.IncLvl();
-for (int i = ScheduledMessages.Count - 1; i >= 0; i--)
-{
-AgentMessage msg = ScheduledMessages[i];
-ScheduledMessages.RemoveAt(i);
-SendMessage(msg);
-}
-Logger.DecLvl();
-}
-public void RegisterService(string id, Func<Agent, AgentProtocol> createChat)
-{
-RegisterService(id, "", createChat);
-}
-public void RegisterService(string id, string description, Func<Agent, AgentProtocol> createChat)
-{
-Logger.debug("Agent.RegisterService()");
-Logger.IncLvl();
-Services.Add(id, new Service(id, description, this.Id, createChat));
-Logger.DecLvl();
-}
-public void StopChat(int chatId)
-{
-Chats.Remove(chatId);
-}
-public void SetTimer(IMyTimerBlock timer)
-{
-Timer = timer;
-}
-public void ScheduleRefresh()
-{
-RefreshScheduled = true;
-if (Timer != null && !Timer.IsCountingDown)
-{
-Timer.GetActionWithName("Start").Apply(Timer);
-}
-}
-public virtual void Refresh(TimeSpan elapsedTime)
-{
-ElapsedTime += elapsedTime;
-if (!RefreshScheduled)
-{
-return;
-}
-RefreshScheduled = false;
-SendScheduledMessages();
-ElapsedTime = new TimeSpan(0);
-}
-}
+//!EMBED SEScripts.MultiAgentNetwork.MAN.Agents.PlatformAgent
+//!EMBED SEScripts.MultiAgentNetwork.MAN.Agents.RegisteredAgent
 
-public abstract class AgentProtocol
+public class UITerminalAgent : RegisteredAgent
 {
-static int ChatCountValue;
-private int ChatIdValue;
-protected Agent Holder;
-public static string Id
+XML.UIController UI;
+IMyTextPanel Screen;
+const string loadingPage = "<hl width='100%'/>Requesting Services...<hl width='100%'/>";
+public UITerminalAgent(MyGridProgram program, IMyTextPanel screen) : base(program)
 {
-get { return null; }
-}
-public static int ChatCount
-{
-get
-{
-return ChatCountValue;
-}
-}
-public int ChatId
-{
-get
-{
-return ChatIdValue;
-}
-}
-public virtual void NotifyEvent(string eventId)
-{
-}
-public AgentProtocol(Agent agent)
-{
-Logger.debug("AgentProtocol constructor()");
+Logger.debug("UITerminalAgent constructor()");
 Logger.IncLvl();
-ChatIdValue = ChatCount;
-ChatCountValue++;
-Holder = agent;
+Screen = screen;
+UI = XML.UIController.FromXML(loadingPage);
+UI.RenderTo(Screen);
+RequestRouteProtocol.RegisterServices(this);
 Logger.DecLvl();
 }
-public bool TrySetId(int id)
+public void LoadXML(string uiString)
 {
-if (id == ChatId)
-{
-return true;
-}
-else if (id >= ChatCount)
-{
-ChatCountValue = id + 1;
-ChatIdValue = id;
-return true;
-}
-else
-{
-return false;
-}
-}
-public abstract void Restart();
-public virtual void Start() { }
-public virtual void Stop()
-{
-if (ChatId == ChatCount - 1)
-{
-ChatCountValue = ChatId;
-}
-Holder.StopChat(ChatId);
-}
-public virtual void ReceiveMessage(AgentMessage msg)
-{
-if (msg.Status == AgentMessage.StatusCodes.CHATIDNOTACCEPTED)
-{
-string[] contentSplit = msg.Content.Split(':');
-if (contentSplit.Length == 2 && contentSplit[0] == "validId")
-{
-int chatId = -1;
-if (Int32.TryParse(contentSplit[1], out chatId))
-{
-TrySetId(Math.Max(ChatCount, chatId));
-Restart();
-}
-else
-{
-Logger.log("ERROR: Could not change chat id");
-}
-}
-}
-}
-public static void RegisterServices(Agent agent) { }
-}
-
-public class AgentMessage : XML.DataStore
-{
-public enum StatusCodes
-{
-UNDEFINED,
-OK,
-CHATNOTFOUND,
-SERVICENOTFOUND,
-UNKNOWNERROR,
-ABORT,
-FORWARDED,
-RECEIVERNOTFOUND,
-CHATIDNOTACCEPTED
-}
-public string Content
-{
-get
-{
-return Parser.UnescapeQuotes(GetAttribute("content"));
-}
-set
-{
-SetAttribute("content", Parser.Sanitize(value));
-}
-}
-public AgentId Sender
-{
-get
-{
-return new AgentId(GetAttribute("sender"));
-}
-set
-{
-SetAttribute("sender", value.Id);
-}
-}
-public AgentId Receiver
-{
-get
-{
-return new AgentId(GetAttribute("receiver"));
-}
-set
-{
-SetAttribute("receiver", value.Id);
-}
-}
-public int ChatId
-{
-get
-{
-int chatid;
-if (Int32.TryParse(GetAttribute("chatid"), out chatid))
-{
-return chatid;
-}
-else
-{
-return -1;
-}
-}
-set
-{
-SetAttribute("chatid", value.ToString());
-}
-}
-public string Service
-{
-get
-{
-return GetAttribute("service");
-}
-set
-{
-SetAttribute("service", value);
-}
-}
-public StatusCodes Status
-{
-get
-{
-StatusCodes status;
-if (Enum.TryParse<StatusCodes>(GetAttribute("status"), true, out status))
-{
-return status;
-}
-else
-{
-return StatusCodes.UNDEFINED;
-}
-}
-set
-{
-SetAttribute("status", value.ToString());
-}
-}
-public AgentMessage() : base()
-{
-Logger.debug("AgentMessage constructor()");
+Logger.debug("UITerminalAgent.LoadUI()");
 Logger.IncLvl();
-Type = "message";
-Attributes = new Dictionary<string, string>();
+UI.LoadXML(uiString);
+UI.RenderTo(Screen);
 Logger.DecLvl();
 }
-public AgentMessage(AgentId sender, AgentId receiver, string msg) : this()
+public void LoadUI(XML.XMLTree ui)
 {
-Logger.debug("AgentMessage constructor(AgentId, AgentId, string)");
+Logger.debug("UITerminalAgent.LoadUI()");
 Logger.IncLvl();
-Content = msg;
-Sender = sender;
-Receiver = receiver;
-Status = StatusCodes.OK;
-Service = "response";
+UI.LoadUI(ui);
+UI.RenderTo(Screen);
 Logger.DecLvl();
 }
-public AgentMessage(
-AgentId sender,
-AgentId receiver,
-StatusCodes status,
-string content,
-string requestedService,
-int chatId
-) : this(sender, receiver, content)
+public void Call(List<string> parameters)
 {
-Logger.debug("AgentMessage constructor(AgentId, AgentId, StatusCodes, string, string, int)");
+Logger.debug("UITerminalAgent.Call()");
 Logger.IncLvl();
-Status = status;
-Service = requestedService;
-ChatId = chatId;
-Logger.DecLvl();
-}
-public AgentMessage(
-AgentId sender,
-AgentId receiver,
-StatusCodes status,
-string content,
-string requestedService
-) : this(sender, receiver, status, content, requestedService, -1)
-{
-}
-public AgentMessage MakeResponse(AgentId newSender, StatusCodes status, string msg)
-{
-Logger.debug("AgentMessage.MakeResponse()");
-Logger.IncLvl();
-AgentMessage aMsg = new AgentMessage(
-newSender,
-Sender,
-status,
-msg,
-"response"
-);
-if (ChatId >= 0)
-{
-aMsg.ChatId = ChatId;
-}
-Logger.DecLvl();
-return aMsg;
-}
-public AgentMessage Duplicate()
-{
-return new AgentMessage(
-Sender,
-Receiver,
-Status,
-Content,
-Service,
-ChatId
-);
-}
-public override string ToString()
-{
-Logger.debug("AgentMessage.ToString()");
-Logger.IncLvl();
-Logger.DecLvl();
-return ToXML();
-}
-public string ToXML()
-{
-Logger.debug("AgentMessage.ToXML()");
-Logger.IncLvl();
-string xml = "<message ";
-xml += Parser.PackData(GetValues((node) => true));
-xml += "/>";
-Logger.DecLvl();
-Logger.log("sanitize message");
-return Parser.Sanitize(xml);
-}
-public static AgentMessage FromXML(string xml)
-{
-Logger.debug("AgentMessage.FromXML()");
-Logger.IncLvl();
-SetUp();
-xml = Parser.UnescapeQuotes(xml);
-XML.XMLTree xmlNode = XML.ParseXML(xml);
-AgentMessage msg = xmlNode.GetNode((node) => node.Type == "message") as AgentMessage;
-Logger.DecLvl();
-Logger.log("unescape message");
-return msg;
-}
-public static void SetUp()
-{
-Logger.debug("AgentMessage.SetUp()");
-Logger.IncLvl();
-if (!XML.NodeRegister.ContainsKey("message"))
-{
-XML.NodeRegister.Add("message", () => {
-return new AgentMessage();
-}
-);
-}
+UI.Call(parameters);
+UI.RenderTo(Screen);
 Logger.DecLvl();
 }
 }
-
-public class AgentId : IEquatable<AgentId>
-{
-public string Id;
-public string Name
-{
-get
-{
-string[] idSplit = Id.Split('@');
-return idSplit[0];
-}
-set
-{
-string[] idSplit = Id.Split('@');
-string platform = (idSplit.Length > 1 ? idSplit[1] : "");
-Id = value + "@" + platform;
-}
-}
-public string Platform
-{
-get
-{
-string[] idSplit = Id.Split('@');
-if (idSplit.Length > 1)
-{
-return idSplit[1];
-}
-else
-{
-return "local";
-}
-}
-set
-{
-string[] idSplit = Id.Split('@');
-Id = idSplit[0] + "@" + value;
-}
-}
-public AgentId(string id)
-{
-Id = id;
-}
-public bool Equals(AgentId other)
-{
-return Name == other.Name && (
-Platform == other.Platform
-|| Platform == "local"
-|| other.Platform == "local"
-|| Platform == ""
-|| other.Platform == "");
-}
-public override bool Equals(Object obj)
-{
-if (obj == null)
-return false;
-AgentId aidObj = obj as AgentId;
-if (aidObj == null)
-return false;
-else
-return Equals(aidObj);
-}
-public static bool operator ==(AgentId id1, AgentId id2)
-{
-if (((object)id1) == null || ((object)id2) == null)
-return Object.Equals(id1, id2);
-return id1.Equals(id2);
-}
-public static bool operator !=(AgentId id1, AgentId id2)
-{
-if (((object)id1) == null || ((object)id2) == null)
-return !Object.Equals(id1, id2);
-return !(id1.Equals(id2));
-}
+//!EMBED SEScripts.MultiAgentNetwork.MAN.Agents.Agent
 }
 
-public class Service : PlatformService
-{
-public Func<Agent, AgentProtocol> Create;
-public Service(string id, string description, AgentId provider, Func<Agent, AgentProtocol> create) :
-this(id, description, provider, false, create) { }
-public Service(string id, string description, AgentId provider, bool providesUI, Func<Agent, AgentProtocol> create) : base(id, description, provider, providesUI)
-{
-Create = create;
-}
-}
-
-public class PlatformService
-{
-public string Id;
-public string Description;
-public AgentId Provider;
-private bool isUIProvider;
-public bool ProvidesUI
-{
-get { return isUIProvider; }
-}
-public PlatformService(string id, string description, AgentId provider) : this(id, description, provider, false) { }
-public PlatformService(string id, string description, AgentId provider, bool providesUI)
-{
-Id = id;
-Description = description;
-Provider = provider;
-isUIProvider = providesUI;
-}
-public string ToXML()
-{
-return "<service id='" + Id.ToString() + "' description='" + Description + "' provider='" + Provider.Id + "'/>";
-}
-public bool Equals(PlatformService other)
-{
-return Id == other.Id && Provider == other.Provider;
-}
-public override bool Equals(Object obj)
-{
-if (obj == null)
-return false;
-PlatformService serviceObj = obj as PlatformService;
-if (serviceObj == null)
-return false;
-else
-return Equals(serviceObj);
-}
-public static bool operator ==(PlatformService service1, PlatformService service2)
-{
-if (((object)service1) == null || ((object)service2) == null)
-return Object.Equals(service1, service2);
-return service1.Equals(service2);
-}
-public static bool operator !=(PlatformService service1, PlatformService service2)
-{
-if (((object)service1) == null || ((object)service2) == null)
-return !Object.Equals(service1, service2);
-return !(service1.Equals(service2));
-}
-
-}
-
-public class PrintProtocol : AgentProtocol
-{
-public new static string Id
-{
-get { return "print"; }
-}
-public PrintProtocol(Agent agent) : base(agent) { }
-public override void ReceiveMessage(AgentMessage msg)
-{
-Logger.log("Message received:");
-Logger.IncLvl();
-Logger.log("from: " + msg.Sender.Id);
-Logger.log("content: " + msg.Content);
-Logger.DecLvl();
-Stop();
-}
-public override void Restart() { }
-public static new void RegisterServices(Agent holder)
-{
-holder.RegisterService(Id, (agent) => {
-return new PrintProtocol(agent);
-});
-}
-}
-
-class ServiceRegistrationProtocol : AgentProtocol
-{
-public class Platform : AgentProtocol
-{
-public new static string Id
-{
-get { return "register-services"; }
-}
-public Platform(Agent agent) : base(agent) { }
-public override void ReceiveMessage(AgentMessage msg)
-{
-Logger.debug("ServiceRegistrationProtocol.ReceiveMessage(AgentMessage)");
-Logger.IncLvl();
-List<XML.XMLTree> services = XML.ParseXML(msg.Content).GetAllNodes((node) => (node.Type == "service"));
-PlatformAgent platform = Holder as PlatformAgent;
-if (platform == null)
-{
-Holder.SendMessage(
-msg.MakeResponse(
-Holder.Id,
-AgentMessage.StatusCodes.UNKNOWNERROR,
-"ERROR: Agent is no PlatformAgent - service registration not possible!"
-)
-);
-Stop();
-return;
-}
-foreach (XML.XMLTree service in services)
-{
-string serviceId = service.GetAttribute("id");
-string serviceDesc = service.GetAttribute("description") ?? "";
-AgentId sender = msg.Sender;
-sender.Platform = platform.Id.Platform;
-Logger.log("Register service '" + serviceId + "' of '" + sender.Id + "'.");
-if (serviceId != null)
-{
-if (!platform.PlatformServices.ContainsKey(serviceId))
-{
-platform.PlatformServices[serviceId] = new List<PlatformService>();
-}
-platform.PlatformServices[serviceId].Add(new PlatformService(serviceId, serviceDesc, sender));
-}
-}
-Holder.SendMessage(msg.MakeResponse(
-Holder.Id,
-AgentMessage.StatusCodes.OK,
-"services registered"
-));
-Stop();
-Logger.DecLvl();
-}
-public override void Restart() { }
-public static new void RegisterServices(Agent holder)
-{
-holder.RegisterService(Id, (agent) => {
-return new Platform(agent);
-});
-}
-}
-public new static string Id
-{
-get { return "complete-service-registration"; }
-}
-public ServiceRegistrationProtocol(Agent agent) : base(agent) { }
-public override void ReceiveMessage(AgentMessage msg)
-{
-if (msg.Status == AgentMessage.StatusCodes.OK && msg.Content == "services registered")
-{
-Logger.log("Setting agent platform to '" + msg.Sender.Name + "'.");
-Holder.Id.Platform = msg.Sender.Name;
-Stop();
-}
-else
-{
-base.ReceiveMessage(msg);
-}
-}
-public override void Restart() { }
-public static new void RegisterServices(Agent holder)
-{
-holder.RegisterService(Id, (agent) => {
-return new ServiceRegistrationProtocol(agent);
-});
-}
-}
-
-public class ServiceRegister : Dictionary<string, List<PlatformService>>
-{
-public ServiceRegister Merge(ServiceRegister other)
-{
-ServiceRegister merged = new ServiceRegister();
-foreach(KeyValuePair<string, List<PlatformService>> item in this)
-{
-merged.Add(item.Key, item.Value);
-}
-foreach(KeyValuePair<string, List<PlatformService>> item in other)
-{
-if(merged.ContainsKey(item.Key))
-{
-merged[item.Key].AddList<PlatformService>(item.Value);
-merged[item.Key] = Util.Uniques<PlatformService>(merged[item.Key]);
-} else
-{
-merged[item.Key] = item.Value;
-}
-}
-return merged;
-}
-public string ToXML()
-{
-string xml = "<services>";
-foreach(KeyValuePair<string, List<PlatformService>> item in this) {
-foreach(PlatformService service in item.Value)
-{
-xml += service.ToXML();
-}
-}
-xml += "</services>";
-return xml;
-}
-}
-
-class MessageRoutingProtocol : AgentProtocol
-{
-static public bool IsPlatform = false;
-public new static string Id
-{
-get { return "route-message"; }
-}
-public MessageRoutingProtocol(Agent agent) : base(agent) { }
-public override void ReceiveMessage(AgentMessage msg) { }
-public override void Restart() { }
-public static new void RegisterServices(Agent holder)
-{
-holder.RegisterService(Id, (agent) => {
-return new MessageRoutingProtocol(agent);
-});
-}
-}
-
-class ProvideServiceInformationProtocol : AgentProtocol
-{
-public new static string Id
-{
-get { return "get-services"; }
-}
-public ProvideServiceInformationProtocol(Agent agent) : base(agent) { }
-public override void ReceiveMessage(AgentMessage msg)
-{
-if (msg.Status == AgentMessage.StatusCodes.OK)
-{
-List<PlatformService> services = new List<PlatformService>(Holder.Services.Values);
-PlatformAgent platform = Holder as PlatformAgent;
-if (platform != null)
-{
-foreach (List<PlatformService> platformServices in platform.PlatformServices.Values)
-{
-services.AddRange(platformServices);
-}
-}
-services = Util.Uniques<PlatformService>(services);
-string content = "<services>";
-foreach (PlatformService service in services)
-{
-content += service.ToXML();
-}
-content += "</services>";
-AgentMessage message = new AgentMessage(
-Holder.Id,
-msg.Sender,
-AgentMessage.StatusCodes.OK,
-content,
-"response",
-ChatId
-);
-Holder.SendMessage(message);
-Stop();
-}
-else
-{
-base.ReceiveMessage(msg);
-}
-}
-public override void Restart() { }
-public static new void RegisterServices(Agent holder)
-{
-holder.RegisterService(Id, (agent) => {
-return new ProvideServiceInformationProtocol(agent);
-});
-}
-}
-
-public class RegisteredAgent : Agent
-{
-public RegisteredAgent(MyGridProgram program) : base(program)
-{
-if (Id.Platform != "local" && (GTS.GetBlockWithName(Id.Platform) as IMyProgrammableBlock) == null)
-{
-Id.Platform = "local";
-}
-ServiceRegistrationProtocol.RegisterServices(this);
-PrintPlatformServicesProtocol.RegisterServices(this);
-}
-public void RegisterWith(string platformName)
-{
-AgentId platform = new AgentId(platformName + "@local");
-ServiceRegistrationProtocol chat = new ServiceRegistrationProtocol(this);
-Chats[chat.ChatId] = chat;
-string content = "<services>";
-foreach (string service in Services.Keys)
-{
-content += "<service id='" + service + "'/>";
-}
-content += "</services>";
-AgentMessage message = new AgentMessage(
-this.Id,
-platform,
-AgentMessage.StatusCodes.OK,
-content,
-ServiceRegistrationProtocol.Platform.Id,
-chat.ChatId
-);
-SendMessage(message);
-}
-}
-
-class PrintPlatformServicesProtocol : AgentProtocol
-{
-int State;
-public new static string Id
-{
-get { return "print-platform-services"; }
-}
-public PrintPlatformServicesProtocol(Agent agent) : base(agent)
-{
-Logger.log("Create new PrintPlatformServicesProtocol");
-State = 0;
-}
-public override void ReceiveMessage(AgentMessage msg)
-{
-Logger.log("PrintPlatformServicesProtocol.ReceiveMessage(message)");
-switch (State)
-{
-case 0:
-Logger.log("Handling state 0");
-if (Holder.Id.Platform == "local")
-{
-Logger.log("WARNING: PrintPlatformServicesProtocol started, but agent is not registered at any platform!");
-Stop();
-return;
-}
-else
-{
-Holder.SendMessage(new AgentMessage(
-Holder.Id,
-new AgentId(Holder.Id.Platform + "@local"),
-AgentMessage.StatusCodes.OK,
-"",
-"get-services",
-ChatId
-));
-State = 1;
-}
-break;
-case 1:
-Logger.log("Handling state 1");
-if (msg.Status == AgentMessage.StatusCodes.OK)
-{
-List<XML.XMLTree> services = XML.ParseXML(msg.Content).GetAllNodes((node) => node.Type == "service");
-Logger.log("Available Platform Services:");
-foreach (XML.XMLTree service in services)
-{
-Logger.log("  " + service.GetAttribute("id"));
-}
-}
-else
-{
-base.ReceiveMessage(msg);
-Logger.log("An error occured in protocol PrintPlatformServicesProtocol: " + msg.Status.ToString());
-}
-Stop();
-break;
-}
-}
-public override void Restart()
-{
-State = 0;
-ReceiveMessage(null);
-}
-public static new void RegisterServices(Agent holder)
-{
-holder.RegisterService(Id, (agent) => {
-return new PrintPlatformServicesProtocol(agent);
-});
-}
-}
-
-}
-
-class DataStorage : XML.DataStore
+public class DataStorage : XML.DataStore
 {
 private Dictionary<string, Type> String2Type;
 private Dictionary<Type, string> Type2String;
@@ -1431,7 +254,7 @@ public T Get<T>(string key)
 {
 Logger.log("DataStore.Get(string)");
 Logger.IncLvl();
-if (!Exists<T>(key))
+if (!Exists1<T>(key))
 {
 throw new Exception("No entry found for key '" + key + "' of type '" + typeof(T).ToString() + "'!");
 }
@@ -1458,9 +281,9 @@ throw new Exception("Error: Invalid Type at DataStore.Get<Type>(string key)!");
 public bool Exists(string key)
 {
 Logger.log("DataStore.Exists(string)");
-return (Exists<string>(key) || Exists<int>(key) || Exists<float>(key));
+return (Exists1<string>(key) || Exists1<int>(key) || Exists1<float>(key));
 }
-public bool Exists<T>(string key)
+public bool Exists1<T>(string key)
 {
 Logger.log("Exists<T>(string)");
 Logger.IncLvl();
@@ -1552,27 +375,35 @@ Logger.DecLvl();
 
 public static class Logger
 {
+public static string History = "";
 static IMyTextPanel DebugPanel;
 static public bool DEBUG = false;
 static int offset = 0;
 public static void log(string msg)
 {
-if (DebugPanel == null)
+/*if (DebugPanel == null)
 {
 return;
-}
+}*/
 string prefix = "";
 for (int i = 0; i < offset; i++)
 {
 prefix += "  ";
 }
-DebugPanel.WritePublicText(prefix + msg + "\n", true);
-//P.Echo(prefix + msg);
+History += prefix + msg + "\n";
+//DebugPanel.WritePublicText(prefix + msg + "\n", true);
+P.Echo(prefix + msg);
 }
 public static void debug(string msg)
 {
 if (!DEBUG)
 {
+string prefix = "";
+for (int i = 0; i < offset; i++)
+{
+prefix += "  ";
+}
+History += prefix + msg + "\n";
 return;
 }
 log(msg);
@@ -1589,20 +420,20 @@ offset = offset - 2;
 
 public static class Parser
 {
-public static string PackData(Dictionary<string, string> data)
+public static StringBuilder PackData(Dictionary<string, string> data)
 {
-string dataString = "";
+StringBuilder dataString = new StringBuilder();
 foreach (string key in data.Keys)
 {
-dataString += key + "=\"" + data[key] + "\" ";
+dataString.Append(key + "=\"" + data[key] + "\" ");
 }
 return dataString;
 }
-public static string Sanitize(string xmlDefinition)
+public static StringBuilder Sanitize(StringBuilder xmlDefinition)
 {
-return xmlDefinition.Replace("\"", "\\\"").Replace("'", "\\'");
+return xmlDefinition.Replace("\"", "\\\"").Replace("'", "\'");
 }
-public static string UnescapeQuotes(string xmlDefinition)
+public static StringBuilder UnescapeQuotes(StringBuilder xmlDefinition)
 {
 return xmlDefinition.Replace("\\\"", "\"").Replace("\\'", "'");
 }
@@ -2180,10 +1011,25 @@ public virtual void AddChild(XMLTree child)
 {
 Logger.debug(Type + ": AddChild():");
 Logger.IncLvl();
-Children.Add(child);
+AddChildAt(Children.Count);
+Logger.DecLvl();
+}
+public virtual void AddChildAt(int position, XMLTree child)
+{
+Logger.debug(Type + ":AddChildAt()");
+Logger.IncLvl();
+if( position > Children.Count )
+{
+throw new Exception("XMLTree.AddChildAt - Exception: position must be less than number of children!");
+}
+Children.Insert(position, child);
 child.SetParent(this as XMLParentNode);
 UpdateSelectability(child);
 Logger.DecLvl();
+}
+public int NumberOfChildren()
+{
+return Children.Count;
 }
 public void SetParent(XMLParentNode parent)
 {
@@ -2638,6 +1484,17 @@ Logger.IncLvl();
 Logger.DecLvl();
 return child.Render(availableWidth);
 }
+public override void DetachChild(XMLTree child)
+{
+Children.Remove(child);
+}
+public void Detach()
+{
+if(GetParent() != null)
+{
+GetParent().DetachChild(this);
+}
+}
 }
 
 public interface XMLParentNode
@@ -2647,6 +1504,7 @@ void UpdateSelectability(XMLTree child);
 void KeyPress(string keyCode);
 void FollowRoute(Route route);
 bool SelectNext();
+void DetachChild(XMLTree child);
 }
 
 public class TextNode : XMLTree
@@ -2671,9 +1529,31 @@ return Content;
 
 public class Route
 {
-string Definition;
+static public Dictionary<string, Action<string, UIController>> RouteHandlers = new Dictionary<string, Action<string, UIController>>
+{
+{
+"revert", (def, controller) => { controller.RevertUI(); }
+},
+{
+"xml", (def, controller) =>
+{
+XMLTree ui = ParseXML(Parser.UnescapeQuotes(def));
+controller.LoadUI(ui);
+}
+},
+{
+"fn", (def, controller) =>
+{
+if(UIFactories.ContainsKey(def))
+{
+UIFactories[def](controller);
+}
+}
+}
+};
 static Dictionary<string, Action<UIController>> UIFactories =
 new Dictionary<string, Action<UIController>>();
+string Definition;
 public Route(string definition)
 {
 Logger.debug("Route constructor():");
@@ -2686,20 +1566,9 @@ public void Follow(UIController controller)
 {
 Logger.debug("Route: GetUI():");
 Logger.IncLvl();
-XMLTree ui = null;
-if (Definition == "revert")
-{
-controller.RevertUI();
-}
-else if (Definition.Substring(0, 4) == "xml:")
-{
-ui = ParseXML(Parser.UnescapeQuotes(Definition.Substring(4)));
-controller.LoadUI(ui);
-}
-else if (Definition.Substring(0, 3) == "fn:" && UIFactories.ContainsKey(Definition.Substring(3)))
-{
-UIFactories[Definition.Substring(3)](controller);
-}
+string[] DefTypeAndValue = Definition.Split(new char[] { ':' }, 2);
+if (!Route.RouteHandlers.ContainsKey(DefTypeAndValue[0])) return;
+Route.RouteHandlers[DefTypeAndValue[0]](DefTypeAndValue.Length >= 2 ? DefTypeAndValue[1] : null, controller);
 Logger.DecLvl();
 }
 static public void RegisterRouteFunction(string id, Action<UIController> fn)
@@ -2937,7 +1806,7 @@ return ui.GetValues(filter);
 }
 public string GetPackedValues(Func<XMLTree, bool> filter)
 {
-return Parser.PackData(GetValues(filter));
+return Parser.PackData(GetValues(filter)).ToString();
 }
 public string GetPackedValues()
 {
@@ -3079,6 +1948,7 @@ public void SetRoute(Route route)
 {
 TargetRoute = route;
 }
+
 }
 
 public class ProgressBar : XMLTree
@@ -3551,6 +2421,7 @@ return Attributes;
 else
 {
 return new Dictionary<string, string>();
+}
 }
 }
 }

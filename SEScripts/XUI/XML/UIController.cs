@@ -180,25 +180,33 @@ namespace SEScripts.XUI.XML
             Logger.debug("UIController.RenderTo()");
             Logger.IncLvl();
             int panelWidth = 0;
-            string panelType = panel.DetailedInfo.Split('\n')[0];
+            string panelType = panel.BlockDefinition.SubtypeId;
             Logger.debug("Type: " + panelType);
-            switch (panelType)
+
+            if (panelType == "LargeTextPanel" || panelType == "SmallTextPanel")
             {
-                case "Type: Text Panel":
-                    panelWidth = 658;
-                    break;
-                case "Type: LCD Panel":
-                    panelWidth = 658;
-                    break;
-                case "Wide LCD Panel":
-                    panelWidth = 1316;
-                    break;
+                panelWidth = 658;
             }
+            else if(panelType == "LargeLCDPanel" || panelType == "SmallLCDPanel")
+            {
+                panelWidth = 658;
+            }
+            else if(panelType == "SmallLCDPanelWide" || panelType == "LargeLCDPanelWide")
+            {
+                panelWidth = 1316;
+            }
+            else if(panelType == "LargeBlockCorner_LCD_1" || panelType == "LargeBlockCorner_LCD_2"
+                || panelType == "SmallBlockCorner_LCD_1" || panelType == "SmallBlockCorner_LCD_2")
+            { }
+            else if(panelType == "LargeBlockCorner_LCD_Flat_1" || panelType == "LargeBlockCorner_LCD_Flat_2"
+                || panelType == "SmallBlockCorner_LCD_Flat_1" || panelType == "SmallBlockCorner_LCD_Flat_2")
+            { }
 
             int width = (int)(((float)panelWidth) / panel.GetValue<Single>("FontSize"));
             Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
             Logger.debug("resulting width: " + width.ToString());
             string text = ui.Render(width);
+            Logger.debug("rendering <" + text);
             panel.WritePublicText(text);
             Logger.DecLvl();
         }
@@ -280,7 +288,15 @@ namespace SEScripts.XUI.XML
 
         public string GetPackedValues(Func<XMLTree, bool> filter)
         {
-            return Parser.PackData(GetValues(filter));
+            return Parser.PackData(GetValues(filter)).ToString();
+        }
+
+        public void DetachChild(XMLTree xml)
+        {
+            if(xml == ui)
+            {
+                ui = null;
+            }
         }
 
         public string GetPackedValues()

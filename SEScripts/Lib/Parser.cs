@@ -21,16 +21,17 @@ namespace SEScripts.Lib
 
         public static string PackData(Dictionary<string, string> data)
         {
-            string dataString = "";
+            StringBuilder dataString = new StringBuilder();
             foreach (string key in data.Keys)
             {
-                dataString += key + "=\"" + data[key] + "\" ";
+                dataString.Append(key + "=\"" + data[key] + "\" ");
             }
-            return dataString;
+            return dataString.ToString();
         }
 
         public static string Sanitize(string xmlDefinition)
         {
+            Logger.debug("Parser.Sanitize()");
             return xmlDefinition.Replace("\"", "\\\"").Replace("'", "\\'");
         }
 
@@ -51,15 +52,15 @@ namespace SEScripts.Lib
 
         public static int GetNextUnescaped(char[] needles, string haystack, int start, int count)
         {
-            Logger.debug("GetNextUnescaped():");
-            Logger.IncLvl();
+            //Logger.debug("GetNextUnescaped():");
+            //Logger.IncLvl();
             int end = start + count - 1;
             int needlePos = haystack.IndexOfAny(needles, start, end - start + 1);
             while (needlePos > 0 && haystack[needlePos - 1] == '\\')
             {
                 needlePos = haystack.IndexOfAny(needles, needlePos + 1, end - needlePos);
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return needlePos;
         }
 
@@ -84,14 +85,14 @@ namespace SEScripts.Lib
             bool ignoreEscapedQuotes
         )
         {
-            Logger.debug("GetNextOutsideQuotes():");
-            Logger.IncLvl();
+            //Logger.debug("GetNextOutsideQuotes():");
+            //Logger.IncLvl();
             char[] quoteChars = new char[] { '\'', '"' };
             int needlePos = -1;
             int quoteEnd = -1;
             int quoteStart;
-            Logger.debug("needle: |" + new string(needles) + "|");
-            Logger.debug("haystack: |" + haystack + "|");
+            //Logger.debug("needle: |" + new string(needles) + "|");
+            //Logger.debug("haystack: |" + haystack + "|");
             while (needlePos == -1)
             {
                 if (ignoreEscapedQuotes)
@@ -102,18 +103,18 @@ namespace SEScripts.Lib
                 {
                     quoteStart = haystack.IndexOfAny(quoteChars, quoteEnd + 1);
                 }
-                Logger.debug("quoteStart position: " + quoteStart.ToString()
-                    + ", quoteEnd position: " + quoteEnd.ToString());
+                //Logger.debug("quoteStart position: " + quoteStart.ToString()
+                //    + ", quoteEnd position: " + quoteEnd.ToString());
                 if (quoteStart == -1)
                 {
-                    Logger.debug("searching for needle in:: " + haystack.Substring(quoteEnd + 1));
+                    //Logger.debug("searching for needle in:: " + haystack.Substring(quoteEnd + 1));
                     needlePos = GetNextUnescaped(needles, haystack, quoteEnd + 1);
                 }
                 else
                 {
-                    Logger.debug("found start quote: " + haystack.Substring(quoteStart));
-                    Logger.debug("searching for needle in: "
-                        + haystack.Substring(quoteEnd + 1, quoteStart - quoteEnd));
+                    //Logger.debug("found start quote: " + haystack.Substring(quoteStart));
+                    //Logger.debug("searching for needle in: "
+                    //    + haystack.Substring(quoteEnd + 1, quoteStart - quoteEnd));
                     needlePos = GetNextUnescaped(
                         needles,
                         haystack,
@@ -136,18 +137,18 @@ namespace SEScripts.Lib
                     {
                         quoteEnd = haystack.IndexOf(haystack[quoteStart], quoteStart + 1);
                     }
-                    Logger.debug("found end quote: " + haystack.Substring(quoteEnd));
+                    //Logger.debug("found end quote: " + haystack.Substring(quoteEnd));
                 }
             }
-            Logger.debug("yay!");
-            Logger.DecLvl();
+            //Logger.debug("yay!");
+            //Logger.DecLvl();
             return needlePos;
         }
 
         public static List<String> ParamString2List(string arg)
         {
-            Logger.debug("Parser.ParamString2List()");
-            Logger.IncLvl();
+            //Logger.debug("Parser.ParamString2List()");
+            //Logger.IncLvl();
 
             arg = arg.Trim() + " ";
             List<string> argList = new List<string>();
@@ -159,15 +160,15 @@ namespace SEScripts.Lib
                 spacePos = Parser.GetNextOutsideQuotes(new char[] { ' ', '\n' }, arg);
                 argList.Add(arg.Substring(0, spacePos).Trim(quoteChars));
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return argList;
         }
 
         public static Dictionary<string, string> GetXMLAttributes(string attributeString)
         {
-            Logger.debug("GetXMLAttributes():");
-            Logger.IncLvl();
-            Logger.debug("attribute string is: <" + attributeString + ">");
+            //Logger.debug("GetXMLAttributes():");
+            //Logger.IncLvl();
+            //Logger.debug("attribute string is: <" + attributeString + ">");
             Dictionary<string, string> attributes = new Dictionary<string, string>();
             char[] quoteChars = new char[] { '\'', '"' };
             List<string> attributeList = ParamString2List(attributeString);
@@ -185,15 +186,15 @@ namespace SEScripts.Lib
                         attribute.Substring(equalSign + 1).Trim(quoteChars);
                 }
             }
-            Logger.debug("attribute dict: {");
-            Logger.IncLvl();
-            foreach (string key in attributes.Keys)
-            {
-                Logger.debug(key + ": " + attributes[key]);
-            }
-            Logger.debug("}");
-            Logger.DecLvl();
-            Logger.DecLvl();
+            //Logger.debug("attribute dict: {");
+            //Logger.IncLvl();
+            //foreach (string key in attributes.Keys)
+            //{
+                //Logger.debug(key + ": " + attributes[key]);
+            //}
+            //Logger.debug("}");
+            //Logger.DecLvl();
+            //Logger.DecLvl();
             return attributes;
         }
 

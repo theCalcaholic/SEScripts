@@ -52,6 +52,19 @@ namespace SEScripts.XUI.XML
             return value;
         }
 
+        public override void SetAttribute(string key, string value)
+        {
+            XMLTree meta = GetNode((node) => { return node.Type == "meta"; });
+            if (meta != null)
+            {
+                meta.SetAttribute(key, value);
+            }
+            else
+            {
+                base.SetAttribute(key, value);
+            }
+        }
+
         public override void UpdateSelectability(XMLTree child)
         {
             base.UpdateSelectability(child);

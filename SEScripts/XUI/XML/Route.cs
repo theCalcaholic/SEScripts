@@ -20,36 +20,51 @@ namespace SEScripts.XUI.XML
 {
     public class Route
     {
-        string Definition;
+        static public Dictionary<string, Action<string, UIController>> RouteHandlers = new Dictionary<string, Action<string, UIController>>
+        {
+            {
+                "revert", (def, controller) => { controller.RevertUI(); }
+            },
+            {
+                "xml", (def, controller) =>
+                {
+                    XMLTree ui = ParseXML(Parser.UnescapeQuotes(def));
+                    controller.LoadUI(ui);
+                }
+            },
+            {
+                "fn", (def, controller) =>
+                {
+                    if(UIFactories.ContainsKey(def))
+                    {
+                        UIFactories[def](controller);
+                    }
+                }
+            }
+        };
         static Dictionary<string, Action<UIController>> UIFactories =
             new Dictionary<string, Action<UIController>>();
+
+        string Definition;
 
         public Route(string definition)
         {
             Logger.debug("Route constructor():");
             Logger.IncLvl();
             Definition = definition;
-            Logger.debug("xml string is: " + Definition.Substring(4));
             Logger.DecLvl();
         }
 
         public void Follow(UIController controller)
         {
-            Logger.debug("Route: GetUI():");
+            Logger.debug("Route.Follow()");
             Logger.IncLvl();
-            XMLTree ui = null;
-            if (Definition == "revert")
+            string[] DefTypeAndValue = Definition.Split(new char[] { ':' }, 2);
+            if (Route.RouteHandlers.ContainsKey(DefTypeAndValue[0].ToLower()))
             {
-                controller.RevertUI();
-            }
-            else if (Definition.Substring(0, 4) == "xml:")
-            {
-                ui = ParseXML(Parser.UnescapeQuotes(Definition.Substring(4)));
-                controller.LoadUI(ui);
-            }
-            else if (Definition.Substring(0, 3) == "fn:" && UIFactories.ContainsKey(Definition.Substring(3)))
-            {
-                UIFactories[Definition.Substring(3)](controller);
+                Route.RouteHandlers[DefTypeAndValue[0].ToLower()](
+                    DefTypeAndValue.Length >= 2 ? DefTypeAndValue[1] : null, controller
+                );
             }
 
             Logger.DecLvl();

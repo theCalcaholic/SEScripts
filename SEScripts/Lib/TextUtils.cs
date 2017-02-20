@@ -77,7 +77,14 @@ namespace SEScripts.Lib
             foreach (char c in line)
             {
                 //Logger.debug("adding character width of '" + c.ToString() + "'");
-                width += LetterWidths[selectedFont][c] + 1;
+                if(LetterWidths[selectedFont].ContainsKey(c))
+                {
+                    width += LetterWidths[selectedFont][c] + 1;
+                }
+                else
+                {
+                    width += 6;
+                }
             }
             Logger.DecLvl();
             return width - 1;

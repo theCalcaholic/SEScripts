@@ -86,11 +86,7 @@ namespace SEScripts.XUI.XML
         {
             TargetRoute = route;
         }
-
-        protected override void RenderText(ref List<string> segments, int width, int availableWidth)
-        {
-
-        }
+        
     }
 
     //EMBED SEScripts.XUI.XML.XMLTree

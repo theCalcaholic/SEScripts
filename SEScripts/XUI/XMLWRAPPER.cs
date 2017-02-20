@@ -68,15 +68,15 @@ namespace SEScripts.XUI
             RootNode root = new RootNode();
             XMLTree currentNode = root;
             string type;
-            Logger.debug("Enter while loop");
+            //Logger.debug("Enter while loop");
             while (xmlString.Length > 0)
             {
                 if (xmlString[0] == '<')
                 {
-                    Logger.debug("found tag");
+                    //Logger.debug("found tag");
                     if (xmlString[1] == '/')
                     {
-                        Logger.debug("tag is end tag");
+                        //Logger.debug("tag is end tag");
                         int spacePos = xmlString.IndexOfAny(spaceChars);
                         int bracketPos = xmlString.IndexOf('>');
                         int typeLength = (spacePos == -1 ? bracketPos : Math.Min(spacePos, bracketPos)) - 2;
@@ -91,7 +91,7 @@ namespace SEScripts.XUI
                     }
                     else
                     {
-                        Logger.debug("tag is start tag");
+                        //Logger.debug("tag is start tag");
                         int spacePos = xmlString.IndexOfAny(spaceChars);
                         int bracketPos = Parser.GetNextOutsideQuotes('>', xmlString);
                         int typeLength = (spacePos == -1 ? bracketPos : Math.Min(spacePos, bracketPos)) - 1;
@@ -105,17 +105,17 @@ namespace SEScripts.XUI
                             newNode = new XML.TextNode(xmlString.Substring(0, textLength).Trim());
                         }
 
-                        Logger.debug("add new node of type '" + newNode.Type + "=" + type + "' to current node");
+                        //Logger.debug("add new node of type '" + newNode.Type + "=" + type + "' to current node");
                         currentNode.AddChild(newNode);
-                        Logger.debug("added new node to current node");
+                        //Logger.debug("added new node to current node");
                         if (spacePos != -1 && spacePos < bracketPos)
                         {
                             string attrString = xmlString.Substring(typeLength + 2, bracketPos - typeLength - 2);
                             attrString = attrString.TrimEnd(new char[] { '/' });
-                            Logger.debug("get xml attributes. attribute string: '" + attrString + "/" + xmlString + "'");
+                            //Logger.debug("get xml attributes. attribute string: '" + attrString + "/" + xmlString + "'");
                             Dictionary<string, string> attributes =
                                 Parser.GetXMLAttributes(attrString);
-                            Logger.debug("got xml attributes");
+                            //Logger.debug("got xml attributes");
                             foreach (string key in attributes.Keys)
                             {
                                 newNode.SetAttribute(key, attributes[key]);
@@ -143,7 +143,7 @@ namespace SEScripts.XUI
                 }
             }
 
-            Logger.debug("parsing finished");
+            //Logger.debug("parsing finished");
             Logger.DecLvl();
             return root;
         }

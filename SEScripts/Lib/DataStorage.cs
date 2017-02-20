@@ -15,11 +15,11 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
 //using SEScripts.Lib;
-//using SEScripts.ParseLib;
+using SEScripts.ParseLib.XML;
 
 namespace SEScripts.Lib
 {
-    class DataStorage : XML.DataStore
+    public class DataStorage : XML.DataStore
     {
 
         private Dictionary<string, Type> String2Type;

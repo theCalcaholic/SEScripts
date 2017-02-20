@@ -33,7 +33,11 @@ namespace SEScripts.ParseLib
 {
 """
 
-parselib_footer = """
+generic_header = """namespace SEScripts.Merged
+{
+"""
+
+generic_footer = """
 }"""
 
 class ScriptProvider:
@@ -67,7 +71,7 @@ class ScriptProvider:
       with open(embed_path + ".cs", encoding='utf-8-sig', mode='r') as f:
         text = f.read()
 
-      regexHeader = re.compile(r'.*namespace\s*?(?P<namespace>[\w.]+)\n{', flags=re.DOTALL | re.UNICODE)
+      regexHeader = re.compile(r'.*namespace\s*?(?P<namespace>[\w.]+)\s*{', flags=re.DOTALL | re.UNICODE)
       matches = regexHeader.search(text)
       parent_namespace = matches.group("namespace")
       embed_text = text[matches.end():text.rfind("}")]
@@ -88,16 +92,18 @@ class ScriptProvider:
     if file_base_name != build_base_name:
       content = content.replace(file_base_name, build_base_name)"""
     content = minify(content)
-    parselib_content = parselib_header + preamble + content + parselib_footer
+    parselib_content = parselib_header + preamble + content + generic_footer
 
     if not os.path.isdir(build_dir):
       os.makedirs(build_dir)
     with open(build_path, "w", encoding='utf-8-sig') as file:
-      file.write(content)
+      print("Saving raw file at: <" + build_path)
+      file.write(generic_header + content + generic_footer)
 
     if not os.path.isdir(parselib_path):
       os.makedirs(parselib_path)
     with open(os.path.join(parselib_path, build_base_name + ".cs"), "w", encoding='utf-8-sig') as file:
+      print("Saving parseLib file at: <" + os.path.join(parselib_path,build_base_name + ".cs"))
       file.write(parselib_content)
     return content
 
@@ -147,7 +153,7 @@ else:
   root_path = sys.argv[1]
   root_namespace = sys.argv[2]
   build_file = sys.argv[3].replace(os.path.dirname(os.path.normpath(root_path)), "").replace("\\", ".").strip(".")
-  if build_file[-3:] == ".cs":
+  if build_file[-3:] == ".cs" or build_file[-3:] == ".CS":
     build_file = build_file[:-3]
   print("root_path: " + root_path)
   print("root_namespace: " + root_namespace)

@@ -18,29 +18,37 @@ namespace SEScripts.Lib
 {
     public static class Logger
     {
+        public static string History = "";
         static IMyTextPanel DebugPanel;
         static public bool DEBUG = false;
-        static int offset = 0;
+        public static int offset = 0;
 
         public static void log(string msg)
         {
             if (DebugPanel == null)
             {
-                return;
+                //return;
             }
             string prefix = "";
             for (int i = 0; i < offset; i++)
             {
                 prefix += "  ";
             }
-            DebugPanel.WritePublicText(prefix + msg + "\n", true);
-            //P.Echo(prefix + msg);
+            History += prefix + msg + "\n";
+            //DebugPanel.WritePublicText(prefix + msg + "\n", true);
+            P.Echo(prefix + msg);
         }
 
         public static void debug(string msg)
         {
             if (!DEBUG)
             {
+                string prefix = "";
+                for (int i = 0; i < offset; i++)
+                {
+                    prefix += "  ";
+                }
+                History += prefix + msg + "\n";
                 return;
             }
             log(msg);

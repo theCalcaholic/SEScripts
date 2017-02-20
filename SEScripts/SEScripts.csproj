@@ -61,26 +61,43 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Lib\Build\DataStorage.cs" />
     <Compile Include="Lib\DataStorage.cs" />
+    <Compile Include="Lib\DataStorageMinificationPrepared.cs" />
     <Compile Include="Lib\Logger.cs" />
     <Compile Include="Lib\Parser.cs" />
     <Compile Include="Lib\TextUtils.cs" />
-    <Compile Include="MultiAgentFramework\Build\MAF.cs" />
+    <Compile Include="Lib\Util.cs" />
+    <Compile Include="MultiAgentNetwork\Build\MAN.cs" />
+    <Compile Include="MultiAgentNetwork\Class1.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Agents\GridPlatformAgent.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Agents\UITerminalAgent.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Models\PlatformService.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Models\Service.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Models\ServiceRegister.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Models\XMLService.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\UIServiceIndex.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\ReceiveMessageProtocol.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\SendLocalMessageProtocol.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\GetHangarDoorsProtocol.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\UIServerProtocol.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\RequestRouteProtocol.cs" />
     <Compile Include="ParseLib\XML.cs" />
-    <Compile Include="MultiAgentFramework\MAFWRAPPER.cs" />
-    <Compile Include="MultiAgentFramework\MAF\Agents\Agent.cs" />
-    <Compile Include="MultiAgentFramework\MAF\Agents\PlatformAgent.cs" />
-    <Compile Include="MultiAgentFramework\MAF\Agents\RegisteredAgent.cs" />
-    <Compile Include="MultiAgentFramework\MAF\Models\AgentId.cs" />
-    <Compile Include="MultiAgentFramework\MAF\Models\AgentMessage.cs" />
-    <Compile Include="MultiAgentFramework\MAF\Protocols\AgentProtocol.cs" />
-    <Compile Include="MultiAgentFramework\MAF\Protocols\MessageRoutingProtocol.cs" />
-    <Compile Include="MultiAgentFramework\MAF\Protocols\PrintPlatformServicesProtocol.cs" />
-    <Compile Include="MultiAgentFramework\MAF\Protocols\PrintProtocol.cs" />
-    <Compile Include="MultiAgentFramework\MAF\Protocols\ProvideServiceInformationProtocol.cs" />
-    <Compile Include="MultiAgentFramework\MAF\Protocols\ServiceRegistrationProtocol.cs" />
+    <Compile Include="MultiAgentNetwork\MANWRAPPER.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Agents\Agent.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Agents\PlatformAgent.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Agents\RegisteredAgent.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Models\AgentId.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Models\AgentMessage.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\AgentProtocol.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\MessageRoutingProtocol.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\PrintPlatformServicesProtocol.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\PrintProtocol.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\ProvideServiceInformationProtocol.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\ServiceRegistrationProtocol.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SirHamsteralotsNN\MLP.cs" />
     <Compile Include="XUI\Build\XML.cs" />
     <Compile Include="XUI\XMLExtensions\XMLMessage.cs" />
     <Compile Include="XUI\XMLWRAPPER.cs" />
@@ -107,7 +124,9 @@
     <Compile Include="XUI\XML\XMLParentNode.cs" />
     <Compile Include="XUI\XML\XMLTree.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="MultiAgentNetwork\MAN\Models\Build\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

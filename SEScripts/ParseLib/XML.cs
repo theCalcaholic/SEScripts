@@ -25,27 +25,35 @@ such changes will be overwritten on next build.
 
 public static class Logger
 {
+public static string History = "";
 static IMyTextPanel DebugPanel;
 static public bool DEBUG = false;
-static int offset = 0;
+public static int offset = 0;
 public static void log(string msg)
 {
 if (DebugPanel == null)
 {
-return;
+//return;
 }
 string prefix = "";
 for (int i = 0; i < offset; i++)
 {
 prefix += "  ";
 }
-DebugPanel.WritePublicText(prefix + msg + "\n", true);
-//P.Echo(prefix + msg);
+History += prefix + msg + "\n";
+//DebugPanel.WritePublicText(prefix + msg + "\n", true);
+P.Echo(prefix + msg);
 }
 public static void debug(string msg)
 {
 if (!DEBUG)
 {
+string prefix = "";
+for (int i = 0; i < offset; i++)
+{
+prefix += "  ";
+}
+History += prefix + msg + "\n";
 return;
 }
 log(msg);
@@ -64,15 +72,16 @@ public static class Parser
 {
 public static string PackData(Dictionary<string, string> data)
 {
-string dataString = "";
+StringBuilder dataString = new StringBuilder();
 foreach (string key in data.Keys)
 {
-dataString += key + "=\"" + data[key] + "\" ";
+dataString.Append(key + "=\"" + data[key] + "\" ");
 }
-return dataString;
+return dataString.ToString();
 }
 public static string Sanitize(string xmlDefinition)
 {
+Logger.debug("Parser.Sanitize()");
 return xmlDefinition.Replace("\"", "\\\"").Replace("'", "\\'");
 }
 public static string UnescapeQuotes(string xmlDefinition)
@@ -89,15 +98,15 @@ return GetNextUnescaped(needles, haystack, start, haystack.Length - start);
 }
 public static int GetNextUnescaped(char[] needles, string haystack, int start, int count)
 {
-Logger.debug("GetNextUnescaped():");
-Logger.IncLvl();
+//Logger.debug("GetNextUnescaped():");
+//Logger.IncLvl();
 int end = start + count - 1;
 int needlePos = haystack.IndexOfAny(needles, start, end - start + 1);
 while (needlePos > 0 && haystack[needlePos - 1] == '\\')
 {
 needlePos = haystack.IndexOfAny(needles, needlePos + 1, end - needlePos);
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 return needlePos;
 }
 public static int GetNextOutsideQuotes(char needle, string haystack)
@@ -118,14 +127,14 @@ string haystack,
 bool ignoreEscapedQuotes
 )
 {
-Logger.debug("GetNextOutsideQuotes():");
-Logger.IncLvl();
+//Logger.debug("GetNextOutsideQuotes():");
+//Logger.IncLvl();
 char[] quoteChars = new char[] { '\'', '"' };
 int needlePos = -1;
 int quoteEnd = -1;
 int quoteStart;
-Logger.debug("needle: |" + new string(needles) + "|");
-Logger.debug("haystack: |" + haystack + "|");
+//Logger.debug("needle: |" + new string(needles) + "|");
+//Logger.debug("haystack: |" + haystack + "|");
 while (needlePos == -1)
 {
 if (ignoreEscapedQuotes)
@@ -136,18 +145,18 @@ else
 {
 quoteStart = haystack.IndexOfAny(quoteChars, quoteEnd + 1);
 }
-Logger.debug("quoteStart position: " + quoteStart.ToString()
-+ ", quoteEnd position: " + quoteEnd.ToString());
+//Logger.debug("quoteStart position: " + quoteStart.ToString()
+//    + ", quoteEnd position: " + quoteEnd.ToString());
 if (quoteStart == -1)
 {
-Logger.debug("searching for needle in:: " + haystack.Substring(quoteEnd + 1));
+//Logger.debug("searching for needle in:: " + haystack.Substring(quoteEnd + 1));
 needlePos = GetNextUnescaped(needles, haystack, quoteEnd + 1);
 }
 else
 {
-Logger.debug("found start quote: " + haystack.Substring(quoteStart));
-Logger.debug("searching for needle in: "
-+ haystack.Substring(quoteEnd + 1, quoteStart - quoteEnd));
+//Logger.debug("found start quote: " + haystack.Substring(quoteStart));
+//Logger.debug("searching for needle in: "
+//    + haystack.Substring(quoteEnd + 1, quoteStart - quoteEnd));
 needlePos = GetNextUnescaped(
 needles,
 haystack,
@@ -170,17 +179,17 @@ else
 {
 quoteEnd = haystack.IndexOf(haystack[quoteStart], quoteStart + 1);
 }
-Logger.debug("found end quote: " + haystack.Substring(quoteEnd));
+//Logger.debug("found end quote: " + haystack.Substring(quoteEnd));
 }
 }
-Logger.debug("yay!");
-Logger.DecLvl();
+//Logger.debug("yay!");
+//Logger.DecLvl();
 return needlePos;
 }
 public static List<String> ParamString2List(string arg)
 {
-Logger.debug("Parser.ParamString2List()");
-Logger.IncLvl();
+//Logger.debug("Parser.ParamString2List()");
+//Logger.IncLvl();
 arg = arg.Trim() + " ";
 List<string> argList = new List<string>();
 char[] quoteChars = new char[] { '\'', '"' };
@@ -191,14 +200,14 @@ arg = arg.Substring(spacePos + 1);
 spacePos = Parser.GetNextOutsideQuotes(new char[] { ' ', '\n' }, arg);
 argList.Add(arg.Substring(0, spacePos).Trim(quoteChars));
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 return argList;
 }
 public static Dictionary<string, string> GetXMLAttributes(string attributeString)
 {
-Logger.debug("GetXMLAttributes():");
-Logger.IncLvl();
-Logger.debug("attribute string is: <" + attributeString + ">");
+//Logger.debug("GetXMLAttributes():");
+//Logger.IncLvl();
+//Logger.debug("attribute string is: <" + attributeString + ">");
 Dictionary<string, string> attributes = new Dictionary<string, string>();
 char[] quoteChars = new char[] { '\'', '"' };
 List<string> attributeList = ParamString2List(attributeString);
@@ -216,15 +225,15 @@ attributes[attribute.Substring(0, equalSign).ToLower()] =
 attribute.Substring(equalSign + 1).Trim(quoteChars);
 }
 }
-Logger.debug("attribute dict: {");
-Logger.IncLvl();
-foreach (string key in attributes.Keys)
-{
-Logger.debug(key + ": " + attributes[key]);
-}
-Logger.debug("}");
-Logger.DecLvl();
-Logger.DecLvl();
+//Logger.debug("attribute dict: {");
+//Logger.IncLvl();
+//foreach (string key in attributes.Keys)
+//{
+//Logger.debug(key + ": " + attributes[key]);
+//}
+//Logger.debug("}");
+//Logger.DecLvl();
+//Logger.DecLvl();
 return attributes;
 }
 }
@@ -286,7 +295,14 @@ return width;
 foreach (char c in line)
 {
 //Logger.debug("adding character width of '" + c.ToString() + "'");
+if(LetterWidths[selectedFont].ContainsKey(c))
+{
 width += LetterWidths[selectedFont][c] + 1;
+}
+else
+{
+width += 6;
+}
 }
 Logger.DecLvl();
 return width - 1;
@@ -439,15 +455,15 @@ Logger.IncLvl();
 RootNode root = new RootNode();
 XMLTree currentNode = root;
 string type;
-Logger.debug("Enter while loop");
+//Logger.debug("Enter while loop");
 while (xmlString.Length > 0)
 {
 if (xmlString[0] == '<')
 {
-Logger.debug("found tag");
+//Logger.debug("found tag");
 if (xmlString[1] == '/')
 {
-Logger.debug("tag is end tag");
+//Logger.debug("tag is end tag");
 int spacePos = xmlString.IndexOfAny(spaceChars);
 int bracketPos = xmlString.IndexOf('>');
 int typeLength = (spacePos == -1 ? bracketPos : Math.Min(spacePos, bracketPos)) - 2;
@@ -461,7 +477,7 @@ xmlString = xmlString.Substring(bracketPos + 1);
 }
 else
 {
-Logger.debug("tag is start tag");
+//Logger.debug("tag is start tag");
 int spacePos = xmlString.IndexOfAny(spaceChars);
 int bracketPos = Parser.GetNextOutsideQuotes('>', xmlString);
 int typeLength = (spacePos == -1 ? bracketPos : Math.Min(spacePos, bracketPos)) - 1;
@@ -473,17 +489,17 @@ int closingBracketPos = xmlString.IndexOf("<");
 int textLength = closingBracketPos == -1 ? xmlString.Length : closingBracketPos;
 newNode = new XML.TextNode(xmlString.Substring(0, textLength).Trim());
 }
-Logger.debug("add new node of type '" + newNode.Type + "=" + type + "' to current node");
+//Logger.debug("add new node of type '" + newNode.Type + "=" + type + "' to current node");
 currentNode.AddChild(newNode);
-Logger.debug("added new node to current node");
+//Logger.debug("added new node to current node");
 if (spacePos != -1 && spacePos < bracketPos)
 {
 string attrString = xmlString.Substring(typeLength + 2, bracketPos - typeLength - 2);
 attrString = attrString.TrimEnd(new char[] { '/' });
-Logger.debug("get xml attributes. attribute string: '" + attrString + "/" + xmlString + "'");
+//Logger.debug("get xml attributes. attribute string: '" + attrString + "/" + xmlString + "'");
 Dictionary<string, string> attributes =
 Parser.GetXMLAttributes(attrString);
-Logger.debug("got xml attributes");
+//Logger.debug("got xml attributes");
 foreach (string key in attributes.Keys)
 {
 newNode.SetAttribute(key, attributes[key]);
@@ -508,7 +524,7 @@ currentNode.AddChild(newNode);
 xmlString = bracketPos == -1 ? "" : xmlString.Substring(bracketPos);
 }
 }
-Logger.debug("parsing finished");
+//Logger.debug("parsing finished");
 Logger.DecLvl();
 return root;
 }
@@ -543,6 +559,18 @@ value = "100%";
 break;
 }
 return value;
+}
+public override void SetAttribute(string key, string value)
+{
+XMLTree meta = GetNode((node) => { return node.Type == "meta"; });
+if (meta != null)
+{
+meta.SetAttribute(key, value);
+}
+else
+{
+base.SetAttribute(key, value);
+}
 }
 public override void UpdateSelectability(XMLTree child)
 {
@@ -611,7 +639,7 @@ SetAttribute("alignself", "left");
 SetAttribute("aligntext", "left");
 SetAttribute("selected", "false");
 SetAttribute("selectable", "false");
-SetAttribute("flowdirection", "vertical");
+SetAttribute("flow", "vertical");
 }
 public bool IsSelectable()
 {
@@ -653,10 +681,25 @@ public virtual void AddChild(XMLTree child)
 {
 Logger.debug(Type + ": AddChild():");
 Logger.IncLvl();
-Children.Add(child);
+AddChildAt(Children.Count, child);
+Logger.DecLvl();
+}
+public virtual void AddChildAt(int position, XMLTree child)
+{
+Logger.debug(Type + ":AddChildAt()");
+Logger.IncLvl();
+if( position > Children.Count )
+{
+throw new Exception("XMLTree.AddChildAt - Exception: position must be less than number of children!");
+}
+Children.Insert(position, child);
 child.SetParent(this as XMLParentNode);
 UpdateSelectability(child);
 Logger.DecLvl();
+}
+public int NumberOfChildren()
+{
+return Children.Count;
 }
 public void SetParent(XMLParentNode parent)
 {
@@ -846,6 +889,10 @@ if (Attributes.ContainsKey(key))
 Logger.DecLvl();
 return Attributes[key];
 }
+else if( key == "flowdirection" && Attributes.ContainsKey("flow"))
+{
+return Attributes["flow"];
+}
 Logger.DecLvl();
 return null;
 }
@@ -869,6 +916,10 @@ if (key == "activated")
 {
 bool shouldBeActivated = value == "true";
 Activated = shouldBeActivated;
+}
+if (key == "flowdirection")
+{
+Attributes["flow"] = value;
 }
 Attributes[key] = value;
 Logger.DecLvl();
@@ -938,13 +989,14 @@ Logger.DecLvl();
 }
 public virtual Dictionary<string, string> GetValues(Func<XMLTree, bool> filter)
 {
-Logger.debug(Type + ": GetValues()");
+Logger.log(Type + ": GetValues()");
 Logger.IncLvl();
 Dictionary<string, string> dict = new Dictionary<string, string>();
 string name = GetAttribute("name");
 string value = GetAttribute("value");
 if (name != null && value != null)
 {
+Logger.log($"Added entry {{{name}: {value}}}");
 dict[name] = value;
 }
 Dictionary<string, string> childDict;
@@ -1017,7 +1069,7 @@ Logger.debug(Type + ".RenderText()");
 Logger.IncLvl();
 for (int i = 0; i < Children.Count; i++)
 {
-if (GetAttribute("flowdirection") == "vertical")
+if (GetAttribute("flow") == "vertical")
 {
 string childString = RenderChild(Children[i], width);
 if (childString != null)
@@ -1052,7 +1104,7 @@ protected virtual string PostRender(List<string> segments, int width, int availa
 Logger.debug(Type + ".PostRender()");
 Logger.IncLvl();
 string renderString = "";
-string flowdir = GetAttribute("flowdirection");
+string flowdir = GetAttribute("flow");
 string alignChildren = GetAttribute("alignchildren");
 string alignSelf = GetAttribute("alignself");
 int totalWidth = 0;
@@ -1111,6 +1163,17 @@ Logger.IncLvl();
 Logger.DecLvl();
 return child.Render(availableWidth);
 }
+public void DetachChild(XMLTree child)
+{
+Children.Remove(child);
+}
+public void Detach()
+{
+if(GetParent() != null)
+{
+GetParent().DetachChild(this);
+}
+}
 }
 
 public interface XMLParentNode
@@ -1120,6 +1183,7 @@ void UpdateSelectability(XMLTree child);
 void KeyPress(string keyCode);
 void FollowRoute(Route route);
 bool SelectNext();
+void DetachChild(XMLTree child);
 }
 
 public class TextNode : XMLTree
@@ -1144,34 +1208,48 @@ return Content;
 
 public class Route
 {
-string Definition;
+static public Dictionary<string, Action<string, UIController>> RouteHandlers = new Dictionary<string, Action<string, UIController>>
+{
+{
+"revert", (def, controller) => { controller.RevertUI(); }
+},
+{
+"xml", (def, controller) =>
+{
+XMLTree ui = ParseXML(Parser.UnescapeQuotes(def));
+controller.LoadUI(ui);
+}
+},
+{
+"fn", (def, controller) =>
+{
+if(UIFactories.ContainsKey(def))
+{
+UIFactories[def](controller);
+}
+}
+}
+};
 static Dictionary<string, Action<UIController>> UIFactories =
 new Dictionary<string, Action<UIController>>();
+string Definition;
 public Route(string definition)
 {
 Logger.debug("Route constructor():");
 Logger.IncLvl();
 Definition = definition;
-Logger.debug("xml string is: " + Definition.Substring(4));
 Logger.DecLvl();
 }
 public void Follow(UIController controller)
 {
-Logger.debug("Route: GetUI():");
+Logger.debug("Route.Follow()");
 Logger.IncLvl();
-XMLTree ui = null;
-if (Definition == "revert")
+string[] DefTypeAndValue = Definition.Split(new char[] { ':' }, 2);
+if (Route.RouteHandlers.ContainsKey(DefTypeAndValue[0].ToLower()))
 {
-controller.RevertUI();
-}
-else if (Definition.Substring(0, 4) == "xml:")
-{
-ui = ParseXML(Parser.UnescapeQuotes(Definition.Substring(4)));
-controller.LoadUI(ui);
-}
-else if (Definition.Substring(0, 3) == "fn:" && UIFactories.ContainsKey(Definition.Substring(3)))
-{
-UIFactories[Definition.Substring(3)](controller);
+Route.RouteHandlers[DefTypeAndValue[0].ToLower()](
+DefTypeAndValue.Length >= 2 ? DefTypeAndValue[1] : null, controller
+);
 }
 Logger.DecLvl();
 }
@@ -1323,17 +1401,18 @@ public void RenderTo(IMyTextPanel panel)
 Logger.debug("UIController.RenderTo()");
 Logger.IncLvl();
 int panelWidth = 0;
-string panelType = panel.DetailedInfo.Split('\n')[0];
+//string panelType = panel.DetailedInfo.Split('\n')[0];
+string panelType = panel.BlockDefinition.SubtypeId.ToLower();
 Logger.debug("Type: " + panelType);
-switch (panelType)
+switch (panelType.ToLower())
 {
-case "Type: Text Panel":
+case "text panel":
 panelWidth = 658;
 break;
-case "Type: LCD Panel":
+case "lcd panel":
 panelWidth = 658;
 break;
-case "Wide LCD Panel":
+case "wide lcd panel":
 panelWidth = 1316;
 break;
 }
@@ -1341,6 +1420,7 @@ int width = (int)(((float)panelWidth) / panel.GetValue<Single>("FontSize"));
 Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
 Logger.debug("resulting width: " + width.ToString());
 string text = ui.Render(width);
+Logger.debug("rendering <" + text);
 panel.WritePublicText(text);
 Logger.DecLvl();
 }
@@ -1410,7 +1490,14 @@ return ui.GetValues(filter);
 }
 public string GetPackedValues(Func<XMLTree, bool> filter)
 {
-return Parser.PackData(GetValues(filter));
+return Parser.PackData(GetValues(filter)).ToString();
+}
+public void DetachChild(XMLTree xml)
+{
+if(xml == ui)
+{
+ui = null;
+}
 }
 public string GetPackedValues()
 {
@@ -1456,7 +1543,7 @@ public class Generic : XMLTree
 {
 public Generic(string type) : base()
 {
-Type = type;
+Type = type.ToLower();
 }
 }
 
@@ -1482,6 +1569,7 @@ Logger.DecLvl();
 }
 protected override string RenderChild(XMLTree child, int width)
 {
+P.Me.CustomData = Logger.History;
 string renderString = "";
 string prefix = "     ";
 if (child.Type == "menuitem")
@@ -1552,6 +1640,7 @@ public void SetRoute(Route route)
 {
 TargetRoute = route;
 }
+
 }
 
 public class ProgressBar : XMLTree
@@ -1773,6 +1862,8 @@ public class TextInput : XMLTree
 int CursorPosition;
 public TextInput()
 {
+Logger.log("TextInput constructor()");
+Logger.IncLvl();
 Type = "textinput";
 Selectable = true;
 CursorPosition = -1;
@@ -1780,6 +1871,8 @@ PreventDefault("LEFT/ABORT");
 PreventDefault("RIGHT/SUBMIT");
 SetAttribute("maxlength", "10");
 SetAttribute("value", "");
+SetAttribute("allowedchars", " a-z0-9");
+Logger.DecLvl();
 }
 public override void OnKeyPressed(string keyCode)
 {
@@ -1792,10 +1885,10 @@ case "RIGHT/SUBMIT":
 IncreaseCursorPosition();
 break;
 case "UP":
-IncreaseLetter();
+DecreaseLetter();
 break;
 case "DOWN":
-DecreaseLetter();
+IncreaseLetter();
 break;
 default:
 base.OnKeyPressed(keyCode);
@@ -1804,59 +1897,61 @@ break;
 }
 private void IncreaseLetter()
 {
+Logger.log("TextInput.IncreaseLetter()");
+Logger.IncLvl();
 if (CursorPosition == -1)
 {
 return;
 }
 char[] value = GetAttribute("value").ToCharArray();
 char letter = value[CursorPosition];
-switch (letter)
+char[] chars = GetAttribute("allowedchars").ToCharArray();
+for (int i = 0; i < chars.Length; i++)
 {
-case ' ':
-value[CursorPosition] = 'a';
-break;
-case 'z':
-value[CursorPosition] = 'A';
-break;
-case 'Z':
-value[CursorPosition] = '0';
-break;
-case '9':
-value[CursorPosition] = ' ';
-break;
-default:
-value[CursorPosition] = (char)(((int)value[CursorPosition]) + 1);
-break;
-}
+if (
+chars[i] != '-'
+&& chars[i] == value[CursorPosition]
+&& !(i < chars.Length - 1 && chars[i + 1] == '-'))
+{
+Logger.log("letter outside class, setting to: " + chars[i == 0 ? chars.Length - 1 : i - 1] + ". (chars[" + ((i + 1) % chars.Length) + "])");
+value[CursorPosition] = chars[(i + 1) % chars.Length];
 SetAttribute("value", new string(value));
+Logger.DecLvl();
+return;
+}
+}
+Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) + 1));
+value[CursorPosition] = (char)(((int)value[CursorPosition]) + 1);
+SetAttribute("value", new string(value));
+Logger.DecLvl();
 }
 private void DecreaseLetter()
 {
+Logger.log("TextInput.DecreaseLetter()");
+Logger.IncLvl();
 if (CursorPosition == -1)
 {
 return;
 }
 char[] value = GetAttribute("value").ToCharArray();
-char letter = value[CursorPosition];
-switch (letter)
+char[] chars = GetAttribute("allowedchars").ToCharArray();
+for(int i = 0; i < chars.Length; i++)
 {
-case ' ':
-value[CursorPosition] = '9';
-break;
-case '0':
-value[CursorPosition] = 'Z';
-break;
-case 'a':
-value[CursorPosition] = ' ';
-break;
-case 'A':
-value[CursorPosition] = 'z';
-break;
-default:
-value[CursorPosition] = (char)(((int)value[CursorPosition]) - 1);
-break;
-}
+if(
+chars[i] != '_'
+&& chars[i] == value[CursorPosition]
+&& !(i > 0 && chars[i-1] == '-'))
+{
+Logger.log("letter outside class, setting to: " + chars[i == 0 ? chars.Length - 1 : i - 1] + ". (chars[" + (i == 0 ? chars.Length - 1 : i - 1) + "])");
+value[CursorPosition] = chars[ i == 0 ? chars.Length - 1 : i - 1];
 SetAttribute("value", new string(value));
+return;
+}
+}
+Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) - 1));
+value[CursorPosition] = (char)(((int)value[CursorPosition]) - 1);
+SetAttribute("value", new string(value));
+Logger.DecLvl();
 }
 private void IncreaseCursorPosition()
 {
@@ -1877,7 +1972,8 @@ PreventDefault("DOWN");
 }
 if (CursorPosition >= GetAttribute("value").Length)
 {
-SetAttribute("value", GetAttribute("value") + " ");
+string chars = GetAttribute("allowedchars");
+SetAttribute("value", GetAttribute("value") + chars[0]);
 }
 }
 private void DecreaseCursorPosition()

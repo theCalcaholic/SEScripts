@@ -24,6 +24,8 @@ namespace SEScripts.XUI.XML
 
         public TextInput()
         {
+            Logger.log("TextInput constructor()");
+            Logger.IncLvl();
             Type = "textinput";
             Selectable = true;
             CursorPosition = -1;
@@ -31,6 +33,8 @@ namespace SEScripts.XUI.XML
             PreventDefault("RIGHT/SUBMIT");
             SetAttribute("maxlength", "10");
             SetAttribute("value", "");
+            SetAttribute("allowedchars", " a-z0-9");
+            Logger.DecLvl();
         }
 
         public override void OnKeyPressed(string keyCode)
@@ -44,10 +48,10 @@ namespace SEScripts.XUI.XML
                     IncreaseCursorPosition();
                     break;
                 case "UP":
-                    IncreaseLetter();
+                    DecreaseLetter();
                     break;
                 case "DOWN":
-                    DecreaseLetter();
+                    IncreaseLetter();
                     break;
                 default:
                     base.OnKeyPressed(keyCode);
@@ -57,60 +61,63 @@ namespace SEScripts.XUI.XML
 
         private void IncreaseLetter()
         {
+            Logger.log("TextInput.IncreaseLetter()");
+            Logger.IncLvl();
             if (CursorPosition == -1)
             {
                 return;
             }
             char[] value = GetAttribute("value").ToCharArray();
             char letter = value[CursorPosition];
-            switch (letter)
+            char[] chars = GetAttribute("allowedchars").ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
             {
-                case ' ':
-                    value[CursorPosition] = 'a';
-                    break;
-                case 'z':
-                    value[CursorPosition] = 'A';
-                    break;
-                case 'Z':
-                    value[CursorPosition] = '0';
-                    break;
-                case '9':
-                    value[CursorPosition] = ' ';
-                    break;
-                default:
-                    value[CursorPosition] = (char)(((int)value[CursorPosition]) + 1);
-                    break;
+                if (
+                    chars[i] != '-' 
+                    && chars[i] == value[CursorPosition] 
+                    && !(i < chars.Length - 1 && chars[i + 1] == '-'))
+                {
+                    Logger.log("letter outside class, setting to: " + chars[i == 0 ? chars.Length - 1 : i - 1] + ". (chars[" + ((i + 1) % chars.Length) + "])");
+                    value[CursorPosition] = chars[(i + 1) % chars.Length];
+                    SetAttribute("value", new string(value));
+                    Logger.DecLvl();
+                    return;
+                }
             }
+
+            Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) + 1));
+            value[CursorPosition] = (char)(((int)value[CursorPosition]) + 1);
             SetAttribute("value", new string(value));
+            Logger.DecLvl();
         }
 
         private void DecreaseLetter()
         {
+            Logger.log("TextInput.DecreaseLetter()");
+            Logger.IncLvl();
             if (CursorPosition == -1)
             {
                 return;
             }
             char[] value = GetAttribute("value").ToCharArray();
-            char letter = value[CursorPosition];
-            switch (letter)
+            char[] chars = GetAttribute("allowedchars").ToCharArray();
+            for(int i = 0; i < chars.Length; i++)
             {
-                case ' ':
-                    value[CursorPosition] = '9';
-                    break;
-                case '0':
-                    value[CursorPosition] = 'Z';
-                    break;
-                case 'a':
-                    value[CursorPosition] = ' ';
-                    break;
-                case 'A':
-                    value[CursorPosition] = 'z';
-                    break;
-                default:
-                    value[CursorPosition] = (char)(((int)value[CursorPosition]) - 1);
-                    break;
+                if(
+                    chars[i] != '_' 
+                    && chars[i] == value[CursorPosition] 
+                    && !(i > 0 && chars[i-1] == '-'))
+                {
+                    Logger.log("letter outside class, setting to: " + chars[i == 0 ? chars.Length - 1 : i - 1] + ". (chars[" + (i == 0 ? chars.Length - 1 : i - 1) + "])");
+                    value[CursorPosition] = chars[ i == 0 ? chars.Length - 1 : i - 1];
+                    SetAttribute("value", new string(value));
+                    return;
+                }
             }
+            Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) - 1));
+            value[CursorPosition] = (char)(((int)value[CursorPosition]) - 1);
             SetAttribute("value", new string(value));
+            Logger.DecLvl();
         }
 
         private void IncreaseCursorPosition()
@@ -132,7 +139,8 @@ namespace SEScripts.XUI.XML
             }
             if (CursorPosition >= GetAttribute("value").Length)
             {
-                SetAttribute("value", GetAttribute("value") + " ");
+                string chars = GetAttribute("allowedchars");
+                SetAttribute("value", GetAttribute("value") + chars[0]);
             }
         }
 

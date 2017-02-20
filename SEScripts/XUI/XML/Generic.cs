@@ -22,7 +22,7 @@ namespace SEScripts.XUI.XML
     {
         public Generic(string type) : base()
         {
-            Type = type;
+            Type = type.ToLower();
         }
 
     }
