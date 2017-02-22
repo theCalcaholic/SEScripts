@@ -27,7 +27,7 @@ namespace SEScripts.Lib
         {
             if (DebugPanel == null)
             {
-                //return;
+                return;
             }
             string prefix = "";
             for (int i = 0; i < offset; i++)
@@ -35,8 +35,8 @@ namespace SEScripts.Lib
                 prefix += "  ";
             }
             History += prefix + msg + "\n";
-            //DebugPanel.WritePublicText(prefix + msg + "\n", true);
-            P.Echo(prefix + msg);
+            DebugPanel.WritePublicText(prefix + msg + "\n", true);
+            //P.Echo(prefix + msg);
         }
 
         public static void debug(string msg)

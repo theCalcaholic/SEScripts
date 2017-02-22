@@ -33,7 +33,7 @@ public static void log(string msg)
 {
 if (DebugPanel == null)
 {
-//return;
+return;
 }
 string prefix = "";
 for (int i = 0; i < offset; i++)
@@ -41,8 +41,8 @@ for (int i = 0; i < offset; i++)
 prefix += "  ";
 }
 History += prefix + msg + "\n";
-//DebugPanel.WritePublicText(prefix + msg + "\n", true);
-P.Echo(prefix + msg);
+DebugPanel.WritePublicText(prefix + msg + "\n", true);
+//P.Echo(prefix + msg);
 }
 public static void debug(string msg)
 {
@@ -1401,21 +1401,26 @@ public void RenderTo(IMyTextPanel panel)
 Logger.debug("UIController.RenderTo()");
 Logger.IncLvl();
 int panelWidth = 0;
-//string panelType = panel.DetailedInfo.Split('\n')[0];
-string panelType = panel.BlockDefinition.SubtypeId.ToLower();
+string panelType = panel.BlockDefinition.SubtypeId;
 Logger.debug("Type: " + panelType);
-switch (panelType.ToLower())
+if (panelType == "LargeTextPanel" || panelType == "SmallTextPanel")
 {
-case "text panel":
 panelWidth = 658;
-break;
-case "lcd panel":
-panelWidth = 658;
-break;
-case "wide lcd panel":
-panelWidth = 1316;
-break;
 }
+else if(panelType == "LargeLCDPanel" || panelType == "SmallLCDPanel")
+{
+panelWidth = 658;
+}
+else if(panelType == "SmallLCDPanelWide" || panelType == "LargeLCDPanelWide")
+{
+panelWidth = 1316;
+}
+else if(panelType == "LargeBlockCorner_LCD_1" || panelType == "LargeBlockCorner_LCD_2"
+|| panelType == "SmallBlockCorner_LCD_1" || panelType == "SmallBlockCorner_LCD_2")
+{ }
+else if(panelType == "LargeBlockCorner_LCD_Flat_1" || panelType == "LargeBlockCorner_LCD_Flat_2"
+|| panelType == "SmallBlockCorner_LCD_Flat_1" || panelType == "SmallBlockCorner_LCD_Flat_2")
+{ }
 int width = (int)(((float)panelWidth) / panel.GetValue<Single>("FontSize"));
 Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
 Logger.debug("resulting width: " + width.ToString());
@@ -1569,7 +1574,6 @@ Logger.DecLvl();
 }
 protected override string RenderChild(XMLTree child, int width)
 {
-P.Me.CustomData = Logger.History;
 string renderString = "";
 string prefix = "     ";
 if (child.Type == "menuitem")
