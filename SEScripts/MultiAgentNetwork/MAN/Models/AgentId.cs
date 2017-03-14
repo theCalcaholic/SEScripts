@@ -16,7 +16,7 @@ using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib;
 
-namespace SEScripts.MultiAgentNetwork.MAN
+namespace SEScripts.MultiAgentNetwork.MAN.Models
 {
     public class AgentId : IEquatable<AgentId>
     {

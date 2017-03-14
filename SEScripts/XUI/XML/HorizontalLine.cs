@@ -26,10 +26,10 @@ namespace SEScripts.XUI.XML
             SetAttribute("width", "100%");
         }
 
-        protected override void RenderText(ref List<string> segments, int width, int availableWidth)
+        /*protected override void RenderText(ref List<string> segments, int width, int availableWidth)
         {
             segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL));
-        }
+        }*/
     }
 
     //EMBED SEScripts.XUI.XML.XMLTree

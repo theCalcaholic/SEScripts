@@ -25,12 +25,12 @@ namespace SEScripts.XUI.XML
             Type = "br";
         }
 
-        protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }
+        //protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }
 
-        protected override string PostRender(List<string> segments, int width, int availableWidth)
+        /*protected override string PostRender(List<string> segments, int width, int availableWidth)
         {
             return "";
-        }
+        }*/
     }
 
 

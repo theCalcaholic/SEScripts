@@ -14,6 +14,8 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
+using SEScripts.Lib.LoggerNS;
+
 namespace SEScripts.Lib
 {
     public static class Parser

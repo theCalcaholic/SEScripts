@@ -14,7 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib;
+using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
@@ -59,6 +59,20 @@ namespace SEScripts.XUI.XML
             }
         }
 
+        public override void SetAttribute(string key, string value)
+        {
+            if(key == "allowedchars")
+            {
+                if(!System.Text.RegularExpressions.Regex.IsMatch(value,
+                    @"([^-\\]-[^-\\]|[^-\\]|\\-|\\\\)*"))
+                {
+                    throw new Exception("Invalid format of allowed characters!");
+                }
+                
+            }
+            base.SetAttribute(key, value);
+        }
+
         private void IncreaseLetter()
         {
             Logger.log("TextInput.IncreaseLetter()");
@@ -69,16 +83,14 @@ namespace SEScripts.XUI.XML
             }
             char[] value = GetAttribute("value").ToCharArray();
             char letter = value[CursorPosition];
-            char[] chars = GetAttribute("allowedchars").ToCharArray();
-            for (int i = 0; i < chars.Length; i++)
+            string[] charSets = GetAllowedCharSets();
+            for (int i = 0; i < charSets.Length; i++)
             {
-                if (
-                    chars[i] != '-' 
-                    && chars[i] == value[CursorPosition] 
-                    && !(i < chars.Length - 1 && chars[i + 1] == '-'))
+                if ((charSets[i].Length == 1 && charSets[i][0] == value[CursorPosition])
+                    || (charSets[i].Length == 3 && charSets[i][2] == value[CursorPosition]))
                 {
-                    Logger.log("letter outside class, setting to: " + chars[i == 0 ? chars.Length - 1 : i - 1] + ". (chars[" + ((i + 1) % chars.Length) + "])");
-                    value[CursorPosition] = chars[(i + 1) % chars.Length];
+                    Logger.log("letter outside class, setting to: " + charSets[i == 0 ? charSets.Length - 1 : i - 1][0] + ". (chars[" + ((i + 1) % charSets.Length) + "])");
+                    value[CursorPosition] = charSets[(i + 1) % charSets.Length][0];
                     SetAttribute("value", new string(value));
                     Logger.DecLvl();
                     return;
@@ -101,15 +113,14 @@ namespace SEScripts.XUI.XML
             }
             char[] value = GetAttribute("value").ToCharArray();
             char[] chars = GetAttribute("allowedchars").ToCharArray();
-            for(int i = 0; i < chars.Length; i++)
+            string[] charSets = GetAllowedCharSets();
+            for(int i = 0; i < charSets.Length; i++)
             {
-                if(
-                    chars[i] != '_' 
-                    && chars[i] == value[CursorPosition] 
-                    && !(i > 0 && chars[i-1] == '-'))
+                if(charSets[i][0] == value[CursorPosition])
                 {
-                    Logger.log("letter outside class, setting to: " + chars[i == 0 ? chars.Length - 1 : i - 1] + ". (chars[" + (i == 0 ? chars.Length - 1 : i - 1) + "])");
-                    value[CursorPosition] = chars[ i == 0 ? chars.Length - 1 : i - 1];
+                    int index = (i == 0 ? charSets.Length - 1 : i - 1);
+                    Logger.log("letter outside class, setting to: " + charSets[index][charSets[index].Length - 1] + ". (chars[" + (index) + "])");
+                    value[CursorPosition] = charSets[index][charSets[index].Length - 1];
                     SetAttribute("value", new string(value));
                     return;
                 }
@@ -118,6 +129,35 @@ namespace SEScripts.XUI.XML
             value[CursorPosition] = (char)(((int)value[CursorPosition]) - 1);
             SetAttribute("value", new string(value));
             Logger.DecLvl();
+        }
+
+        private string[] GetAllowedCharSets()
+        {
+
+            string charString = GetAttribute("allowedchars");
+            System.Text.RegularExpressions.MatchCollection matches =
+                System.Text.RegularExpressions.Regex.Matches(charString, @"[^-\\]-[^-\\]|[^-\\]|\\-|\\\\");
+            string[] charSets = new string[matches.Count];
+            int i = 0;
+            foreach (System.Text.RegularExpressions.Match match in matches)
+            {
+                string matchString = match.ToString();
+                if (matchString == "\\-")
+                {
+                    charSets[i] = "-";
+                }
+                else if (matchString == "\\\\")
+                {
+                    charSets[i] = "\\";
+                }
+                else
+                {
+                    charSets[i] = matchString;
+                }
+                i++;
+            }
+            //P.Echo("Char sets found: " + string.Join(",", charSets));
+            return charSets;
         }
 
         private void IncreaseCursorPosition()
@@ -139,8 +179,8 @@ namespace SEScripts.XUI.XML
             }
             if (CursorPosition >= GetAttribute("value").Length)
             {
-                string chars = GetAttribute("allowedchars");
-                SetAttribute("value", GetAttribute("value") + chars[0]);
+                string[] charSets = GetAllowedCharSets();
+                SetAttribute("value", GetAttribute("value") + charSets[0][0]);
             }
         }
 
@@ -157,7 +197,7 @@ namespace SEScripts.XUI.XML
             }
         }
 
-        protected override void RenderText(ref List<string> segments, int width, int availableWidth)
+        /*protected override void RenderText(ref List<string> segments, int width, int availableWidth)
         {
             string value = GetAttribute("value");
             if (CursorPosition != -1)
@@ -168,14 +208,11 @@ namespace SEScripts.XUI.XML
             }
             else if (value.Length == 0)
             {
-                /*char[] valueChr = (" " + value).ToCharArray(); 
-                valueChr[0] = (char) 187; 
-                value = new string(valueChr);*/
                 value = "_" + value;
             }
             segments.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " " + value);
 
-        }
+        }*/
     }
 
 

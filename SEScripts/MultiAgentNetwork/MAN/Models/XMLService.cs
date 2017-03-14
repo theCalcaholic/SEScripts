@@ -14,7 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib;
+//using SEScripts.Lib;
 using SEScripts.ParseLib.XUI;
 
 namespace SEScripts.MultiAgentNetwork.MAN.Models
@@ -36,7 +36,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
             Logger.DecLvl();
         }
 
-        protected override void RenderText(ref List<string> segments, int width, int availableWidth)
+        /*protected override void RenderText(ref List<string> segments, int width, int availableWidth)
         {
             string[] description = GetAttribute("description").Split('\n');
             segments.Add(
@@ -46,6 +46,6 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
             {
                 segments.Add("  " + description[i]);
             }
-        }
+        }*/
     }
 }

@@ -29,6 +29,15 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'XUI DEBUG|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\XUI DEBUG\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Sandbox.Common">
       <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Sandbox.Common.dll</HintPath>
@@ -61,14 +70,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Lib\Build\DataStorage.cs" />
+    <Compile Include="Lib\BasicVector.cs" />
     <Compile Include="Lib\DataStorage.cs" />
     <Compile Include="Lib\DataStorageMinificationPrepared.cs" />
+    <Compile Include="Lib\BasicMatrix.cs" />
+    <Compile Include="Lib\DimensionMismatchException.cs" />
     <Compile Include="Lib\Logger.cs" />
     <Compile Include="Lib\Parser.cs" />
     <Compile Include="Lib\TextUtils.cs" />
     <Compile Include="Lib\Util.cs" />
-    <Compile Include="MultiAgentNetwork\Build\MAN.cs" />
     <Compile Include="MultiAgentNetwork\Class1.cs" />
     <Compile Include="MultiAgentNetwork\MAN\Agents\GridPlatformAgent.cs" />
     <Compile Include="MultiAgentNetwork\MAN\Agents\UITerminalAgent.cs" />
@@ -76,7 +86,7 @@
     <Compile Include="MultiAgentNetwork\MAN\Models\Service.cs" />
     <Compile Include="MultiAgentNetwork\MAN\Models\ServiceRegister.cs" />
     <Compile Include="MultiAgentNetwork\MAN\Models\XMLService.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\UIServiceIndex.cs" />
+    <Compile Include="MultiAgentNetwork\MAN\Protocols\UIServiceIndexServer.cs" />
     <Compile Include="MultiAgentNetwork\MAN\Protocols\ReceiveMessageProtocol.cs" />
     <Compile Include="MultiAgentNetwork\MAN\Protocols\SendLocalMessageProtocol.cs" />
     <Compile Include="MultiAgentNetwork\MAN\Protocols\GetHangarDoorsProtocol.cs" />
@@ -98,7 +108,10 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SirHamsteralotsNN\MLP.cs" />
-    <Compile Include="XUI\Build\XML.cs" />
+    <Compile Include="XUI\NodeRenderCache.cs" />
+    <Compile Include="XUI\ScreenBuilder\NodeBox.cs" />
+    <Compile Include="XUI\ScreenBuilder\ScreenBuilder.cs" />
+    <Compile Include="XUI\ScreenBuilder\ScreenSegment.cs" />
     <Compile Include="XUI\XMLExtensions\XMLMessage.cs" />
     <Compile Include="XUI\XMLWRAPPER.cs" />
     <Compile Include="XUI\XML\Break.cs" />
@@ -125,7 +138,10 @@
     <Compile Include="XUI\XML\XMLTree.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Lib\Build\" />
+    <Folder Include="MultiAgentNetwork\Build\" />
     <Folder Include="MultiAgentNetwork\MAN\Models\Build\" />
+    <Folder Include="XUI\Build\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

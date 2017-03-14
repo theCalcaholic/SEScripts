@@ -15,6 +15,7 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib;
+using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
@@ -28,7 +29,7 @@ namespace SEScripts.XUI.XML
             {
                 "xml", (def, controller) =>
                 {
-                    XMLTree ui = ParseXML(Parser.UnescapeQuotes(def));
+                    XMLTree ui = XMLWRAPPER.ParseXML(Parser.UnescapeQuotes(def));
                     controller.LoadUI(ui);
                 }
             },

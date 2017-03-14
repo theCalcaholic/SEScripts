@@ -20,7 +20,7 @@ namespace SEScripts.XUI.XML
 {
     public interface XMLParentNode
     {
-
+        bool HasUserInputBindings { get; set; }
         XMLParentNode GetParent();
 
         void UpdateSelectability(XMLTree child);

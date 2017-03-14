@@ -19,7 +19,7 @@ using SEScripts.MultiAgentNetwork.MAN.Agents;
 using SEScripts.MultiAgentNetwork.MAN.Models;
 
 namespace SEScripts.MultiAgentNetwork.MAN.Protocols
-{
+{/*
     public class ReceiveMessageProtocol : AgentProtocol
     {
         public override string GetProtocolId()
@@ -83,12 +83,12 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
         {
             if( msg.Service == "response" )
             {
-                if(msg.ChatId == -1)
+                if(msg.SenderChatId == -1)
                 {
                     status = AgentMessage.StatusCodes.UNKNOWNERROR;
                     return false;
                 }
-                else if(!Holder.Chats.ContainsKey(msg.ChatId)) 
+                else if(!Holder.SenderChats.ContainsKey(msg.SenderChatId)) 
                 {
                     status = AgentMessage.StatusCodes.CHATNOTFOUND;
                     return false;
@@ -108,9 +108,9 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             else
             {
                 AgentProtocol chat = Holder.Services[msg.Service].Create(Holder);
-                if (msg.ChatId != -1)
+                if (msg.SenderChatId != -1)
                 {
-                    if (!chat.TrySetId(msg.ChatId))
+                    if (!chat.TrySetId(msg.SenderChatId))
                     {
                         chat.Stop();
                         status = AgentMessage.StatusCodes.CHATIDNOTACCEPTED;
@@ -129,7 +129,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             agent.RegisterService("receive", (holder) => new ReceiveMessageProtocol(holder));
         }
 
-    }
+    }*/
 
     //EMBED SEScripts.MultiAgentNetwork.MAN.Agents.Agent
     //EMBED SEScripts.MultiAgentNetwork.MAN.Models.AgentMessage

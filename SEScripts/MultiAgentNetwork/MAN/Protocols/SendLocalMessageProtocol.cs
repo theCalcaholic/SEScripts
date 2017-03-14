@@ -14,12 +14,12 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib;
+using SEScripts.Lib.LoggerNS;
 using SEScripts.MultiAgentNetwork.MAN.Agents;
 using SEScripts.MultiAgentNetwork.MAN.Models;
 
 namespace SEScripts.MultiAgentNetwork.MAN.Protocols
-{
+{/*
     public class SendLocalMessageProtocol : AgentProtocol
     {
         static int ChatCountValue;
@@ -85,12 +85,12 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             else
             {
                 Logger.log("Receiver not local. Trying to find corresponding platform agent.");
-                receiverBlock = Holder.GTSGetBlockWithName(msg.Receiver.Platform) as IMyProgrammableBlock;
+                receiverBlock = Holder.GTS.GetBlockWithName(msg.Receiver.Platform) as IMyProgrammableBlock;
                 if (receiverBlock == null)
                 {
                     if (Id.Platform != Id.Name)
                     {
-                        receiverBlock = Holder.GetGTS().GetBlockWithName(Id.Platform) as IMyProgrammableBlock;
+                        receiverBlock = Holder.GTS.GetBlockWithName(Id.Platform) as IMyProgrammableBlock;
                     }
                     if (receiverBlock == null)
                     {
@@ -134,7 +134,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             agent.RegisterService(Id, (holder) => new SendLocalMessageProtocol(holder) );
         }
 
-    }
+    }*/
 
     //EMBED SEScripts.MultiAgentNetwork.MAN.Agents.Agent
     //EMBED SEScripts.MultiAgentNetwork.MAN.Protocols.AgentProtocol

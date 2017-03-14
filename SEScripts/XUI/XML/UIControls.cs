@@ -29,14 +29,9 @@ namespace SEScripts.XUI.XML
             SetAttribute("selectable", "false");
         }
 
-        private void RetrieveController()
+        private void UpdateController()
         {
-            XMLParentNode ancestor = this;
-            while (ancestor.GetParent() != null)
-            {
-                ancestor = ancestor.GetParent();
-            }
-            Controller = ancestor as UIController;
+            Controller = RetrieveRoot() as UIController;
             SetAttribute("selectable", (Controller != null && Controller.UIStack.Count > 0) ? "true" : "false");
             if (IsSelectable())
             {
@@ -59,7 +54,7 @@ namespace SEScripts.XUI.XML
         {
             if (Controller == null)
             {
-                RetrieveController();
+                UpdateController();
             }
             switch (keyCode)
             {
@@ -73,11 +68,11 @@ namespace SEScripts.XUI.XML
             }
         }
 
-        protected override string PostRender(List<string> segments, int width, int availableWidth)
+        /*protected override string PostRender(List<string> segments, int width, int availableWidth)
         {
             if (Controller == null)
             {
-                RetrieveController();
+                UpdateController();
             }
             string prefix;
             if (!IsSelectable())
@@ -101,7 +96,7 @@ namespace SEScripts.XUI.XML
             renderString = prefix + (tmpPrefix + renderString).Substring(prefixSpacesCount);
             return renderString;
             //renderString = prefix + renderString;
-        }
+        }*/
     }
 
 

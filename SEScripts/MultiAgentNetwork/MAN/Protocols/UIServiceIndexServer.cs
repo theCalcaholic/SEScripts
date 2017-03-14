@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using SEScripts.MultiAgentNetwork.MAN.Agents;
 using SEScripts.MultiAgentNetwork.MAN.Models;
 using SEScripts.ParseLib.XUI;
-using SEScripts.Lib;
+//using SEScripts.Lib;
 
 namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 {
@@ -191,7 +191,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             StringBuilder xml = new StringBuilder();
             foreach (string key in Platforms.Keys)
             {
-                xml.Append("<menuItem route='fn:show-platform-services' platform='" + key + "'>" + Platforms[key] + "</menuitem>");
+                xml.Append("<menuItem id='" + key + "' route='fn:show-platform-services' platform='" + key + "'>" + Platforms[key] + "</menuitem>");
             }
             return xml;
         }
@@ -216,7 +216,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             if(UIAgent != null)
             {
                 XML.XMLTree meta = UIAgent.UI.GetNode((node) => node.Type == "meta");
-                bool isLoaded = (meta != null && meta.GetAttribute("uiserviceindexhome") != null);
+                bool isLoaded = (meta?.GetAttribute("uiserviceindexhome") != null);
                 if (HomePageActive && !isLoaded )
                 {
                     Logger.log("Setting HomPageActive to false");
@@ -224,11 +224,36 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                 }
                 else
                 {
-                    if(isLoaded)
+                    XML.XMLTree ui = XML.ParseXML(PageHome());
+                    if (isLoaded)
                     {
                         meta.SetAttribute("historydisabled", "true");
+                        Logger.log("Get id of selected node");
+                        /*XML.XMLTree selected = UIAgent.UI.GetSelectedNode();
+                        Logger.log("got selected node! (" + selected + ")");
+                        Logger.log("selected node is " + (selected == null ? "null!" : "of type " + selected.Type));
+                        string selectedId = selected.GetAttribute("id");
+                        Logger.log("got selected id!")
+
+                        //string selectedId = null;
+                        Logger.log("id is: " + selectedId ?? "null" );
+                        if (selectedId != null)
+                        {
+                            Logger.log("Get node to select in new UI");
+                            XML.XMLTree selectedNode = ui.GetNode((node) => (node.GetAttribute("id") == selectedId));
+                            Logger.log("found it!");
+                            if (selectedNode != null && selectedNode.IsSelectable())
+                            {
+                                Logger.log("select node...");
+                                while (!selectedNode.IsSelected())
+                                {
+                                    ui.SelectNext();
+                                }
+                            }
+                        }
+                        Logger.log("done");*/
                     }
-                    XML.XMLTree ui = XML.ParseXML(PageHome());
+
                     UIAgent.LoadUI(ui);
                     HomePageActive = true;
                     UIAgent.UpdateScreen();

@@ -26,17 +26,17 @@ namespace SEScripts.XUI.XML
             SetAttribute("flowdirection", "horizontal");
         }
 
-        protected override void PreRender(ref List<string> segments, int width, int availableWidth)
+        /*protected override void PreRender(ref List<string> segments, int width, int availableWidth)
         {
             segments.Add(IsSelected() ? "[[  " : "[   ");
             base.PreRender(ref segments, width, availableWidth);
-        }
+        }*/
 
-        protected override string PostRender(List<string> segments, int width, int availableWidth)
+        /*protected override string PostRender(List<string> segments, int width, int availableWidth)
         {
             segments.Add(IsSelected() ? "  ]]" : "   ]");
             return base.PostRender(segments, width, availableWidth);
-        }
+        }*/
     }
 
     //EMBED SEScripts.XUI.XML.MenuItem

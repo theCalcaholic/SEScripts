@@ -14,7 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib;
+//using SEScripts.Lib;
 using SEScripts.MultiAgentNetwork.MAN.Protocols;
 using SEScripts.MultiAgentNetwork.MAN.Models;
 using SEScripts.ParseLib.XUI;
@@ -61,6 +61,10 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
             Logger.debug("UITerminalAgent.LoadUI()");
             Logger.IncLvl();
             UI.LoadUI(ui);
+            if(UI.HasUserInputBindings)
+            {
+                ScheduleRefresh();
+            }
             Logger.DecLvl();
         }
 
@@ -79,7 +83,21 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
             Logger.IncLvl();
             UI.Call(parameters);
             UpdateScreen();
+            if (UI.HasUserInputBindings)
+            {
+                ScheduleRefresh();
+            }
             Logger.DecLvl();
+        }
+
+        public override void Refresh(TimeSpan elapsedTime)
+        {
+            base.Refresh(elapsedTime);
+            UI.Call(new List<string> { "refresh" });
+            if (UI.UpdateUserInput())
+            {
+                UpdateScreen();
+            }
         }
     }
     //EMBED SEScripts.MultiAgentNetwork.MAN.Agents.RegisteredAgent

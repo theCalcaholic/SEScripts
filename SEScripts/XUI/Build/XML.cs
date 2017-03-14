@@ -3,46 +3,37 @@
 
 public static class Logger
 {
-public static string History = "";
+private static StringBuilder Log = new StringBuilder();
+public static string Output
+{
+get { return Log.ToString(); }
+}
 static IMyTextPanel DebugPanel;
 static public bool DEBUG = false;
 public static int offset = 0;
+private static StringBuilder Prefix = new StringBuilder();
+
 public static void log(string msg)
 {
-if (DebugPanel == null)
-{
-return;
-}
-string prefix = "";
-for (int i = 0; i < offset; i++)
-{
-prefix += "  ";
-}
-History += prefix + msg + "\n";
-DebugPanel.WritePublicText(prefix + msg + "\n", true);
-//P.Echo(prefix + msg);
+Log.Append(Prefix);
+Log.Append(msg + "\n");
+//!UNCOMMENT P.Echo(Prefix + msg);
 }
 public static void debug(string msg)
 {
-if (!DEBUG)
+if (DEBUG)
 {
-string prefix = "";
-for (int i = 0; i < offset; i++)
-{
-prefix += "  ";
-}
-History += prefix + msg + "\n";
-return;
-}
 log(msg);
+}
 }
 public static void IncLvl()
 {
-offset += 2;
+Prefix.Append("  ");
 }
 public static void DecLvl()
 {
-offset = offset - 2;
+if( Prefix.Length >= 2)
+Prefix.Remove(Prefix.Length - 2, 2);
 }
 }
 
@@ -241,12 +232,38 @@ public static void SelectFont(FONT f)
 {
 selectedFont = f;
 }
+public static int GetLetterWidth(char c)
+{
+if(LetterWidths[selectedFont].ContainsKey(c))
+{
+return LetterWidths[selectedFont][c];
+}
+return 6;
+}
+public static int GetTextWidth(StringBuilder text)
+{
+Logger.debug("TextUtils.GetTextWidth(StringBuilder)");
+Logger.IncLvl();
+int width = 0;
+int lineWidth = 0;
+for (int i = 0; i < text.Length; i++)
+{
+if (text[i] == '\n')
+{
+width = Math.Max(width, lineWidth - 1);
+lineWidth = 0;
+}
+else if(text[i] != '\r')
+{
+lineWidth += GetLetterWidth(text[i]) + 1;
+}
+}
+return width;
+Logger.DecLvl();
+}
 public static int GetTextWidth(string text)
 {
-if (DEBUG)
-{
 Logger.debug("TextUtils.GetTextWidth()");
-}
 Logger.IncLvl();
 int width = 0;
 text = text.Replace("\r", "");
@@ -260,10 +277,7 @@ return width;
 }
 private static int GetLineWidth(char[] line)
 {
-if (DEBUG)
-{
 Logger.debug("TextUtils.GetLineWidth()");
-}
 Logger.IncLvl();
 int width = 0;
 if (line.Length == 0)
@@ -287,17 +301,13 @@ return width - 1;
 }
 public static string RemoveLastTrailingNewline(string text)
 {
-if (DEBUG)
-{
 Logger.debug("TextUtils.RemoveLastTrailingNewline");
-}
 Logger.IncLvl();
 Logger.DecLvl();
 return (text.Length > 1 && text[text.Length - 1] == '\n') ? text.Remove(text.Length - 1) : text;
 }
 public static string RemoveFirstTrailingNewline(string text)
 {
-if (DEBUG)
 Logger.debug("TextUtils.RemoveFirstTrailingNewline");
 Logger.IncLvl();
 Logger.DecLvl();
@@ -305,7 +315,6 @@ return (text.Length > 1 && text[0] == '\n') ? text.Remove(0) : text;
 }
 public static string CenterText(string text, int totalWidth)
 {
-if (DEBUG)
 Logger.debug("TextUtils.CenterText()");
 Logger.IncLvl();
 if (DEBUG)
@@ -331,7 +340,6 @@ return CreateStringOfLength(constituent, length, RoundMode.FLOOR);
 }
 public static string CreateStringOfLength(string constituent, int length, RoundMode mode)
 {
-if (DEBUG)
 Logger.debug("TextUtils.CreateStringOfLength()");
 Logger.IncLvl();
 int lengthOfConstituent = GetLineWidth(constituent.ToCharArray());
@@ -355,7 +363,6 @@ return result;
 }
 public static string PadString(string line, int totalWidth, PadMode mode, string padString)
 {
-if (DEBUG)
 Logger.debug("TextUtils.PadString()");
 Logger.IncLvl();
 if (mode == PadMode.LEFT)
@@ -377,7 +384,6 @@ return PadText(text, totalWidth, mode, " ");
 }
 public static string PadText(string text, int totalWidth, PadMode mode, string padString)
 {
-if (DEBUG)
 Logger.debug("TextUtils.PadText()");
 Logger.IncLvl();
 string[] lines = text.Split('\n');
@@ -395,19 +401,19 @@ public static class XML
 {
 public static Dictionary<string, Func<XML.XMLTree>> NodeRegister = new Dictionary<string, Func<XML.XMLTree>> {
 {"root", () => { return new XML.RootNode(); } },
-{"menu", () => { return new XML.Menu(); } },
-{"menuitem", () => { return new XML.MenuItem(); } },
-{"progressbar", () => { return new XML.ProgressBar(); } },
-{"container", () => { return new XML.Container(); } },
-{"hl", () => { return new XML.HorizontalLine(); } },
-{"uicontrols", () => { return new UIControls(); } },
-{"textinput", () => { return new TextInput(); } },
-{"submitbutton", () => { return new SubmitButton(); } },
-{"br", () => { return new Break(); } },
-{"space", () => { return new Space(); } },
-{"hidden", () => { return new Hidden(); } },
-{"hiddendata", () => { return new Hidden(); } },
-{"meta", () => { return new MetaNode(); } }
+//{"menu", () => { return new XML.Menu(); } },
+//{"menuitem", () => { return new XML.MenuItem(); } },
+//{"progressbar", () => { return new XML.ProgressBar(); } },
+//{"container", () => { return new XML.Container(); } },
+//{"hl", () => { return new XML.HorizontalLine(); } },
+//{"uicontrols", () => { return new UIControls(); } },
+//{"textinput", () => { return new TextInput(); } },
+//{"submitbutton", () => { return new SubmitButton(); } },
+//{"br", () => { return new Break(); } },
+//{"space", () => { return new Space(); } },
+//{"hidden", () => { return new Hidden(); } },
+//{"hiddendata", () => { return new Hidden(); } },
+//{"meta", () => { return new MetaNode(); } }
 };
 public static XMLTree CreateNode(string type)
 {
@@ -600,8 +606,52 @@ private bool Selected;
 protected int SelectedChild;
 protected bool Activated;
 protected Dictionary<string, string> Attributes;
+private bool _hasUserInputBindings;
+public bool HasUserInputBindings
+{
+get { return _hasUserInputBindings; }
+set
+{
+_hasUserInputBindings = value;
+if(Parent != null && HasUserInputBindings)
+{
+Parent.HasUserInputBindings = true;
+}
+}
+}
+protected bool RerenderRequired;
+private NodeBox RenderCache;
+protected NodeBox RenderBox
+{
+get
+{
+Logger.log(Type + "RenderBox.get()");
+Logger.IncLvl();
+if(RerenderRequired)
+{
+BuildRenderCache();
+}
+Logger.DecLvl();
+return RenderCache;
+}
+set
+{
+RenderCache = value;
+}
+}
+public int Width
+{
+get
+{
+return RenderBox.Width;
+}
+}
+
 public XMLTree()
 {
+Logger.debug("XMLTree constructor");
+Logger.IncLvl();
+HasUserInputBindings = false;
 PreventDefaults = new List<string>();
 Parent = null;
 Children = new List<XMLTree>();
@@ -611,6 +661,8 @@ Selected = false;
 SelectedChild = -1;
 Activated = false;
 Attributes = new Dictionary<string, string>();
+RenderCache = new NodeBoxTree();
+RerenderRequired = true;
 Type = "NULL";
 // set attribute defaults
 SetAttribute("alignself", "left");
@@ -618,6 +670,7 @@ SetAttribute("aligntext", "left");
 SetAttribute("selected", "false");
 SetAttribute("selectable", "false");
 SetAttribute("flow", "vertical");
+Logger.DecLvl();
 }
 public bool IsSelectable()
 {
@@ -670,6 +723,7 @@ if( position > Children.Count )
 {
 throw new Exception("XMLTree.AddChildAt - Exception: position must be less than number of children!");
 }
+RerenderRequired = true;
 Children.Insert(position, child);
 child.SetParent(this as XMLParentNode);
 UpdateSelectability(child);
@@ -684,6 +738,10 @@ public void SetParent(XMLParentNode parent)
 Logger.debug(Type + ": SetParent():");
 Logger.IncLvl();
 Parent = parent;
+if(HasUserInputBindings && Parent != null)
+{
+Parent.HasUserInputBindings = true;
+}
 Logger.DecLvl();
 }
 public XMLParentNode GetParent()
@@ -747,9 +805,10 @@ Logger.debug(Type + ": UpdateSelectability():");
 Logger.IncLvl();
 bool ChildrenWereSelectable = ChildrenAreSelectable;
 ChildrenAreSelectable = ChildrenAreSelectable || child.IsSelectable();
-if (Parent != null && (Selectable || ChildrenAreSelectable) != (Selectable || ChildrenWereSelectable))
+if ((Selectable || ChildrenAreSelectable) != (Selectable || ChildrenWereSelectable))
 {
-Parent.UpdateSelectability(this);
+RerenderRequired = true;
+Parent?.UpdateSelectability(this);
 }
 Logger.DecLvl();
 }
@@ -820,6 +879,7 @@ Unselect();
 if (!WasSelected && IsSelected())
 {
 OnSelect();
+RerenderRequired = true;
 }
 Logger.DecLvl();
 return Selected;
@@ -853,6 +913,7 @@ Unselect();
 if (!WasSelected && IsSelected())
 {
 OnSelect();
+RerenderRequired = true;
 }
 Logger.DecLvl();
 return Selected;
@@ -890,17 +951,66 @@ Parent.UpdateSelectability(this);
 }
 }
 }
-if (key == "activated")
+else if (key == "activated")
 {
 bool shouldBeActivated = value == "true";
 Activated = shouldBeActivated;
 }
-if (key == "flowdirection")
+else if(key == "inputbinding")
 {
-Attributes["flow"] = value;
+HasUserInputBindings = true;
+if(Parent != null)
+{
+Parent.HasUserInputBindings = true;
+}
+}
+else if (key == "flow")
+{
+if(value == "horizontal")
+{
+RenderCache.Flow = NodeBox.FlowDirection.HORIZONTAL;
+}
+else
+{
+RenderCache.Flow = NodeBox.FlowDirection.VERTICAL;
+}
+RerenderRequired = true;
+}
+else if (key == "align")
+{
+switch(value)
+{
+case "right":
+RenderCache.Align = NodeBox.TextAlign.RIGHT;
+break;
+case "center":
+RenderCache.Align = NodeBox.TextAlign.CENTER;
+break;
+default:
+RenderCache.Align = NodeBox.TextAlign.LEFT;
+break;
+}
+RerenderRequired = true;
+}
+else if (key == "width")
+{
+int width;
+if(Int32.TryParse(value, out width))
+{
+RenderCache.DesiredWidth = width;
+}
 }
 Attributes[key] = value;
 Logger.DecLvl();
+}
+public XMLParentNode RetrieveRoot()
+{
+XMLParentNode ancestor = this;
+while (ancestor.GetParent() != null)
+{
+ancestor = ancestor.GetParent();
+}
+return ancestor;
 }
 public void KeyPress(string keyCode)
 {
@@ -992,7 +1102,7 @@ dict[key] = childDict[key];
 Logger.DecLvl();
 return dict;
 }
-public int GetWidth(int maxWidth)
+/*public int GetWidth(int maxWidth)
 {
 Logger.debug(Type + ".GetWidth()");
 Logger.IncLvl();
@@ -1023,7 +1133,7 @@ return Math.Min(maxWidth, Int32.Parse(attributeWidthValue));
 }
 }
 }
-public string Render(int availableWidth)
+public string RenderOld(int availableWidth)
 {
 Logger.debug(Type + ".Render()");
 Logger.IncLvl();
@@ -1034,6 +1144,17 @@ RenderText(ref segments, width, availableWidth);
 string renderString = PostRender(segments, width, availableWidth);
 Logger.DecLvl();
 return renderString;
+}
+public NodeBox Render(int availableWidth)
+{
+return Render(availableWidth, 0);
+}
+public NodeBox Render(int availableWidth, int availableHeight)
+{
+Logger.debug(Type + ".Render()");
+Logger.IncLvl();
+Logger.DecLvl();
+return Cache;
 }
 protected virtual void PreRender(ref List<string> segments, int width, int availableWidth)
 {
@@ -1134,16 +1255,19 @@ renderString = TextUtils.PadText(renderString, availableWidth, TextUtils.PadMode
 Logger.DecLvl();
 return renderString;
 }
+
 protected virtual string RenderChild(XMLTree child, int availableWidth)
 {
 Logger.log(Type + ".RenderChild()");
 Logger.IncLvl();
 Logger.DecLvl();
 return child.Render(availableWidth);
-}
+}*/
+
 public void DetachChild(XMLTree child)
 {
 Children.Remove(child);
+RerenderRequired = true;
 }
 public void Detach()
 {
@@ -1152,10 +1276,35 @@ if(GetParent() != null)
 GetParent().DetachChild(this);
 }
 }
+protected virtual void BuildRenderCache()
+{
+Logger.debug(Type + ".BuildRenderCache()");
+Logger.IncLvl();
+RenderCache.Clear();
+NodeBoxTree box = RenderCache as NodeBoxTree;
+foreach (XMLTree child in Children)
+{
+box.Add(child.RenderBox);
+}
+RerenderRequired = false;
+Logger.DecLvl();
+}
+public string Render(int maxWidth)
+{
+Logger.debug(Type + ".Render()");
+Logger.IncLvl();
+Logger.DecLvl();
+return Render(maxWidth);
+}
+public string Render()
+{
+return Render(-1);
+}
 }
 
 public interface XMLParentNode
 {
+bool HasUserInputBindings { get; set; }
 XMLParentNode GetParent();
 void UpdateSelectability(XMLTree child);
 void KeyPress(string keyCode);
@@ -1169,18 +1318,28 @@ public class TextNode : XMLTree
 public string Content;
 public TextNode(string content) : base()
 {
+Logger.debug("TextNode constructor()");
+Logger.IncLvl();
 Type = "textnode";
 Content = content.Replace("\n", "");
 Content = Content.Trim(new char[] { '\n', ' ', '\r' });
-if (Content == "")
-{
-Content = null;
+RenderBox = new NodeBoxLeaf(Content);
+RerenderRequired = false;
+Logger.DecLvl();
 }
-}
-protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }
-protected override string PostRender(List<string> segments, int width, int availableWidth)
+//protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }
+/*protected override string PostRender(List<string> segments, int width, int availableWidth)
 {
 return Content;
+}*/
+protected override void BuildRenderCache()
+{
+Logger.debug(Type + ".BuildRenderCache()");
+Logger.IncLvl();
+RenderBox.Clear();
+RenderBox.Add(Content);
+RerenderRequired = false;
+Logger.DecLvl();
 }
 }
 
@@ -1194,7 +1353,7 @@ static public Dictionary<string, Action<string, UIController>> RouteHandlers = n
 {
 "xml", (def, controller) =>
 {
-XMLTree ui = ParseXML(Parser.UnescapeQuotes(def));
+XMLTree ui = XML.ParseXML(Parser.UnescapeQuotes(def));
 controller.LoadUI(ui);
 }
 },
@@ -1242,18 +1401,33 @@ public class UIController : XMLParentNode
 XMLTree ui;
 public Stack<XMLTree> UIStack;
 public string Type;
+bool UserInputActive;
+IMyTerminalBlock UserInputSource;
+TextInputMode UserInputMode;
+List<XMLTree> UserInputBindings;
+string InputDataCache;
+public bool HasUserInputBindings
+{
+get { return UserInputActive && UserInputSource != null && UserInputBindings.Count > 0; }
+set { }
+}
+public enum TextInputMode { PUBLIC_TEXT, CUSTOM_DATA }
 public UIController(XMLTree rootNode)
 {
 Logger.debug("UIController constructor()");
 Logger.IncLvl();
 Type = "CTRL";
 UIStack = new Stack<XMLTree>();
+UserInputBindings = new List<XMLTree>();
+UserInputActive = false;
+InputDataCache = "";
 ui = rootNode;
 ui.SetParent(this);
 if (GetSelectedNode() == null && ui.IsSelectable())
 {
 ui.SelectFirst();
 }
+CollectUserInputBindings();
 Logger.DecLvl();
 }
 public static UIController FromXML(string xml)
@@ -1347,6 +1521,8 @@ else
 ui = rootNode;
 ui.SetParent(this);
 }
+UserInputBindings = new List<XMLTree>();
+CollectUserInputBindings();
 Logger.DecLvl();
 }
 public void ClearUIStack()
@@ -1493,6 +1669,123 @@ public bool SelectNext()
 {
 return ui.SelectNext();
 }
+public void SetUserInputSource(IMyTerminalBlock sourceBlock, TextInputMode mode)
+{
+if(mode == TextInputMode.PUBLIC_TEXT && (sourceBlock as IMyTextPanel) == null)
+{
+throw new Exception("Only Text Panels can be used as user input if PUBLIC_TEXT mode is selected!");
+}
+UserInputSource = sourceBlock;
+UserInputMode = mode;
+}
+public void EnableUserInput()
+{
+UserInputActive = true;
+}
+public void DisableUserInput()
+{
+UserInputActive = false;
+}
+public void RegisterInputBinding(XMLTree node)
+{
+UserInputBindings.Add(node);
+}
+public bool UpdateUserInput()
+{
+Logger.debug("UIController.RefreshUserInput()");
+Logger.IncLvl();
+if(!UserInputActive || UserInputSource == null)
+{
+return false;
+}
+// get input data
+string inputData = null;
+switch(UserInputMode)
+{
+case TextInputMode.CUSTOM_DATA:
+inputData = UserInputSource?.CustomData;
+break;
+case TextInputMode.PUBLIC_TEXT:
+inputData = (UserInputSource as IMyTextPanel)?.GetPublicText();
+break;
+}
+bool inputHasChanged = true;
+if( inputData == null || inputData == InputDataCache)
+{
+inputHasChanged = false;
+}
+Logger.debug("input has " + (inputHasChanged ? "" : "not ") + "changed");
+Logger.debug("Iterating input bindings (" + UserInputBindings.Count + " bindings registered).");
+// update ui input bindings
+string binding;
+string fieldValue;
+foreach (XMLTree node in UserInputBindings)
+{
+binding = node.GetAttribute("inputbinding");
+if(binding != null)
+{
+Logger.debug("binding found at " + node.Type + " node for field: " + binding);
+fieldValue = node.GetAttribute(binding.ToLower());
+Logger.debug("field is " + (fieldValue ?? "EMPTY") + ".");
+if(!inputHasChanged && fieldValue != null && fieldValue != InputDataCache)
+{
+Logger.debug("applying field value: " + fieldValue);
+inputData = fieldValue;
+inputHasChanged = true;
+}
+else if(inputHasChanged)
+{
+Logger.debug("Updating field value to input: " + inputData);
+node.SetAttribute(binding.ToLower(), inputData);
+}
+}
+}
+if(inputHasChanged)
+{
+InputDataCache = inputData;
+}
+// update user input device
+switch (UserInputMode)
+{
+case TextInputMode.CUSTOM_DATA:
+if(UserInputSource != null)
+{
+UserInputSource.CustomData = InputDataCache;
+}
+break;
+case TextInputMode.PUBLIC_TEXT:
+(UserInputSource as IMyTextPanel)?.WritePublicText(InputDataCache);
+break;
+}
+return inputHasChanged;
+}
+private void CollectUserInputBindings()
+{
+Logger.debug("UIController.CollectUserInputBindings()");
+XMLTree node;
+Queue<XMLParentNode> nodes = new Queue<XMLParentNode>();
+nodes.Enqueue(ui);
+while(nodes.Count != 0)
+{
+node = nodes.Dequeue() as XMLTree;
+if(!node.HasUserInputBindings)
+{
+Logger.debug("node has no userinputbindings");
+}
+if (node != null && node.HasUserInputBindings)
+{
+Logger.debug("Checking " + node.Type + " node...");
+for (int i = 0; i < node.NumberOfChildren(); i++)
+{
+nodes.Enqueue(node.GetChild(i));
+}
+if (node.GetAttribute("inputbinding") != null)
+{
+RegisterInputBinding(node);
+}
+}
+}
+}
 }
 
 public abstract class UIFactory
@@ -1529,39 +1822,7 @@ public Generic(string type) : base()
 Type = type.ToLower();
 }
 }
-
-public class Menu : XMLTree
-{
-public Menu() : base()
-{
-Type = "menu";
-}
-public override void AddChild(XMLTree child)
-{
-Logger.debug(Type + ": Add child():");
-Logger.IncLvl();
-if (child.Type != "menuitem" && child.IsSelectable())
-{
-Logger.DecLvl();
-throw new Exception(
-"ERROR: Only children of type <menupoint> or children that are not selectable are allowed!"
-+ " (type was: <" + child.Type + ">)");
-}
-base.AddChild(child);
-Logger.DecLvl();
-}
-protected override string RenderChild(XMLTree child, int width)
-{
-string renderString = "";
-string prefix = "     ";
-if (child.Type == "menuitem")
-{
-renderString += (child.IsSelected() ? ">> " : prefix);
-}
-renderString += base.RenderChild(child, width);
-return renderString;
-}
-}
+//!EMBED SEScripts.XUI.XML.Menu
 
 public class MenuItem : XMLTree
 {
@@ -1624,371 +1885,17 @@ TargetRoute = route;
 }
 
 }
-
-public class ProgressBar : XMLTree
-{
-float StepSize
-{
-get
-{
-float stepSize;
-if (!Single.TryParse(GetAttribute("stepsize"), out stepSize))
-{
-return 0.1f;
-}
-return stepSize;
-}
-set
-{
-string valueString = Math.Max(0.001f, Math.Min(0.009f, value)).ToString();
-if (valueString.Length > 5)
-{
-valueString += valueString.Substring(0, 5);
-}
-SetAttribute("stepsize", valueString);
-}
-}
-public float FillLevel
-{
-get
-{
-float fillLevel;
-if (!Single.TryParse(GetAttribute("value"), out fillLevel))
-{
-return 0.0f;
-}
-return fillLevel;
-}
-set
-{
-string valueString = Math.Max(0f, Math.Min(1f, value)).ToString();
-if (valueString.Length > 5)
-{
-valueString = valueString.Substring(0, 5);
-}
-SetAttribute("value", valueString);
-}
-}
-public ProgressBar() : this(0f)
-{
-}
-public ProgressBar(float fillLevel) : this(fillLevel, false)
-{
-}
-public ProgressBar(float fillLevel, bool selectable) : base()
-{
-Type = "progressbar";
-PreventDefault("LEFT/ABORT");
-PreventDefault("RIGHT/SUBMIT");
-SetAttribute("width", "500");
-SetAttribute("filledstring", "|");
-SetAttribute("emptystring", "'");
-SetAttribute("value", fillLevel.ToString());
-SetAttribute("stepsize", "0.05");
-SetAttribute("selectable", selectable ? "true" : "false");
-}
-public void IncreaseFillLevel()
-{
-Logger.debug(Type + ".IncreaseFillLevel()");
-Logger.IncLvl();
-FillLevel += StepSize;
-Logger.DecLvl();
-}
-public void DecreaseFillLevel()
-{
-Logger.debug(Type + ".DecreaseFillLevel()");
-Logger.IncLvl();
-FillLevel -= StepSize;
-Logger.DecLvl();
-}
-public override void OnKeyPressed(string keyCode)
-{
-Logger.debug(Type + ": OnKeyPressed():");
-Logger.IncLvl();
-switch (keyCode)
-{
-case "LEFT/ABORT":
-DecreaseFillLevel();
-break;
-case "RIGHT/SUBMIT":
-IncreaseFillLevel();
-break;
-}
-base.OnKeyPressed(keyCode);
-Logger.DecLvl();
-}
-protected override void RenderText(ref List<string> segments, int width, int availableWidth)
-{
-Logger.debug(Type + ".RenderText()");
-Logger.IncLvl();
-string suffix = IsSelected() ? ">" : "  ";
-string prefix = IsSelected() ? "<" : "  ";
-string renderString = prefix + "[";
-float fillLevel = FillLevel;
-string fillString = GetAttribute("filledstring");
-string emptyString = GetAttribute("emptystring");
-int innerWidth = (width - 2 * TextUtils.GetTextWidth("[]"));
-renderString += TextUtils.CreateStringOfLength(fillString, (int)(innerWidth * fillLevel));
-renderString += TextUtils.CreateStringOfLength(emptyString, (int)(innerWidth * (1 - fillLevel)));
-renderString += "]" + suffix;
-segments.Add(renderString);
-Logger.DecLvl();
-}
-}
-
-public class Container : XMLTree
-{
-public Container() : base()
-{
-Type = "container";
-}
-}
-
-public class HorizontalLine : XMLTree
-{
-public HorizontalLine() : base()
-{
-Type = "hl";
-SetAttribute("width", "100%");
-}
-protected override void RenderText(ref List<string> segments, int width, int availableWidth)
-{
-segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL));
-}
-}
-
-public class UIControls : XMLTree
-{
-UIController Controller;
-public UIControls() : base()
-{
-Type = "uicontrols";
-Controller = null;
-SetAttribute("selectable", "false");
-}
-private void RetrieveController()
-{
-XMLParentNode ancestor = this;
-while (ancestor.GetParent() != null)
-{
-ancestor = ancestor.GetParent();
-}
-Controller = ancestor as UIController;
-SetAttribute("selectable", (Controller != null && Controller.UIStack.Count > 0) ? "true" : "false");
-if (IsSelectable())
-{
-PreventDefault("LEFT/ABORT");
-PreventDefault("RIGHT/SUBMIT");
-}
-else
-{
-AllowDefault("LEFT/ABORT");
-AllowDefault("RIGHT/SUBMIT");
-}
-GetParent().UpdateSelectability(this);
-if (IsSelected() && !IsSelectable())
-{
-GetParent().SelectNext();
-}
-}
-public override void OnKeyPressed(string keyCode)
-{
-if (Controller == null)
-{
-RetrieveController();
-}
-switch (keyCode)
-{
-case "LEFT/ABORT":
-case "RIGHT/SUBMIT":
-if (Controller != null && Controller.UIStack.Count > 0)
-{
-Controller.RevertUI();
-}
-break;
-}
-}
-protected override string PostRender(List<string> segments, int width, int availableWidth)
-{
-if (Controller == null)
-{
-RetrieveController();
-}
-string prefix;
-if (!IsSelectable())
-{
-prefix = "";
-}
-else
-{
-prefix = IsSelected() ? "<<" : TextUtils.CreateStringOfLength(" ", TextUtils.GetTextWidth("<<"));
-}
-string renderString = base.PostRender(segments, width, availableWidth);
-int prefixSpacesCount = TextUtils.CreateStringOfLength(" ", TextUtils.GetTextWidth(prefix)).Length;
-string tmpPrefix = "";
-for (int i = 0; i < prefixSpacesCount; i++)
-{
-if ((renderString.Length - 1) < i || renderString[i] != ' ')
-{
-tmpPrefix += " ";
-}
-}
-renderString = prefix + (tmpPrefix + renderString).Substring(prefixSpacesCount);
-return renderString;
-//renderString = prefix + renderString;
-}
-}
-
-public class TextInput : XMLTree
-{
-int CursorPosition;
-public TextInput()
-{
-Logger.log("TextInput constructor()");
-Logger.IncLvl();
-Type = "textinput";
-Selectable = true;
-CursorPosition = -1;
-PreventDefault("LEFT/ABORT");
-PreventDefault("RIGHT/SUBMIT");
-SetAttribute("maxlength", "10");
-SetAttribute("value", "");
-SetAttribute("allowedchars", " a-z0-9");
-Logger.DecLvl();
-}
-public override void OnKeyPressed(string keyCode)
-{
-switch (keyCode)
-{
-case "LEFT/ABORT":
-DecreaseCursorPosition();
-break;
-case "RIGHT/SUBMIT":
-IncreaseCursorPosition();
-break;
-case "UP":
-DecreaseLetter();
-break;
-case "DOWN":
-IncreaseLetter();
-break;
-default:
-base.OnKeyPressed(keyCode);
-break;
-}
-}
-private void IncreaseLetter()
-{
-Logger.log("TextInput.IncreaseLetter()");
-Logger.IncLvl();
-if (CursorPosition == -1)
-{
-return;
-}
-char[] value = GetAttribute("value").ToCharArray();
-char letter = value[CursorPosition];
-char[] chars = GetAttribute("allowedchars").ToCharArray();
-for (int i = 0; i < chars.Length; i++)
-{
-if (
-chars[i] != '-'
-&& chars[i] == value[CursorPosition]
-&& !(i < chars.Length - 1 && chars[i + 1] == '-'))
-{
-Logger.log("letter outside class, setting to: " + chars[i == 0 ? chars.Length - 1 : i - 1] + ". (chars[" + ((i + 1) % chars.Length) + "])");
-value[CursorPosition] = chars[(i + 1) % chars.Length];
-SetAttribute("value", new string(value));
-Logger.DecLvl();
-return;
-}
-}
-Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) + 1));
-value[CursorPosition] = (char)(((int)value[CursorPosition]) + 1);
-SetAttribute("value", new string(value));
-Logger.DecLvl();
-}
-private void DecreaseLetter()
-{
-Logger.log("TextInput.DecreaseLetter()");
-Logger.IncLvl();
-if (CursorPosition == -1)
-{
-return;
-}
-char[] value = GetAttribute("value").ToCharArray();
-char[] chars = GetAttribute("allowedchars").ToCharArray();
-for(int i = 0; i < chars.Length; i++)
-{
-if(
-chars[i] != '_'
-&& chars[i] == value[CursorPosition]
-&& !(i > 0 && chars[i-1] == '-'))
-{
-Logger.log("letter outside class, setting to: " + chars[i == 0 ? chars.Length - 1 : i - 1] + ". (chars[" + (i == 0 ? chars.Length - 1 : i - 1) + "])");
-value[CursorPosition] = chars[ i == 0 ? chars.Length - 1 : i - 1];
-SetAttribute("value", new string(value));
-return;
-}
-}
-Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) - 1));
-value[CursorPosition] = (char)(((int)value[CursorPosition]) - 1);
-SetAttribute("value", new string(value));
-Logger.DecLvl();
-}
-private void IncreaseCursorPosition()
-{
-if (CursorPosition < Single.Parse(GetAttribute("maxlength")) - 1)
-{
-CursorPosition++;
-}
-else
-{
-CursorPosition = 0;
-DecreaseCursorPosition();
-KeyPress("DOWN");
-}
-if (CursorPosition != -1)
-{
-PreventDefault("UP");
-PreventDefault("DOWN");
-}
-if (CursorPosition >= GetAttribute("value").Length)
-{
-string chars = GetAttribute("allowedchars");
-SetAttribute("value", GetAttribute("value") + chars[0]);
-}
-}
-private void DecreaseCursorPosition()
-{
-if (CursorPosition > -1)
-{
-CursorPosition--;
-}
-if (CursorPosition == -1)
-{
-AllowDefault("UP");
-AllowDefault("DOWN");
-}
-}
-protected override void RenderText(ref List<string> segments, int width, int availableWidth)
-{
-string value = GetAttribute("value");
-if (CursorPosition != -1)
-{
-value = value.Substring(0, CursorPosition)
-+ "|" + value.Substring(CursorPosition, 1) + "|"
-+ value.Substring(CursorPosition + 1);
-}
-else if (value.Length == 0)
-{
-/*char[] valueChr = (" " + value).ToCharArray();
-valueChr[0] = (char) 187;
-value = new string(valueChr);*/
-value = "_" + value;
-}
-segments.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " " + value);
-}
-}
+//!EMBED SEScripts.XUI.XML.ProgressBar
+//!EMBED SEScripts.XUI.XML.Container
+//!EMBED SEScripts.XUI.XML.HorizontalLine
+//!EMBED SEScripts.XUI.XML.UIControls
+//!EMBED SEScripts.XUI.XML.TextInput
+//!EMBED SEScripts.XUI.XML.SubmitButton
+//!EMBED SEScripts.XUI.XML.Break
+//!EMBED SEScripts.XUI.XML.Space
+//!EMBED SEScripts.XUI.XML.Hidden
+//!EMBED SEScripts.XUI.XML.HiddenData
+//!EMBED SEScripts.XUI.XML.MetaNode
 
 public abstract class DataStore : XMLTree
 {
@@ -2011,98 +1918,316 @@ return dict;
 }
 }
 
-
-public class SubmitButton : MenuItem
+public class NodeBoxTree : NodeBox
 {
-public SubmitButton()
+List<NodeBox> Boxes;
+private int _Width;
+private int _Height;
+public NodeBox this[int i]
 {
-Type = "submitbutton";
-SetAttribute("flowdirection", "horizontal");
+get
+{
+return Boxes[i];
 }
-protected override void PreRender(ref List<string> segments, int width, int availableWidth)
+set
 {
-segments.Add(IsSelected() ? "[[  " : "[   ");
-base.PreRender(ref segments, width, availableWidth);
-}
-protected override string PostRender(List<string> segments, int width, int availableWidth)
-{
-segments.Add(IsSelected() ? "  ]]" : "   ]");
-return base.PostRender(segments, width, availableWidth);
+Boxes[i] = value;
 }
 }
-
-public class Break : TextNode
+public int Count
 {
-public Break() : base("")
-{
-Type = "br";
+get { return Boxes.Count; }
 }
-protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }
-protected override string PostRender(List<string> segments, int width, int availableWidth)
+public override int Height
 {
-return "";
-}
-}
-
-public class Space : XMLTree
+get {
+int height = 0;
+foreach(NodeBox box in Boxes)
 {
-public Space() : base()
+if(Flow == NodeBox.FlowDirection.VERTICAL)
 {
-Logger.debug("Space constructor()");
-Logger.IncLvl();
-Type = "space";
-SetAttribute("width", "0");
-Logger.DecLvl();
-}
-protected override void RenderText(ref List<string> segments, int width, int availableWidth)
-{
-Logger.debug(Type + ".RenderText()");
-Logger.IncLvl();
-segments.Add(TextUtils.CreateStringOfLength(" ", width));
-Logger.DecLvl();
-}
-}
-
-public class Hidden : XMLTree
-{
-public Hidden() : base()
-{
-Type = "hidden";
-}
-protected override string PostRender(List<string> segments, int width, int availableWidth)
-{
-return null;
-}
-}
-
-public class HiddenData : DataStore
-{
-public HiddenData() : base()
-{
-Type = "hiddendata";
-}
-protected override string PostRender(List<string> segments, int width, int availableWidth)
-{
-return null;
-}
-}
-
-class MetaNode : Hidden
-{
-public MetaNode() : base()
-{
-Type = "meta";
-}
-public override Dictionary<string, string> GetValues(Func<XMLTree, bool> filter)
-{
-if (filter(this))
-{
-return Attributes;
+height += box.Height;
 }
 else
 {
-return new Dictionary<string, string>();
+height = Math.Max(height, box.Height);
 }
+}
+return height;
+}
+set { _Height = value; }
+}
+public override int MinWidth
+{
+get {
+Logger.debug("NodeBoxTree.Width.get");
+int width = 0;
+foreach(NodeBox box in Boxes)
+{
+if(Flow == NodeBox.FlowDirection.VERTICAL)
+{
+width = Math.Max(box.MinWidth, width);
+}
+else
+{
+if(box.MinWidth != -1)
+{
+width += box.MinWidth;
+}
+}
+}
+return Math.Max(width, 0);
+}
+}
+public NodeBoxTree() : base()
+{
+Boxes = new List<NodeBox>();
+_Height = 0;
+}
+public override void Add(string box)
+{
+Boxes.Add(new NodeBoxLeaf(box));
+}
+public void Add(NodeBox box)
+{
+Boxes.Add(box);
+}
+
+public override string GetLine(int index)
+{
+if (Flow == NodeBox.FlowDirection.VERTICAL)
+{
+foreach (NodeBox box in Boxes)
+{
+if (index < box.Height)
+{
+return box.GetLine(index);
+}
+else
+{
+index -= box.Height;
+}
+}
+}
+else
+{
+StringBuilder line = new StringBuilder();
+foreach (NodeBox box in Boxes)
+{
+line.Append(box.GetLine(index));
+}
+return line.ToString();
+}
+return "";
+}
+public override string GetRenderedLine(int index, int maxWidth)
+{
+if (Flow == NodeBox.FlowDirection.VERTICAL)
+{
+foreach (NodeBox box in Boxes)
+{
+if (index < box.Height)
+{
+return box.RenderLine(index, maxWidth);
+}
+else
+{
+index -= box.Height;
+}
+}
+}
+else
+{
+StringBuilder line = new StringBuilder();
+foreach (NodeBox box in Boxes)
+{
+line.Append(box.RenderLine(index, maxWidth));
+}
+return line.ToString();
+}
+return "";
+}
+public override void Clear()
+{
+Boxes.Clear();
+}
+}
+public class NodeBoxLeaf : NodeBox
+{
+string Content;
+private int _Height;
+public override NodeBox.FlowDirection Flow
+{
+get { return NodeBox.FlowDirection.VERTICAL; }
+set {}
+}
+public override int Height
+{
+get { return _Height; }
+set { _Height = value; }
+}
+public override int MinWidth
+{
+get
+{
+Logger.debug("NodeBoxLeaf.MinWidth.get");
+int contentWidth = TextUtils.GetTextWidth(Content);
+/*if (_MinWidth >= 0 && _MinWidth < contentWidth)
+{
+return _MinWidth;
+}
+else
+{
+return contentWidth;
+}*/
+return contentWidth;
+}
+}
+public NodeBoxLeaf()
+{
+_Height = 0;
+Content = "";
+}
+public NodeBoxLeaf(string content) : this()
+{
+Content = content.Replace("\n", "");
+if(Content != "")
+{
+_Height = 1;
+}
+}
+public override void Add(string box)
+{
+Content += box.Replace("\n", "");
+}
+public override string GetRenderedLine(int index, int maxWidth)
+{
+return GetLine(index);
+}
+public override string GetLine(int index)
+{
+if (index == 0)
+{
+return Content;
+}
+return "";
+}
+public override void Clear()
+{
+Content = "";
+}
+}
+public abstract class NodeBox
+{
+public enum TextAlign { LEFT, RIGHT, CENTER }
+public enum FlowDirection { HORIZONTAL, VERTICAL }
+public abstract int Height { get; set; }
+public abstract void Add(string box);
+public abstract string GetLine(int index);
+public abstract string GetRenderedLine(int index, int maxWidth);
+public abstract void Clear();
+private NodeBox.FlowDirection _Flow;
+private NodeBox.TextAlign _Align;
+protected int _MinWidth;
+protected int _MaxWidth;
+protected int _DesiredWidth;
+public int Width
+{
+get
+{
+return Math.Min(MinWidth, MaxWidth);
+}
+}
+public NodeBox.TextAlign Align
+{
+get { return _Align; }
+set { _Align = value; }
+}
+public virtual NodeBox.FlowDirection Flow
+{
+get { return _Flow; }
+set { _Flow = value; }
+}
+public virtual int MinWidth
+{
+get { return _MinWidth; }
+set { _MinWidth = value; }
+}
+public int DesiredWidth
+{
+get { return _DesiredWidth; }
+set { _DesiredWidth = value; }
+}
+public int MaxWidth
+{
+get { return _MaxWidth; }
+set { _MaxWidth = value; }
+}
+public NodeBox()
+{
+_Flow = NodeBox.FlowDirection.VERTICAL;
+_Align = NodeBox.TextAlign.LEFT;
+_MinWidth = -1;
+_MaxWidth = -1;
+_DesiredWidth = -1;
+}
+public IEnumerable<string> GetRenderedLines(int maxWidth)
+{
+Logger.debug("NodeBox.GetRenderedLines()");
+for (int i = 0; i < Height; i++)
+{
+yield return GetRenderedLine(i, maxWidth);
+}
+}
+public IEnumerable<string> GetLines()
+{
+Logger.debug("NodeBox.GetLines()");
+for (int i = 0; i < Height; i++)
+{
+yield return GetLine(i);
+}
+}
+public virtual string RenderLine(int index, int maxWidth)
+{
+Logger.debug("NodeBox.RenderLine()");
+int width = (maxWidth >= 0) ? Math.Min(maxWidth, MinWidth) : MinWidth;
+string line = GetRenderedLine(index, maxWidth);
+int diff = width - TextUtils.GetTextWidth(line);
+Logger.debug(diff.ToString());
+if (diff <= 0)
+{
+return line;
+}
+else if (Align == NodeBox.TextAlign.CENTER)
+{
+string padding = TextUtils.CreateStringOfLength(" ", diff / 2);
+return padding + line + padding;
+}
+else
+{
+string padding = TextUtils.CreateStringOfLength(" ", diff);
+if (Align == NodeBox.TextAlign.LEFT)
+{
+return line + padding;
+}
+else if (Align == NodeBox.TextAlign.RIGHT)
+{
+return padding + line;
+}
+}
+return null;
+}
+public string Render(int maxWidth)
+{
+Logger.debug("NodeBox.Render()");
+StringBuilder result = new StringBuilder();
+foreach(string line in GetRenderedLines(maxWidth))
+{
+result.Append(line);
+result.Append("\n");
+}
+result.Remove(result.Length - 1, 1);
+return result.ToString();
 }
 }
 }

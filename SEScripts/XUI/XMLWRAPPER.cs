@@ -15,6 +15,7 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib;
+using SEScripts.Lib.LoggerNS;
 using SEScripts.XUI.XML;
 
 namespace SEScripts.XUI
@@ -27,19 +28,19 @@ namespace SEScripts.XUI
     {
         public static Dictionary<string, Func<XML.XMLTree>> NodeRegister = new Dictionary<string, Func<XML.XMLTree>> {
         {"root", () => { return new XML.RootNode(); } },
-        {"menu", () => { return new XML.Menu(); } },
-        {"menuitem", () => { return new XML.MenuItem(); } },
-        {"progressbar", () => { return new XML.ProgressBar(); } },
-        {"container", () => { return new XML.Container(); } },
-        {"hl", () => { return new XML.HorizontalLine(); } },
-        {"uicontrols", () => { return new UIControls(); } },
-        {"textinput", () => { return new TextInput(); } },
-        {"submitbutton", () => { return new SubmitButton(); } },
-        {"br", () => { return new Break(); } },
-        {"space", () => { return new Space(); } },
-        {"hidden", () => { return new Hidden(); } },
-        {"hiddendata", () => { return new Hidden(); } },
-        {"meta", () => { return new MetaNode(); } }
+        //{"menu", () => { return new XML.Menu(); } },
+        //{"menuitem", () => { return new XML.MenuItem(); } },
+        //{"progressbar", () => { return new XML.ProgressBar(); } },
+        //{"container", () => { return new XML.Container(); } },
+        //{"hl", () => { return new XML.HorizontalLine(); } },
+        //{"uicontrols", () => { return new UIControls(); } },
+        //{"textinput", () => { return new TextInput(); } },
+        //{"submitbutton", () => { return new SubmitButton(); } },
+        //{"br", () => { return new Break(); } },
+        //{"space", () => { return new Space(); } },
+        //{"hidden", () => { return new Hidden(); } },
+        //{"hiddendata", () => { return new Hidden(); } },
+        //{"meta", () => { return new MetaNode(); } }
     };
 
         public static XMLTree CreateNode(string type)
@@ -154,20 +155,21 @@ namespace SEScripts.XUI
         //EMBED SEScripts.XUI.XML.Generic
 
         //EMBED SEScripts.XUI.XML.UIController
-        //EMBED SEScripts.XUI.XML.Menu
+        //!EMBED SEScripts.XUI.XML.Menu
         //EMBED SEScripts.XUI.XML.MenuItem
-        //EMBED SEScripts.XUI.XML.ProgressBar
-        //EMBED SEScripts.XUI.XML.Container
-        //EMBED SEScripts.XUI.XML.HorizontalLine
-        //EMBED SEScripts.XUI.XML.UIControls
-        //EMBED SEScripts.XUI.XML.TextInput
-        //EMBED SEScripts.XUI.XML.SubmitButton
-        //EMBED SEScripts.XUI.XML.Break
-        //EMBED SEScripts.XUI.XML.Space
-        //EMBED SEScripts.XUI.XML.Hidden
-        //EMBED SEScripts.XUI.XML.HiddenData
-        //EMBED SEScripts.XUI.XML.MetaNode
+        //!EMBED SEScripts.XUI.XML.ProgressBar
+        //!EMBED SEScripts.XUI.XML.Container
+        //!EMBED SEScripts.XUI.XML.HorizontalLine
+        //!EMBED SEScripts.XUI.XML.UIControls
+        //!EMBED SEScripts.XUI.XML.TextInput
+        //!EMBED SEScripts.XUI.XML.SubmitButton
+        //!EMBED SEScripts.XUI.XML.Break
+        //!EMBED SEScripts.XUI.XML.Space
+        //!EMBED SEScripts.XUI.XML.Hidden
+        //!EMBED SEScripts.XUI.XML.HiddenData
+        //!EMBED SEScripts.XUI.XML.MetaNode
 
         //EMBED SEScripts.XUI.XML.DataStore
+        //EMBED SEScripts.XUI.ScreenBuilder.NodeBox
     }
 }

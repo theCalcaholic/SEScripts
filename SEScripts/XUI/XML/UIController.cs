@@ -14,6 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
+using SEScripts.Lib.LoggerNS;
 using SEScripts.Lib;
 
 namespace SEScripts.XUI.XML
@@ -23,6 +24,18 @@ namespace SEScripts.XUI.XML
         XMLTree ui;
         public Stack<XMLTree> UIStack;
         public string Type;
+        bool UserInputActive;
+        IMyTerminalBlock UserInputSource;
+        TextInputMode UserInputMode;
+        List<XMLTree> UserInputBindings;
+        string InputDataCache;
+        public bool HasUserInputBindings
+        {
+            get { return UserInputActive && UserInputSource != null && UserInputBindings.Count > 0; }
+            set { }
+        }
+
+        public enum TextInputMode { PUBLIC_TEXT, CUSTOM_DATA }
 
         public UIController(XMLTree rootNode)
         {
@@ -30,12 +43,17 @@ namespace SEScripts.XUI.XML
             Logger.IncLvl();
             Type = "CTRL";
             UIStack = new Stack<XMLTree>();
+            UserInputBindings = new List<XMLTree>();
+            UserInputActive = false;
+            InputDataCache = "";
             ui = rootNode;
             ui.SetParent(this);
             if (GetSelectedNode() == null && ui.IsSelectable())
             {
                 ui.SelectFirst();
             }
+
+            CollectUserInputBindings();
 
             Logger.DecLvl();
         }
@@ -106,7 +124,6 @@ namespace SEScripts.XUI.XML
                     {
                         FollowRoute(new Route(refresh));
                     }
-
                     break;
                 case "revert":
                     RevertUI();
@@ -142,6 +159,8 @@ namespace SEScripts.XUI.XML
                 ui = rootNode;
                 ui.SetParent(this);
             }
+            UserInputBindings = new List<XMLTree>();
+            CollectUserInputBindings();
 
             Logger.DecLvl();
         }
@@ -310,6 +329,135 @@ namespace SEScripts.XUI.XML
         public bool SelectNext()
         {
             return ui.SelectNext();
+        }
+
+        public void SetUserInputSource(IMyTerminalBlock sourceBlock, TextInputMode mode)
+        {
+            if(mode == TextInputMode.PUBLIC_TEXT && (sourceBlock as IMyTextPanel) == null)
+            {
+                throw new Exception("Only Text Panels can be used as user input if PUBLIC_TEXT mode is selected!");
+            }
+            UserInputSource = sourceBlock;
+            UserInputMode = mode;
+        }
+
+        public void EnableUserInput()
+        {
+            UserInputActive = true;
+        }
+
+        public void DisableUserInput()
+        {
+            UserInputActive = false;
+        }
+
+        public void RegisterInputBinding(XMLTree node)
+        {
+            UserInputBindings.Add(node);
+        }
+
+        public bool UpdateUserInput()
+        {
+            Logger.debug("UIController.RefreshUserInput()");
+            Logger.IncLvl();
+            if(!UserInputActive || UserInputSource == null)
+            {
+                return false;
+            }
+
+            // get input data
+            string inputData = null;
+            switch(UserInputMode)
+            {
+                case TextInputMode.CUSTOM_DATA:
+                    inputData = UserInputSource?.CustomData;
+                    break;
+                case TextInputMode.PUBLIC_TEXT:
+                    inputData = (UserInputSource as IMyTextPanel)?.GetPublicText();
+                    break;
+            }
+            bool inputHasChanged = true;
+            if( inputData == null || inputData == InputDataCache)
+            {
+                inputHasChanged = false;
+            }
+
+            Logger.debug("input has " + (inputHasChanged ? "" : "not ") + "changed");
+            Logger.debug("Iterating input bindings (" + UserInputBindings.Count + " bindings registered).");
+
+            // update ui input bindings
+            string binding;
+            string fieldValue;
+            foreach (XMLTree node in UserInputBindings)
+            {
+                binding = node.GetAttribute("inputbinding");
+                if(binding != null)
+                {
+                    Logger.debug("binding found at " + node.Type + " node for field: " + binding);
+                    fieldValue = node.GetAttribute(binding.ToLower());
+                    Logger.debug("field is " + (fieldValue ?? "EMPTY") + ".");
+                    if(!inputHasChanged && fieldValue != null && fieldValue != InputDataCache)
+                    {
+                        Logger.debug("applying field value: " + fieldValue);
+                        inputData = fieldValue;
+                        inputHasChanged = true;
+                    }
+                    else if(inputHasChanged)
+                    {
+                        Logger.debug("Updating field value to input: " + inputData);
+                        node.SetAttribute(binding.ToLower(), inputData);
+                    }
+                }
+            }
+            if(inputHasChanged)
+            {
+                InputDataCache = inputData;
+            }
+
+            // update user input device
+            switch (UserInputMode)
+            {
+                case TextInputMode.CUSTOM_DATA:
+                    if(UserInputSource != null)
+                    {
+                        UserInputSource.CustomData = InputDataCache;
+                    }
+                    break;
+                case TextInputMode.PUBLIC_TEXT:
+                    (UserInputSource as IMyTextPanel)?.WritePublicText(InputDataCache);
+                    break;
+            }
+
+            return inputHasChanged;
+        }
+
+        private void CollectUserInputBindings()
+        {
+            Logger.debug("UIController.CollectUserInputBindings()");
+            XMLTree node;
+            Queue<XMLParentNode> nodes = new Queue<XMLParentNode>();
+            nodes.Enqueue(ui);
+            while(nodes.Count != 0)
+            {
+                node = nodes.Dequeue() as XMLTree;
+                if(!node.HasUserInputBindings)
+                {
+                    Logger.debug("node has no userinputbindings");
+                }
+                if (node != null && node.HasUserInputBindings)
+                {
+                    Logger.debug("Checking " + node.Type + " node...");
+                    for (int i = 0; i < node.NumberOfChildren(); i++)
+                    {
+                        nodes.Enqueue(node.GetChild(i));
+                    }
+                    if (node.GetAttribute("inputbinding") != null)
+                    {
+                        RegisterInputBinding(node);
+
+                    }
+                }
+            }
         }
     }
 

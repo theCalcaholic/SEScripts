@@ -14,7 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib;
+using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
@@ -30,9 +30,55 @@ namespace SEScripts.XUI.XML
         protected int SelectedChild;
         protected bool Activated;
         protected Dictionary<string, string> Attributes;
+        private bool _hasUserInputBindings;
+        public bool HasUserInputBindings
+        {
+            get { return _hasUserInputBindings; }
+            set
+            {
+                _hasUserInputBindings = value;
+                if(Parent != null && HasUserInputBindings)
+                {
+                    Parent.HasUserInputBindings = true;
+                }
+            }
+        }
+
+        protected bool RerenderRequired;
+        private NodeBox RenderCache;
+        protected NodeBox RenderBox
+        {
+            get
+            {
+                Logger.log(Type + "RenderBox.get()");
+                Logger.IncLvl();
+                if(RerenderRequired)
+                {
+                    BuildRenderCache();
+                }
+                Logger.DecLvl();
+                return RenderCache;
+            }
+            set
+            {
+                RenderCache = value;
+            }
+        }
+
+        public int Width
+        {
+            get
+            {
+                return RenderBox.Width;
+            }
+        }
+        
 
         public XMLTree()
         {
+            Logger.debug("XMLTree constructor");
+            Logger.IncLvl();
+            HasUserInputBindings = false;
             PreventDefaults = new List<string>();
             Parent = null;
             Children = new List<XMLTree>();
@@ -42,6 +88,8 @@ namespace SEScripts.XUI.XML
             SelectedChild = -1;
             Activated = false;
             Attributes = new Dictionary<string, string>();
+            RenderCache = new NodeBoxTree();
+            RerenderRequired = true;
             Type = "NULL";
 
             // set attribute defaults
@@ -50,6 +98,7 @@ namespace SEScripts.XUI.XML
             SetAttribute("selected", "false");
             SetAttribute("selectable", "false");
             SetAttribute("flow", "vertical");
+            Logger.DecLvl();
         }
 
         public bool IsSelectable()
@@ -108,6 +157,7 @@ namespace SEScripts.XUI.XML
             {
                 throw new Exception("XMLTree.AddChildAt - Exception: position must be less than number of children!");
             }
+            RerenderRequired = true;
             Children.Insert(position, child);
             child.SetParent(this as XMLParentNode);
             UpdateSelectability(child);
@@ -124,6 +174,10 @@ namespace SEScripts.XUI.XML
             Logger.debug(Type + ": SetParent():");
             Logger.IncLvl();
             Parent = parent;
+            if(HasUserInputBindings && Parent != null)
+            {
+                Parent.HasUserInputBindings = true;
+            }
             Logger.DecLvl();
         }
 
@@ -194,9 +248,10 @@ namespace SEScripts.XUI.XML
             Logger.IncLvl();
             bool ChildrenWereSelectable = ChildrenAreSelectable;
             ChildrenAreSelectable = ChildrenAreSelectable || child.IsSelectable();
-            if (Parent != null && (Selectable || ChildrenAreSelectable) != (Selectable || ChildrenWereSelectable))
+            if ((Selectable || ChildrenAreSelectable) != (Selectable || ChildrenWereSelectable))
             {
-                Parent.UpdateSelectability(this);
+                RerenderRequired = true;
+                Parent?.UpdateSelectability(this);
             }
 
             Logger.DecLvl();
@@ -276,6 +331,7 @@ namespace SEScripts.XUI.XML
             if (!WasSelected && IsSelected())
             {
                 OnSelect();
+                RerenderRequired = true;
             }
 
             Logger.DecLvl();
@@ -313,6 +369,7 @@ namespace SEScripts.XUI.XML
             if (!WasSelected && IsSelected())
             {
                 OnSelect();
+                RerenderRequired = true;
             }
 
             Logger.DecLvl();
@@ -355,20 +412,70 @@ namespace SEScripts.XUI.XML
                     }
                 }
             }
-
-            if (key == "activated")
+            else if (key == "activated")
             {
                 bool shouldBeActivated = value == "true";
                 Activated = shouldBeActivated;
             }
-
-            if (key == "flowdirection")
+            else if(key == "inputbinding")
             {
-                Attributes["flow"] = value;
+                HasUserInputBindings = true;
+                if(Parent != null)
+                {
+                    Parent.HasUserInputBindings = true;
+                }
+            }
+            else if (key == "flow")
+            {
+                if(value == "horizontal")
+                {
+                    RenderCache.Flow = NodeBox.FlowDirection.HORIZONTAL;
+                }
+                else
+                {
+                    RenderCache.Flow = NodeBox.FlowDirection.VERTICAL;
+                }
+                RerenderRequired = true;
+            }
+            else if (key == "align")
+            {
+                switch(value)
+                {
+                    case "right":
+                        RenderCache.Align = NodeBox.TextAlign.RIGHT;
+                        break;
+                    case "center":
+                        RenderCache.Align = NodeBox.TextAlign.CENTER;
+                        break;
+                    default:
+                        RenderCache.Align = NodeBox.TextAlign.LEFT;
+                        break;
+                }
+                RerenderRequired = true;
+
+            }
+            else if (key == "width")
+            {
+                int width;
+                if(Int32.TryParse(value, out width))
+                {
+                    RenderCache.DesiredWidth = width;
+                }
             }
 
             Attributes[key] = value;
             Logger.DecLvl();
+        }
+
+        public XMLParentNode RetrieveRoot()
+        {
+            XMLParentNode ancestor = this;
+            while (ancestor.GetParent() != null)
+            {
+                ancestor = ancestor.GetParent();
+            }
+
+            return ancestor;
         }
 
         public void KeyPress(string keyCode)
@@ -475,7 +582,7 @@ namespace SEScripts.XUI.XML
             return dict;
         }
 
-        public int GetWidth(int maxWidth)
+        /*public int GetWidth(int maxWidth)
         {
             Logger.debug(Type + ".GetWidth()");
             Logger.IncLvl();
@@ -507,7 +614,7 @@ namespace SEScripts.XUI.XML
             }
         }
 
-        public string Render(int availableWidth)
+        public string RenderOld(int availableWidth)
         {
             Logger.debug(Type + ".Render()");
             Logger.IncLvl();
@@ -519,6 +626,20 @@ namespace SEScripts.XUI.XML
 
             Logger.DecLvl();
             return renderString;
+        }
+
+        public NodeBox Render(int availableWidth)
+        {
+            return Render(availableWidth, 0);
+        }
+
+        public NodeBox Render(int availableWidth, int availableHeight)
+        {
+            Logger.debug(Type + ".Render()");
+            Logger.IncLvl();
+
+            Logger.DecLvl();
+            return Cache;
         }
 
         protected virtual void PreRender(ref List<string> segments, int width, int availableWidth)
@@ -627,18 +748,19 @@ namespace SEScripts.XUI.XML
             Logger.DecLvl();
             return renderString;
         }
-
+        
         protected virtual string RenderChild(XMLTree child, int availableWidth)
         {
             Logger.log(Type + ".RenderChild()");
             Logger.IncLvl();
             Logger.DecLvl();
             return child.Render(availableWidth);
-        }
-
+        }*/
+        
         public void DetachChild(XMLTree child)
         {
             Children.Remove(child);
+            RerenderRequired = true;
         }
 
         public void Detach()
@@ -647,6 +769,34 @@ namespace SEScripts.XUI.XML
             {
                 GetParent().DetachChild(this);
             }
+        }
+
+
+        protected virtual void BuildRenderCache()
+        {
+            Logger.debug(Type + ".BuildRenderCache()");
+            Logger.IncLvl();
+            RenderCache.Clear();
+            NodeBoxTree box = RenderCache as NodeBoxTree;
+            foreach (XMLTree child in Children)
+            {
+                box.Add(child.RenderBox);
+            }
+            RerenderRequired = false;
+            Logger.DecLvl();
+        }
+
+        public string Render(int maxWidth)
+        {
+            Logger.debug(Type + ".Render()");
+            Logger.IncLvl();
+            Logger.DecLvl();
+            return Render(maxWidth);
+        }
+
+        public string Render()
+        {
+            return Render(-1);
         }
     }
 

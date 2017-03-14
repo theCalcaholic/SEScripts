@@ -14,54 +14,47 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-namespace SEScripts.Lib
+namespace SEScripts.Lib.LoggerNS
 {
     public static class Logger
     {
-        public static string History = "";
+        private static StringBuilder Log = new StringBuilder();
+        public static string Output
+        {
+            get { return Log.ToString(); }
+        }
         static IMyTextPanel DebugPanel;
         static public bool DEBUG = false;
         public static int offset = 0;
+        private static StringBuilder Prefix = new StringBuilder();
+        
+
 
         public static void log(string msg)
         {
-            if (DebugPanel == null)
-            {
-                return;
-            }
-            string prefix = "";
-            for (int i = 0; i < offset; i++)
-            {
-                prefix += "  ";
-            }
-            History += prefix + msg + "\n";
-            DebugPanel.WritePublicText(prefix + msg + "\n", true);
-            //P.Echo(prefix + msg);
+            Log.Append(Prefix);
+            Log.Append(msg + "\n");
+            Console.WriteLine(Prefix + msg);
+            //!UNCOMMENT P.Echo(Prefix + msg);
         }
 
         public static void debug(string msg)
         {
-            if (!DEBUG)
+            if (DEBUG)
             {
-                string prefix = "";
-                for (int i = 0; i < offset; i++)
-                {
-                    prefix += "  ";
-                }
-                History += prefix + msg + "\n";
-                return;
+                log(msg);
             }
-            log(msg);
         }
 
         public static void IncLvl()
         {
-            offset += 2;
+            Prefix.Append("  ");
         }
 
         public static void DecLvl()
         {
-            offset = offset - 2;
+            if( Prefix.Length >= 2)
+                Prefix.Remove(Prefix.Length - 2, 2);
         }
     }
 

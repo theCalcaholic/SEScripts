@@ -14,7 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib;
+using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
@@ -41,7 +41,7 @@ namespace SEScripts.XUI.XML
             Logger.DecLvl();
         }
 
-        protected override string RenderChild(XMLTree child, int width)
+        /*protected override string RenderChild(XMLTree child, int width)
         {
             string renderString = "";
             string prefix = "     ";
@@ -51,7 +51,7 @@ namespace SEScripts.XUI.XML
             }
             renderString += base.RenderChild(child, width);
             return renderString;
-        }
+        }*/
     }
 
     //EMBED SEScripts.XUI.XML.XMLTree

@@ -24,10 +24,10 @@ namespace SEScripts.XUI.XML
         {
             Type = "hidden";
         }
-        protected override string PostRender(List<string> segments, int width, int availableWidth)
+        /*protected override string PostRender(List<string> segments, int width, int availableWidth)
         {
             return null;
-        }
+        }*/
     }
 
 

@@ -14,8 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib;
-using SEScripts.MultiAgentNetwork.MAN.Agents;
+//using SEScripts.Lib;
 using SEScripts.ParseLib.XUI;
 
 namespace SEScripts.MultiAgentNetwork.MAN.Models

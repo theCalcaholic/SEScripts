@@ -14,22 +14,22 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib;
-using SEScripts.XUI.XML.DataStore;
+using SEScripts.Lib.DataStorage;
+using SEScripts.ParseLib.XUI;
 
 namespace SEScripts.XUI.XMLExtensions
 {
     
-    class XMLMessage : DataStore
+    class XMLMessage : XML.DataStore
     {
         XMLMessage() : base()
         {
-            XML.Type = "message";
+            Type = "message";
         }
 
         static void Register()
         {
-            XML.NodeRegister.Add("message", () => { return new XMLMessage(); });
+            //XML.NodeRegister.Add("message", () => { return new XMLMessage(); });
         }
     }
 }

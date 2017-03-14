@@ -27,11 +27,9 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib;
+using SEScripts.Lib.LoggerNS;
 
-namespace SEScripts.ParseLib
-{
-"""
+namespace """
 
 generic_header = """namespace SEScripts.Merged
 {
@@ -91,8 +89,9 @@ class ScriptProvider:
     """wrapperRegex = re.compile(r'\w+WRAPPER', flags=re.UNICODE)
     if file_base_name != build_base_name:
       content = content.replace(file_base_name, build_base_name)"""
+    parselib_namespace = namespace[namespace.find(".") + 1:namespace.rfind(".")]
     content = minify(content)
-    parselib_content = parselib_header + preamble + content + generic_footer
+    parselib_content = parselib_header + "SEScripts.ParseLib." + parselib_namespace + " {\n" + preamble + content + generic_footer
 
     if not os.path.isdir(build_dir):
       os.makedirs(build_dir)
@@ -129,6 +128,7 @@ class ScriptProvider:
     name = namespace[namespace.rfind(".") + 1:]
     if name[-7:] == "WRAPPER":
       content = content.replace(name, name[:-7])
+    content = content.replace("//UNCOMMENT ", "")
     print("-------------------------------------------------------\n")
     return content
 

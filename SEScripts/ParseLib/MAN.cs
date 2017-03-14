@@ -1625,6 +1625,10 @@ public void LoadUI(XML.XMLTree ui)
 Logger.debug("UITerminalAgent.LoadUI()");
 Logger.IncLvl();
 UI.LoadUI(ui);
+if(UI.HasUserInputBindings)
+{
+ScheduleRefresh();
+}
 Logger.DecLvl();
 }
 public void UpdateScreen()
@@ -1641,7 +1645,20 @@ Logger.debug("UITerminalAgent.Call()");
 Logger.IncLvl();
 UI.Call(parameters);
 UpdateScreen();
+if (UI.HasUserInputBindings)
+{
+ScheduleRefresh();
+}
 Logger.DecLvl();
+}
+public override void Refresh(TimeSpan elapsedTime)
+{
+base.Refresh(elapsedTime);
+UI.Call(new List<string> { "refresh" });
+if (UI.UpdateUserInput())
+{
+UpdateScreen();
+}
 }
 }
 
@@ -2058,7 +2075,7 @@ private StringBuilder GetPlatformMenuitems()
 StringBuilder xml = new StringBuilder();
 foreach (string key in Platforms.Keys)
 {
-xml.Append("<menuItem route='fn:show-platform-services' platform='" + key + "'>" + Platforms[key] + "</menuitem>");
+xml.Append("<menuItem id='" + key + "' route='fn:show-platform-services' platform='" + key + "'>" + Platforms[key] + "</menuitem>");
 }
 return xml;
 }
@@ -2081,7 +2098,7 @@ UITerminalAgent UIAgent = Holder as UITerminalAgent;
 if(UIAgent != null)
 {
 XML.XMLTree meta = UIAgent.UI.GetNode((node) => node.Type == "meta");
-bool isLoaded = (meta != null && meta.GetAttribute("uiserviceindexhome") != null);
+bool isLoaded = (meta?.GetAttribute("uiserviceindexhome") != null);
 if (HomePageActive && !isLoaded )
 {
 Logger.log("Setting HomPageActive to false");
@@ -2089,11 +2106,34 @@ HomePageActive = false;
 }
 else
 {
-if(isLoaded)
+XML.XMLTree ui = XML.ParseXML(PageHome());
+if (isLoaded)
 {
 meta.SetAttribute("historydisabled", "true");
+Logger.log("Get id of selected node");
+/*XML.XMLTree selected = UIAgent.UI.GetSelectedNode();
+Logger.log("got selected node! (" + selected + ")");
+Logger.log("selected node is " + (selected == null ? "null!" : "of type " + selected.Type));
+string selectedId = selected.GetAttribute("id");
+Logger.log("got selected id!")
+//string selectedId = null;
+Logger.log("id is: " + selectedId ?? "null" );
+if (selectedId != null)
+{
+Logger.log("Get node to select in new UI");
+XML.XMLTree selectedNode = ui.GetNode((node) => (node.GetAttribute("id") == selectedId));
+Logger.log("found it!");
+if (selectedNode != null && selectedNode.IsSelectable())
+{
+Logger.log("select node...");
+while (!selectedNode.IsSelected())
+{
+ui.SelectNext();
 }
-XML.XMLTree ui = XML.ParseXML(PageHome());
+}
+}
+Logger.log("done");*/
+}
 UIAgent.LoadUI(ui);
 HomePageActive = true;
 UIAgent.UpdateScreen();
@@ -3103,8 +3143,22 @@ private bool Selected;
 protected int SelectedChild;
 protected bool Activated;
 protected Dictionary<string, string> Attributes;
+private bool _hasUserInputBindings;
+public bool HasUserInputBindings
+{
+get { return _hasUserInputBindings; }
+set
+{
+_hasUserInputBindings = value;
+if(Parent != null && HasUserInputBindings)
+{
+Parent.HasUserInputBindings = true;
+}
+}
+}
 public XMLTree()
 {
+HasUserInputBindings = false;
 PreventDefaults = new List<string>();
 Parent = null;
 Children = new List<XMLTree>();
@@ -3187,6 +3241,10 @@ public void SetParent(XMLParentNode parent)
 Logger.debug(Type + ": SetParent():");
 Logger.IncLvl();
 Parent = parent;
+if(HasUserInputBindings && Parent != null)
+{
+Parent.HasUserInputBindings = true;
+}
 Logger.DecLvl();
 }
 public XMLParentNode GetParent()
@@ -3402,8 +3460,25 @@ if (key == "flowdirection")
 {
 Attributes["flow"] = value;
 }
+if(key == "inputbinding")
+{
+HasUserInputBindings = true;
+if(Parent != null)
+{
+Parent.HasUserInputBindings = true;
+}
+}
 Attributes[key] = value;
 Logger.DecLvl();
+}
+public XMLParentNode RetrieveRoot()
+{
+XMLParentNode ancestor = this;
+while (ancestor.GetParent() != null)
+{
+ancestor = ancestor.GetParent();
+}
+return ancestor;
 }
 public void KeyPress(string keyCode)
 {
@@ -3659,6 +3734,7 @@ GetParent().DetachChild(this);
 
 public interface XMLParentNode
 {
+bool HasUserInputBindings { get; set; }
 XMLParentNode GetParent();
 void UpdateSelectability(XMLTree child);
 void KeyPress(string keyCode);
@@ -3745,18 +3821,33 @@ public class UIController : XMLParentNode
 XMLTree ui;
 public Stack<XMLTree> UIStack;
 public string Type;
+bool UserInputActive;
+IMyTerminalBlock UserInputSource;
+TextInputMode UserInputMode;
+List<XMLTree> UserInputBindings;
+string InputDataCache;
+public bool HasUserInputBindings
+{
+get { return UserInputActive && UserInputSource != null && UserInputBindings.Count > 0; }
+set { }
+}
+public enum TextInputMode { PUBLIC_TEXT, CUSTOM_DATA }
 public UIController(XMLTree rootNode)
 {
 Logger.debug("UIController constructor()");
 Logger.IncLvl();
 Type = "CTRL";
 UIStack = new Stack<XMLTree>();
+UserInputBindings = new List<XMLTree>();
+UserInputActive = false;
+InputDataCache = "";
 ui = rootNode;
 ui.SetParent(this);
 if (GetSelectedNode() == null && ui.IsSelectable())
 {
 ui.SelectFirst();
 }
+CollectUserInputBindings();
 Logger.DecLvl();
 }
 public static UIController FromXML(string xml)
@@ -3850,6 +3941,8 @@ else
 ui = rootNode;
 ui.SetParent(this);
 }
+UserInputBindings = new List<XMLTree>();
+CollectUserInputBindings();
 Logger.DecLvl();
 }
 public void ClearUIStack()
@@ -3996,6 +4089,122 @@ public bool SelectNext()
 {
 return ui.SelectNext();
 }
+public void SetUserInputSource(IMyTerminalBlock sourceBlock, TextInputMode mode)
+{
+if(mode == TextInputMode.PUBLIC_TEXT && (sourceBlock as IMyTextPanel) == null)
+{
+throw new Exception("Only Text Panels can be used as user input if PUBLIC_TEXT mode is selected!");
+}
+UserInputSource = sourceBlock;
+UserInputMode = mode;
+}
+public void EnableUserInput()
+{
+UserInputActive = true;
+}
+public void DisableUserInput()
+{
+UserInputActive = false;
+}
+public void RegisterInputBinding(XMLTree node)
+{
+UserInputBindings.Add(node);
+}
+public bool UpdateUserInput()
+{
+P.Echo("UIController.RefreshUserInput()");
+if(!UserInputActive || UserInputSource == null)
+{
+return false;
+}
+// get input data
+string inputData = null;
+switch(UserInputMode)
+{
+case TextInputMode.CUSTOM_DATA:
+inputData = UserInputSource?.CustomData;
+break;
+case TextInputMode.PUBLIC_TEXT:
+inputData = (UserInputSource as IMyTextPanel)?.GetPublicText();
+break;
+}
+bool inputHasChanged = true;
+if( inputData == null || inputData == InputDataCache)
+{
+inputHasChanged = false;
+}
+P.Echo("input has " + (inputHasChanged ? "" : "not ") + "changed");
+P.Echo("Iterating input bindings (" + UserInputBindings.Count + " bindings registered).");
+// update ui input bindings
+string binding;
+string fieldValue;
+foreach (XMLTree node in UserInputBindings)
+{
+binding = node.GetAttribute("inputbinding");
+if(binding != null)
+{
+P.Echo("binding found at " + node.Type + " node for field: " + binding);
+fieldValue = node.GetAttribute(binding.ToLower());
+P.Echo("field is " + (fieldValue ?? "EMPTY") + ".");
+if(!inputHasChanged && fieldValue != null && fieldValue != InputDataCache)
+{
+P.Echo("applying field value: " + fieldValue);
+inputData = fieldValue;
+inputHasChanged = true;
+}
+else if(inputHasChanged)
+{
+P.Echo("Updating field value to input: " + inputData);
+node.SetAttribute(binding.ToLower(), inputData);
+}
+}
+}
+if(inputHasChanged)
+{
+InputDataCache = inputData;
+}
+// update user input device
+switch (UserInputMode)
+{
+case TextInputMode.CUSTOM_DATA:
+if(UserInputSource != null)
+{
+UserInputSource.CustomData = InputDataCache;
+}
+break;
+case TextInputMode.PUBLIC_TEXT:
+(UserInputSource as IMyTextPanel)?.WritePublicText(InputDataCache);
+break;
+}
+return inputHasChanged;
+}
+private void CollectUserInputBindings()
+{
+P.Echo("UIController.CollectUserInputBindings()");
+XMLTree node;
+Queue<XMLParentNode> nodes = new Queue<XMLParentNode>();
+nodes.Enqueue(ui);
+while(nodes.Count != 0)
+{
+node = nodes.Dequeue() as XMLTree;
+if(!node.HasUserInputBindings)
+{
+P.Echo("node has no userinputbindings");
+}
+if (node != null && node.HasUserInputBindings)
+{
+P.Echo("Checking " + node.Type + " node...");
+for (int i = 0; i < node.NumberOfChildren(); i++)
+{
+nodes.Enqueue(node.GetChild(i));
+}
+if (node.GetAttribute("inputbinding") != null)
+{
+RegisterInputBinding(node);
+}
+}
+}
+}
 }
 
 public abstract class UIFactory
@@ -4055,7 +4264,6 @@ Logger.DecLvl();
 }
 protected override string RenderChild(XMLTree child, int width)
 {
-P.Me.CustomData = Logger.History;
 string renderString = "";
 string prefix = "     ";
 if (child.Type == "menuitem")
@@ -4270,14 +4478,9 @@ Type = "uicontrols";
 Controller = null;
 SetAttribute("selectable", "false");
 }
-private void RetrieveController()
+private void UpdateController()
 {
-XMLParentNode ancestor = this;
-while (ancestor.GetParent() != null)
-{
-ancestor = ancestor.GetParent();
-}
-Controller = ancestor as UIController;
+Controller = RetrieveRoot() as UIController;
 SetAttribute("selectable", (Controller != null && Controller.UIStack.Count > 0) ? "true" : "false");
 if (IsSelectable())
 {
@@ -4299,7 +4502,7 @@ public override void OnKeyPressed(string keyCode)
 {
 if (Controller == null)
 {
-RetrieveController();
+UpdateController();
 }
 switch (keyCode)
 {
@@ -4316,7 +4519,7 @@ protected override string PostRender(List<string> segments, int width, int avail
 {
 if (Controller == null)
 {
-RetrieveController();
+UpdateController();
 }
 string prefix;
 if (!IsSelectable())
@@ -4381,6 +4584,19 @@ base.OnKeyPressed(keyCode);
 break;
 }
 }
+public override void SetAttribute(string key, string value)
+{
+if(key == "allowedchars")
+{
+if(!System.Text.RegularExpressions.Regex.IsMatch(value,
+@"([^-\\]-[^-\\]|[^-\\]|\\-|\\\\)*"))
+{
+throw new Exception("Invalid format of allowed characters!");
+}
+
+}
+base.SetAttribute(key, value);
+}
 private void IncreaseLetter()
 {
 Logger.log("TextInput.IncreaseLetter()");
@@ -4391,16 +4607,14 @@ return;
 }
 char[] value = GetAttribute("value").ToCharArray();
 char letter = value[CursorPosition];
-char[] chars = GetAttribute("allowedchars").ToCharArray();
-for (int i = 0; i < chars.Length; i++)
+string[] charSets = GetAllowedCharSets();
+for (int i = 0; i < charSets.Length; i++)
 {
-if (
-chars[i] != '-'
-&& chars[i] == value[CursorPosition]
-&& !(i < chars.Length - 1 && chars[i + 1] == '-'))
+if ((charSets[i].Length == 1 && charSets[i][0] == value[CursorPosition])
+|| (charSets[i].Length == 3 && charSets[i][2] == value[CursorPosition]))
 {
-Logger.log("letter outside class, setting to: " + chars[i == 0 ? chars.Length - 1 : i - 1] + ". (chars[" + ((i + 1) % chars.Length) + "])");
-value[CursorPosition] = chars[(i + 1) % chars.Length];
+Logger.log("letter outside class, setting to: " + charSets[i == 0 ? charSets.Length - 1 : i - 1][0] + ". (chars[" + ((i + 1) % charSets.Length) + "])");
+value[CursorPosition] = charSets[(i + 1) % charSets.Length][0];
 SetAttribute("value", new string(value));
 Logger.DecLvl();
 return;
@@ -4421,15 +4635,14 @@ return;
 }
 char[] value = GetAttribute("value").ToCharArray();
 char[] chars = GetAttribute("allowedchars").ToCharArray();
-for(int i = 0; i < chars.Length; i++)
+string[] charSets = GetAllowedCharSets();
+for(int i = 0; i < charSets.Length; i++)
 {
-if(
-chars[i] != '_'
-&& chars[i] == value[CursorPosition]
-&& !(i > 0 && chars[i-1] == '-'))
+if(charSets[i][0] == value[CursorPosition])
 {
-Logger.log("letter outside class, setting to: " + chars[i == 0 ? chars.Length - 1 : i - 1] + ". (chars[" + (i == 0 ? chars.Length - 1 : i - 1) + "])");
-value[CursorPosition] = chars[ i == 0 ? chars.Length - 1 : i - 1];
+int index = (i == 0 ? charSets.Length - 1 : i - 1);
+Logger.log("letter outside class, setting to: " + charSets[index][charSets[index].Length - 1] + ". (chars[" + (index) + "])");
+value[CursorPosition] = charSets[index][charSets[index].Length - 1];
 SetAttribute("value", new string(value));
 return;
 }
@@ -4438,6 +4651,33 @@ Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPositi
 value[CursorPosition] = (char)(((int)value[CursorPosition]) - 1);
 SetAttribute("value", new string(value));
 Logger.DecLvl();
+}
+private string[] GetAllowedCharSets()
+{
+string charString = GetAttribute("allowedchars");
+System.Text.RegularExpressions.MatchCollection matches =
+System.Text.RegularExpressions.Regex.Matches(charString, @"[^-\\]-[^-\\]|[^-\\]|\\-|\\\\");
+string[] charSets = new string[matches.Count];
+int i = 0;
+foreach (System.Text.RegularExpressions.Match match in matches)
+{
+string matchString = match.ToString();
+if (matchString == "\\-")
+{
+charSets[i] = "-";
+}
+else if (matchString == "\\\\")
+{
+charSets[i] = "\\";
+}
+else
+{
+charSets[i] = matchString;
+}
+i++;
+}
+P.Echo("Char sets found: " + string.Join(",", charSets));
+return charSets;
 }
 private void IncreaseCursorPosition()
 {
@@ -4458,8 +4698,8 @@ PreventDefault("DOWN");
 }
 if (CursorPosition >= GetAttribute("value").Length)
 {
-string chars = GetAttribute("allowedchars");
-SetAttribute("value", GetAttribute("value") + chars[0]);
+string[] charSets = GetAllowedCharSets();
+SetAttribute("value", GetAttribute("value") + charSets[0][0]);
 }
 }
 private void DecreaseCursorPosition()

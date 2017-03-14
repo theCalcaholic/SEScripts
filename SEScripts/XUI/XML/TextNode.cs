@@ -14,7 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib;
+using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
@@ -24,20 +24,31 @@ namespace SEScripts.XUI.XML
 
         public TextNode(string content) : base()
         {
+            Logger.debug("TextNode constructor()");
+            Logger.IncLvl();
             Type = "textnode";
             Content = content.Replace("\n", "");
             Content = Content.Trim(new char[] { '\n', ' ', '\r' });
-            if (Content == "")
-            {
-                Content = null;
-            }
+            RenderBox = new NodeBoxLeaf(Content);
+            RerenderRequired = false;
+            Logger.DecLvl();
         }
 
-        protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }
+        //protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }
 
-        protected override string PostRender(List<string> segments, int width, int availableWidth)
+        /*protected override string PostRender(List<string> segments, int width, int availableWidth)
         {
             return Content;
+        }*/
+
+        protected override void BuildRenderCache()
+        {
+            Logger.debug(Type + ".BuildRenderCache()");
+            Logger.IncLvl();
+            RenderBox.Clear();
+            RenderBox.Add(Content);
+            RerenderRequired = false;
+            Logger.DecLvl();
         }
     }
 

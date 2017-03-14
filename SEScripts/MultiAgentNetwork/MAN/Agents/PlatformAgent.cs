@@ -15,10 +15,10 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 using System.Linq;
 
-using SEScripts.Lib;
 using SEScripts.MultiAgentNetwork.MAN.Protocols;
 using SEScripts.MultiAgentNetwork.MAN.Models;
 using SEScripts.ParseLib.XUI;
+using SEScripts.Lib.DataStorage;
 
 namespace SEScripts.MultiAgentNetwork.MAN.Agents
 {

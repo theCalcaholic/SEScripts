@@ -15,9 +15,9 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
 //using SEScripts.Lib;
-using SEScripts.ParseLib.XML;
+using SEScripts.ParseLib.XUI;
 
-namespace SEScripts.Lib
+namespace SEScripts.Lib.DataStorage
 {
     public class DataStorage : XML.DataStore
     {

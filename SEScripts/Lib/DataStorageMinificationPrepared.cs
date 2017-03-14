@@ -23,7 +23,7 @@ namespace SEScripts.Lib
     using VRage.Game.ObjectBuilders.Definitions;
 
     //using SEScripts.Lib;
-    //using SEScripts.ParseLib;
+    using ParseLib.XUI;
 
     namespace SEScripts.Lib
     {
