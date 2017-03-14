@@ -35,6 +35,18 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'XUI DEBUG|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\XUI DEBUG\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
   </ItemGroup>
@@ -51,14 +63,20 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="MultiAgentFramework\MAF\Models\AgentMessageTests.cs" />
+    <Compile Include="GenericTestClass.cs" />
+    <Compile Include="Lib\TextUtilsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XUI\ScreenBuilder\NodeBoxLeafTests.cs" />
+    <Compile Include="XUI\ScreenBuilder\NodeBoxTreeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SEScripts\SEScripts.csproj">
       <Project>{3CFC0D17-F514-459C-BA65-073EC0D5C836}</Project>
       <Name>SEScripts</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="XUI\XML\" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
