@@ -18,7 +18,7 @@ using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
-    public abstract class XMLTree : XMLParentNode
+    public abstract class XMLTree : NodeBoxTree, XMLParentNode
     {
         public string Type;
         private XMLParentNode Parent;
@@ -45,36 +45,9 @@ namespace SEScripts.XUI.XML
         }
 
         protected bool RerenderRequired;
-        private NodeBox RenderCache;
-        protected NodeBox RenderBox
-        {
-            get
-            {
-                Logger.log(Type + "RenderBox.get()");
-                Logger.IncLvl();
-                if(RerenderRequired)
-                {
-                    BuildRenderCache();
-                }
-                Logger.DecLvl();
-                return RenderCache;
-            }
-            set
-            {
-                RenderCache = value;
-            }
-        }
-
-        public int Width
-        {
-            get
-            {
-                return RenderBox.Width;
-            }
-        }
         
 
-        public XMLTree()
+        public XMLTree() : base()
         {
             Logger.debug("XMLTree constructor");
             Logger.IncLvl();
@@ -88,7 +61,6 @@ namespace SEScripts.XUI.XML
             SelectedChild = -1;
             Activated = false;
             Attributes = new Dictionary<string, string>();
-            RenderCache = new NodeBoxTree();
             RerenderRequired = true;
             Type = "NULL";
 
@@ -161,6 +133,7 @@ namespace SEScripts.XUI.XML
             Children.Insert(position, child);
             child.SetParent(this as XMLParentNode);
             UpdateSelectability(child);
+
             Logger.DecLvl();
         }
 
@@ -429,11 +402,11 @@ namespace SEScripts.XUI.XML
             {
                 if(value == "horizontal")
                 {
-                    RenderCache.Flow = NodeBox.FlowDirection.HORIZONTAL;
+                    base.Flow = NodeBox.FlowDirection.HORIZONTAL;
                 }
                 else
                 {
-                    RenderCache.Flow = NodeBox.FlowDirection.VERTICAL;
+                    base.Flow = NodeBox.FlowDirection.VERTICAL;
                 }
                 RerenderRequired = true;
             }
@@ -442,13 +415,13 @@ namespace SEScripts.XUI.XML
                 switch(value)
                 {
                     case "right":
-                        RenderCache.Align = NodeBox.TextAlign.RIGHT;
+                        base.Align = NodeBox.TextAlign.RIGHT;
                         break;
                     case "center":
-                        RenderCache.Align = NodeBox.TextAlign.CENTER;
+                        base.Align = NodeBox.TextAlign.CENTER;
                         break;
                     default:
-                        RenderCache.Align = NodeBox.TextAlign.LEFT;
+                        base.Align = NodeBox.TextAlign.LEFT;
                         break;
                 }
                 RerenderRequired = true;
@@ -459,7 +432,7 @@ namespace SEScripts.XUI.XML
                 int width;
                 if(Int32.TryParse(value, out width))
                 {
-                    RenderCache.DesiredWidth = width;
+                    base.DesiredWidth = width;
                 }
             }
 
@@ -776,11 +749,11 @@ namespace SEScripts.XUI.XML
         {
             Logger.debug(Type + ".BuildRenderCache()");
             Logger.IncLvl();
-            RenderCache.Clear();
-            NodeBoxTree box = RenderCache as NodeBoxTree;
+            base.Clear();
+            NodeBoxTree box = this;
             foreach (XMLTree child in Children)
             {
-                box.Add(child.RenderBox);
+                box.Add(child);
             }
             RerenderRequired = false;
             Logger.DecLvl();

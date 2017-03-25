@@ -424,5 +424,6 @@ namespace SEScripts.XUI.Tests
             tree.Clear();
             Assert.AreEqual(0, tree.Count);
         }
+        
     }
 }

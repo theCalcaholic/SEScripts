@@ -29,7 +29,7 @@ namespace SEScripts.XUI.XML
             Type = "textnode";
             Content = content.Replace("\n", "");
             Content = Content.Trim(new char[] { '\n', ' ', '\r' });
-            RenderBox = new NodeBoxLeaf(Content);
+            Add(new NodeBoxLeaf(Content));
             RerenderRequired = false;
             Logger.DecLvl();
         }
@@ -45,8 +45,8 @@ namespace SEScripts.XUI.XML
         {
             Logger.debug(Type + ".BuildRenderCache()");
             Logger.IncLvl();
-            RenderBox.Clear();
-            RenderBox.Add(Content);
+            base.Clear();
+            Add(Content);
             RerenderRequired = false;
             Logger.DecLvl();
         }

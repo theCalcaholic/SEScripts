@@ -68,6 +68,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XUI\ScreenBuilder\NodeBoxLeafTests.cs" />
     <Compile Include="XUI\ScreenBuilder\NodeBoxTreeTests.cs" />
+    <Compile Include="XUI\XML\XMLTreeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SEScripts\SEScripts.csproj">
@@ -75,9 +76,7 @@
       <Name>SEScripts</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="XUI\XML\" />
-  </ItemGroup>
+  <ItemGroup />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

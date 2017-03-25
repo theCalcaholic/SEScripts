@@ -104,24 +104,43 @@ namespace SEScripts.XUI
 
         public override void Add(string box)
         {
+            AddAt(Boxes.Count, box);
+        }
+
+        public override void AddAt(int position, string box)
+        {
             Logger.debug("NodeBoxTree.Add(string)");
             Logger.IncLvl();
-            Boxes.Add(new NodeBoxLeaf(box));
+            AddAt(position, new NodeBoxLeaf(box));
             Logger.DecLvl();
         }
 
         public override void Add(StringBuilder box)
         {
+            AddAt(Boxes.Count, box);
+        }
+
+        public override void AddAt(int position, StringBuilder box)
+        {
             Logger.debug("NodeBoxTree.Add(StringBuilder)");
             Logger.IncLvl();
-            Boxes.Add(new NodeBoxLeaf(box));
+            AddAt(position, new NodeBoxLeaf(box));
             Logger.DecLvl();
         }
+
+        public void AddAt(int position, NodeBox box)
+        {
+            Logger.debug("NodeBoxTree.Add(NodeBox)");
+            Logger.IncLvl();
+            Boxes.AddOrInsert<NodeBox>(box, position);
+            Logger.DecLvl();
+        }
+
         public void Add(NodeBox box)
         {
             Logger.debug("NodeBoxTree.Add(NodeBox)");
             Logger.IncLvl();
-            Boxes.Add(box);
+            AddAt(Boxes.Count, box);
             Logger.DecLvl();
         }
 
@@ -265,16 +284,42 @@ namespace SEScripts.XUI
             Logger.DecLvl();
         }
 
+        public override void AddAt(int position, StringBuilder box)
+        {
+            Logger.debug("NodeBoxLeaf.AddAt(int, StringBuilder)");
+            Logger.IncLvl();
+            if (position == 0)
+            {
+                Content = new StringBuilder(box.ToString() + Content.ToString());
+            }
+            else
+            {
+                Content.AppendStringBuilder(box);
+            }
+            Logger.DecLvl();
+        }
+
         public override void Add(StringBuilder box)
         {
             Logger.debug("NodeBoxLeaf.Add(StringBuilder)");
+            Logger.IncLvl();
             Content.AppendStringBuilder(box.Replace("\n", ""));
+            Logger.DecLvl();
+        }
+        public override void AddAt(int position, string box)
+        {
+            Logger.debug("NodeBoxLeaf.AddAt(int, string)");
+            Logger.IncLvl();
+            AddAt(position, new StringBuilder(box));
+            Logger.DecLvl();
         }
 
         public override void Add(string box)
         {
             Logger.debug("NodeBoxLeaf.Add(string)");
-            Content.Append( box.Replace("\n", "") );
+            Logger.IncLvl();
+            Add(new StringBuilder(box));
+            Logger.DecLvl();
         }
 
         public override StringBuilder GetLine(int index)
@@ -313,6 +358,8 @@ namespace SEScripts.XUI
 
         public abstract void Add(string box);
         public abstract void Add(StringBuilder box);
+        public abstract void AddAt(int position, string box);
+        public abstract void AddAt(int position, StringBuilder box);
         public abstract StringBuilder GetLine(int index);
         public abstract StringBuilder GetLine(int index, int maxWidth);
         public abstract void Clear();
