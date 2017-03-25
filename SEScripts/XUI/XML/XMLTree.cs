@@ -18,7 +18,7 @@ using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
-    public abstract class XMLTree : NodeBoxTree, XMLParentNode
+    public abstract class XMLTree : XMLParentNode
     {
         public string Type;
         private XMLParentNode Parent;
@@ -45,9 +45,51 @@ namespace SEScripts.XUI.XML
         }
 
         protected bool RerenderRequired;
+
+        public virtual NodeBox RenderCache
+        {
+            get
+            {
+                NodeBoxTree cache = new NodeBoxTree();
+                NodeBox childCache;
+                foreach (XMLTree child in Children)
+                {
+                    childCache = child.RenderCache;
+                    cache.Add(childCache);
+                }
+                cache.Flow = GetAttribute("flow") == "horizontal" ? NodeBox.FlowDirection.HORIZONTAL : NodeBox.FlowDirection.VERTICAL;
+
+                switch(GetAttribute("alignself"))
+                {
+                    case "right":
+                        cache.Align = NodeBox.TextAlign.RIGHT;
+                        break;
+                    case "center":
+                        cache.Align = NodeBox.TextAlign.CENTER;
+                        break;
+                    default:
+                        cache.Align = NodeBox.TextAlign.LEFT;
+                        break;
+                }
+
+                int result;
+                if(Int32.TryParse(GetAttribute("minwidth"), out result))
+                    cache.MinWidth = result;
+                if (Int32.TryParse(GetAttribute("maxwidth"), out result))
+                    cache.MaxWidth = result;
+                if (Int32.TryParse(GetAttribute("width"), out result))
+                    cache.DesiredWidth = result;
+                if (Int32.TryParse(GetAttribute("forcewidth"), out result))
+                    cache.ForcedWidth = result;
+                if (Int32.TryParse(GetAttribute("height"), out result))
+                    cache.Height = result;
+
+                return cache;
+            }
+        }
         
 
-        public XMLTree() : base()
+        public XMLTree()
         {
             Logger.debug("XMLTree constructor");
             Logger.IncLvl();
@@ -402,11 +444,11 @@ namespace SEScripts.XUI.XML
             {
                 if(value == "horizontal")
                 {
-                    base.Flow = NodeBox.FlowDirection.HORIZONTAL;
+                    //RenderCach.Flow = NodeBox.FlowDirection.HORIZONTAL;
                 }
                 else
                 {
-                    base.Flow = NodeBox.FlowDirection.VERTICAL;
+                    //base.Flow = NodeBox.FlowDirection.VERTICAL;
                 }
                 RerenderRequired = true;
             }
@@ -415,13 +457,13 @@ namespace SEScripts.XUI.XML
                 switch(value)
                 {
                     case "right":
-                        base.Align = NodeBox.TextAlign.RIGHT;
+                        //base.Align = NodeBox.TextAlign.RIGHT;
                         break;
                     case "center":
-                        base.Align = NodeBox.TextAlign.CENTER;
+                        //base.Align = NodeBox.TextAlign.CENTER;
                         break;
                     default:
-                        base.Align = NodeBox.TextAlign.LEFT;
+                        //base.Align = NodeBox.TextAlign.LEFT;
                         break;
                 }
                 RerenderRequired = true;
@@ -432,7 +474,7 @@ namespace SEScripts.XUI.XML
                 int width;
                 if(Int32.TryParse(value, out width))
                 {
-                    base.DesiredWidth = width;
+                    //base.DesiredWidth = width;
                 }
             }
 
@@ -745,11 +787,11 @@ namespace SEScripts.XUI.XML
         }
 
 
-        protected virtual void BuildRenderCache()
+        /*protected virtual void BuildRenderCache()
         {
             Logger.debug(Type + ".BuildRenderCache()");
             Logger.IncLvl();
-            base.Clear();
+            //base.Clear();
             NodeBoxTree box = this;
             foreach (XMLTree child in Children)
             {
@@ -757,7 +799,7 @@ namespace SEScripts.XUI.XML
             }
             RerenderRequired = false;
             Logger.DecLvl();
-        }
+        }*/
 
         public string Render(int maxWidth)
         {

@@ -43,7 +43,7 @@ namespace SEScripts.XUI.Tests
             Assert.IsNotNull(leaf);
             Assert.AreEqual<string>("", leaf.GetLine(0).ToString());
             Assert.AreEqual(0, leaf.Height);
-            Assert.AreEqual(-1, leaf.Width);
+            Assert.AreEqual(-1, leaf.ForcedWidth);
             Assert.AreEqual(-1, leaf.MaxWidth);
             Assert.AreEqual(0, leaf.MinWidth);
             Assert.AreEqual(-1, leaf.DesiredWidth);

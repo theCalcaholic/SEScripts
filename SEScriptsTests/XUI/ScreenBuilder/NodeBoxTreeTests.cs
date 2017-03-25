@@ -128,7 +128,7 @@ namespace SEScripts.XUI.Tests
             NodeBoxTree tree = new NodeBoxTree();
             Assert.IsNotNull(tree);
             Assert.AreEqual(0, tree.Height);
-            Assert.AreEqual(-1, tree.Width);
+            Assert.AreEqual(-1, tree.ForcedWidth);
             Assert.AreEqual(-1, tree.MaxWidth);
             Assert.AreEqual(0, tree.MinWidth);
             Assert.AreEqual(-1, tree.DesiredWidth);
@@ -166,29 +166,29 @@ namespace SEScripts.XUI.Tests
 
             NodeBoxTree tree = new NodeBoxTree();
             NodeBoxLeaf leaf1 = new NodeBoxLeaf(line1);
-            leaf1.Width = TextUtils.GetTextWidth(line1);
+            leaf1.ForcedWidth = TextUtils.GetTextWidth(line1);
             NodeBoxLeaf leaf2 = new NodeBoxLeaf(line2);
-            leaf2.Width = TextUtils.GetTextWidth(line2);
+            leaf2.ForcedWidth = TextUtils.GetTextWidth(line2);
 
             tree.Add(leaf1);
             tree.Add(leaf2);
-            tree.Width = 0;
+            tree.ForcedWidth = 0;
 
             Assert.AreEqual<string>("", tree.GetLine(0).ToString());
 
-            tree.Width = Math.Max(TextUtils.GetTextWidth(line1), TextUtils.GetTextWidth(line2));
+            tree.ForcedWidth = Math.Max(TextUtils.GetTextWidth(line1), TextUtils.GetTextWidth(line2));
             Assert.AreEqual<string>(
                 TextUtils.PadText(line1, TextUtils.GetTextWidth(line2), TextUtils.PadMode.RIGHT).ToString(),
                 tree.GetLine(0).ToString());
             Assert.AreEqual<string>(line2.ToString(), tree.GetLine(1).ToString());
-            Assert.AreEqual<string>(TextUtils.CreateStringOfLength(" ", tree.Width).ToString(), tree.GetLine(2).ToString());
+            Assert.AreEqual<string>(TextUtils.CreateStringOfLength(" ", tree.ForcedWidth).ToString(), tree.GetLine(2).ToString());
 
             tree.Flow = NodeBox.FlowDirection.HORIZONTAL;
-            tree.Width = TextUtils.GetTextWidth(line1) + TextUtils.GetTextWidth(line2) + 1;
+            tree.ForcedWidth = TextUtils.GetTextWidth(line1) + TextUtils.GetTextWidth(line2) + 1;
 
             Assert.AreEqual<string>(line1.ToString() + line2, tree.GetLine(0).ToString());
             Console.WriteLine("testing empty line, horizontal");
-            Assert.AreEqual<string>(TextUtils.CreateStringOfLength(" ", tree.Width).ToString(), tree.GetLine(1).ToString());
+            Assert.AreEqual<string>(TextUtils.CreateStringOfLength(" ", tree.ForcedWidth).ToString(), tree.GetLine(1).ToString());
 
             string leftline1 = "abcde";
             string leftline2 = "f";
@@ -199,15 +199,15 @@ namespace SEScripts.XUI.Tests
             NodeBoxTree leftBox = new NodeBoxTree();
             leftBox.Add(leftline1);
             leftBox.Add(leftline2);
-            leftBox.Width = Math.Max(TextUtils.GetTextWidth(new StringBuilder(leftline1)), TextUtils.GetTextWidth(new StringBuilder(leftline2)));
+            leftBox.ForcedWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(leftline1)), TextUtils.GetTextWidth(new StringBuilder(leftline2)));
             NodeBoxTree rightBox = new NodeBoxTree();
             rightBox.Add(rightline1);
             rightBox.Add(rightline2);
-            rightBox.Width = Math.Max(TextUtils.GetTextWidth(new StringBuilder(rightline1)), TextUtils.GetTextWidth(new StringBuilder(rightline2)));
+            rightBox.ForcedWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(rightline1)), TextUtils.GetTextWidth(new StringBuilder(rightline2)));
 
             tree.Add(leftBox);
             tree.Add(rightBox);
-            tree.Width = leftBox.Width + rightBox.Width + 1;
+            tree.ForcedWidth = leftBox.ForcedWidth + rightBox.ForcedWidth + 1;
 
             Assert.AreEqual<string>(leftline1 + rightline1, tree.GetLine(0).ToString());
             string expected =
@@ -381,31 +381,31 @@ namespace SEScripts.XUI.Tests
             TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
 
             NodeBoxLeaf leftLeaf1 = new NodeBoxLeaf(left1);
-            leftLeaf1.Width = TextUtils.GetTextWidth(new StringBuilder(left1));
+            leftLeaf1.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(left1));
             NodeBoxLeaf leftLeaf2 = new NodeBoxLeaf(left2);
-            leftLeaf2.Width = TextUtils.GetTextWidth(new StringBuilder(left2));
+            leftLeaf2.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(left2));
             NodeBoxLeaf rightLeaf1 = new NodeBoxLeaf(right1);
-            rightLeaf1.Width = TextUtils.GetTextWidth(new StringBuilder(right1));
+            rightLeaf1.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(right1));
             NodeBoxLeaf rightLeaf2 = new NodeBoxLeaf(right2);
-            rightLeaf2.Width = TextUtils.GetTextWidth(new StringBuilder(right2));
+            rightLeaf2.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(right2));
             NodeBoxLeaf rightLeaf3 = new NodeBoxLeaf(right3);
-            rightLeaf3.Width = TextUtils.GetTextWidth(new StringBuilder(right3));
+            rightLeaf3.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(right3));
 
             NodeBoxTree leftBox = new NodeBoxTree();
             NodeBoxTree rightBox = new NodeBoxTree();
 
             leftBox.Add(leftLeaf1);
             leftBox.Add(leftLeaf2);
-            leftBox.Width = Math.Max(leftLeaf1.Width, leftLeaf2.Width);
+            leftBox.ForcedWidth = Math.Max(leftLeaf1.ForcedWidth, leftLeaf2.ForcedWidth);
             rightBox.Add(rightLeaf1);
             rightBox.Add(rightLeaf2);
             rightBox.Add(rightLeaf3);
-            rightBox.Width = Math.Max(rightLeaf1.Width, Math.Max(rightLeaf2.Width, rightLeaf3.Width));
+            rightBox.ForcedWidth = Math.Max(rightLeaf1.ForcedWidth, Math.Max(rightLeaf2.ForcedWidth, rightLeaf3.ForcedWidth));
             rightBox.Align = NodeBox.TextAlign.RIGHT;
 
             frame.Add(leftBox);
             frame.Add(rightBox);
-            frame.Width = leftBox.Width + 1 + rightBox.Width;
+            frame.ForcedWidth = leftBox.ForcedWidth + 1 + rightBox.ForcedWidth;
             frame.Flow = NodeBox.FlowDirection.HORIZONTAL;
             
             foreach(StringBuilder line in frame.GetLines())

@@ -369,26 +369,46 @@ namespace SEScripts.XUI
         protected int _MaxWidth;
         protected int _DesiredWidth;
         protected int _ForcedWidth;
-        public int Width
+        public int ForcedWidth
         {
             get
             {
                 Logger.debug("NodeBox.Width.get()");
                 return _ForcedWidth;
-                /*if(MaxWidth > -1)
-                {
-                    return Math.Max(0, Math.Min(MinWidth, MaxWidth));
-                }
-                else
-                {
-                    return Math.Max(0, MinWidth);
-                }*/
             }
             set
             {
                 Logger.debug("NodeBox.Width.get()");
                 _ForcedWidth = value;
             }
+        }
+
+        public int GetActualWidth(int maxWidth)
+        {
+            Logger.debug("NodeBox.GetActualWidth(int)");
+            Logger.IncLvl();
+            if (ForcedWidth == -1)
+            {
+                if (maxWidth == -1)
+                {
+                    Logger.debug("actual width equals min width");
+                    Logger.DecLvl();
+                    return MinWidth;
+                }
+                else
+                {
+                    Logger.debug("actual width equals maximum of min and max widths");
+                    Logger.DecLvl();
+                    return Math.Max(MinWidth, maxWidth);
+                }
+            }
+            else
+            {
+                Logger.debug("actual width equals forced width");
+                Logger.DecLvl();
+                return ForcedWidth;
+            }
+            
         }
 
         public NodeBox.TextAlign Align
@@ -489,25 +509,7 @@ namespace SEScripts.XUI
             Logger.debug("NodeBox.AlignLine()");
             Logger.IncLvl();
             Logger.debug("max width is " + maxWidth);
-            int actualWidth;
-            if (Width == -1)
-            {
-                if(maxWidth == -1)
-                {
-                    actualWidth = MinWidth;
-                    Logger.debug("actual width equals min width");
-                }
-                else
-                {
-                    actualWidth = Math.Max(MinWidth, maxWidth);
-                    Logger.debug("actual width equals maximum of min and max widths");
-                }
-            }
-            else
-            {
-                actualWidth = Width;
-                Logger.debug("actual width equals forced width");
-            }
+            int actualWidth = GetActualWidth(maxWidth);
             Logger.debug("actual width is " + actualWidth);
             Logger.debug("line width is " + TextUtils.GetTextWidth(line));
             Logger.debug("line is: |" + line + "|");

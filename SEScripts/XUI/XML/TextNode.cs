@@ -27,11 +27,18 @@ namespace SEScripts.XUI.XML
             Logger.debug("TextNode constructor()");
             Logger.IncLvl();
             Type = "textnode";
-            Content = content.Replace("\n", "");
+            Content.Replace("\n", "");
             Content = Content.Trim(new char[] { '\n', ' ', '\r' });
-            Add(new NodeBoxLeaf(Content));
             RerenderRequired = false;
             Logger.DecLvl();
+        }
+
+        public override NodeBox RenderCache
+        {
+            get
+            {
+                return new NodeBoxLeaf(Content);
+            }
         }
 
         //protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }
@@ -41,15 +48,14 @@ namespace SEScripts.XUI.XML
             return Content;
         }*/
 
-        protected override void BuildRenderCache()
+
+        /*protected override void BuildRenderCache()
         {
             Logger.debug(Type + ".BuildRenderCache()");
             Logger.IncLvl();
-            base.Clear();
-            Add(Content);
             RerenderRequired = false;
             Logger.DecLvl();
-        }
+        }*/
     }
 
     //EMBED SEScripts.XUI.XML.XMLTree
