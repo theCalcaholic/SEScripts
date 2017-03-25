@@ -83,10 +83,10 @@ namespace SEScripts.XUI.Tests
         public void GetRenderedLineTest()
         {
             NodeBoxLeaf leaf = new NodeBoxLeaf("test line");
-            Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetRenderedLine(0, 0).ToString());
-            Assert.AreEqual<string>(leaf.GetLine(1).ToString(), leaf.GetRenderedLine(1, 0).ToString());
-            Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetRenderedLine(0, 100).ToString());
-            Assert.AreEqual<string>(leaf.GetLine(1).ToString(), leaf.GetRenderedLine(1, 100).ToString());
+            Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetLine(0, 0).ToString());
+            Assert.AreEqual<string>(leaf.GetLine(1).ToString(), leaf.GetLine(1, 0).ToString());
+            Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetLine(0, 100).ToString());
+            Assert.AreEqual<string>(leaf.GetLine(1).ToString(), leaf.GetLine(1, 100).ToString());
         }
 
         [TestMethod()]
