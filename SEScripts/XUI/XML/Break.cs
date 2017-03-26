@@ -31,6 +31,16 @@ namespace SEScripts.XUI.XML
         {
             return "";
         }*/
+
+        public override NodeBox RenderCache
+        {
+            get
+            {
+                NodeBox cache = new NodeBoxLeaf();
+                cache.Height = 1;
+                return cache;
+            }
+        }
     }
 
 

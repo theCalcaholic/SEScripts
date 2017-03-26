@@ -28,6 +28,17 @@ namespace SEScripts.XUI.XML
         {
             return null;
         }*/
+
+        public override NodeBox RenderCache
+        {
+            get
+            {
+                NodeBox cache = new NodeBoxTree();
+                cache.ForcedWidth = 0;
+                cache.Height = 0;
+                return cache;
+            }
+        }
     }
 
 

@@ -27,6 +27,7 @@ namespace SEScripts.XUI.XML
             Logger.debug("TextNode constructor()");
             Logger.IncLvl();
             Type = "textnode";
+            Content = content;
             Content.Replace("\n", "");
             Content = Content.Trim(new char[] { '\n', ' ', '\r' });
             RerenderRequired = false;

@@ -447,7 +447,7 @@ namespace SEScripts.XUI.XML
                 if (node != null && node.HasUserInputBindings)
                 {
                     Logger.debug("Checking " + node.Type + " node...");
-                    for (int i = 0; i < node.NumberOfChildren(); i++)
+                    for (int i = 0; i < node.NumberOfChildren; i++)
                     {
                         nodes.Enqueue(node.GetChild(i));
                     }

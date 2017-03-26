@@ -30,6 +30,17 @@ namespace SEScripts.XUI.XML
         {
             segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL));
         }*/
+
+        public override NodeBox RenderCache
+        {
+            get
+            {
+                int width = 0;
+                Int32.TryParse(GetAttribute("width"), out width);
+                return new NodeBoxLeaf(
+                    TextUtils.PadText(new StringBuilder(), width, TextUtils.PadMode.RIGHT, "_"));
+            }
+        }
     }
 
     //EMBED SEScripts.XUI.XML.XMLTree

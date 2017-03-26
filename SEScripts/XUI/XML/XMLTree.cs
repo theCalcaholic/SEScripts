@@ -44,6 +44,14 @@ namespace SEScripts.XUI.XML
             }
         }
 
+        public int NumberOfChildren
+        {
+            get
+            {
+                return Children.Count;
+            }
+        }
+
         protected bool RerenderRequired;
 
         public virtual NodeBox RenderCache
@@ -75,18 +83,81 @@ namespace SEScripts.XUI.XML
                 int result;
                 if(Int32.TryParse(GetAttribute("minwidth"), out result))
                     cache.MinWidth = result;
+                //cache.MinWidth = CalculateWidth("minwidth", -1, 0);
                 if (Int32.TryParse(GetAttribute("maxwidth"), out result))
                     cache.MaxWidth = result;
+                //cache.MaxWidth = CalculateWidth(GetAttribute("maxwidth"), -1);
                 if (Int32.TryParse(GetAttribute("width"), out result))
                     cache.DesiredWidth = result;
+                //cache.DesiredWidth = CalculateWidth(GetAttribute("width"), -1);
                 if (Int32.TryParse(GetAttribute("forcewidth"), out result))
                     cache.ForcedWidth = result;
+                //cache.ForcedWidth = CalculateWidth(GetAttribute("forcewidth"), -1);
                 if (Int32.TryParse(GetAttribute("height"), out result))
                     cache.Height = result;
+                //cache.Height = CalculateWidth(GetAttribute("height"), -1);
 
                 return cache;
             }
         }
+
+        public static int CalculateWidth(string widthDef, int maxWidth)
+        {
+            return CalculateWidth(widthDef, maxWidth, -1);
+        }
+
+        public static int ResolvePercentage(string widthString, int maxWidth)
+        {
+            float fWidth;
+            if(widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
+            {
+                return (int)(fWidth / 100f * Math.Max(0, maxWidth));
+            }
+            else
+            {
+                int iWidth = -1;
+                if (Int32.TryParse(widthString, out iWidth))
+                    return iWidth;
+                return -1;
+            }
+        }
+
+        public static int CalculateWidth(string widthDef, int maxWidth, int defaultValue)
+        {
+            Logger.debug("XMLTree.CalculateWidth(string, int, int)");
+            Logger.IncLvl();
+            if (widthDef == null)
+            {
+                Logger.DecLvl();
+                return defaultValue;
+            }
+            else if (widthDef[widthDef.Length - 1] == '%')
+            {
+                Logger.debug("is procent value.");
+                Logger.DecLvl();
+                float fwidth;
+                if (maxWidth >= 0 && Single.TryParse(widthDef.Substring(0, widthDef.Length - 1), out fwidth))
+                {
+                    return (int)(fwidth / 100f * maxWidth);
+                }
+                return Math.Max(defaultValue, maxWidth);
+            }
+            else
+            {
+                int iWidth;
+                bool parseSuccess = Int32.TryParse(widthDef, out iWidth);
+
+                if (maxWidth == -1)
+                {
+                    return parseSuccess ? iWidth : defaultValue;
+                }
+                else
+                {
+                    return parseSuccess ? Math.Max(maxWidth, iWidth) : Math.Max(defaultValue, maxWidth);
+                }
+            }
+        }
+
         
 
         public XMLTree()
@@ -177,11 +248,6 @@ namespace SEScripts.XUI.XML
             UpdateSelectability(child);
 
             Logger.DecLvl();
-        }
-
-        public int NumberOfChildren()
-        {
-            return Children.Count;
         }
 
         public void SetParent(XMLParentNode parent)
@@ -771,7 +837,7 @@ namespace SEScripts.XUI.XML
             Logger.DecLvl();
             return child.Render(availableWidth);
         }*/
-        
+
         public void DetachChild(XMLTree child)
         {
             Children.Remove(child);
@@ -806,7 +872,14 @@ namespace SEScripts.XUI.XML
             Logger.debug(Type + ".Render()");
             Logger.IncLvl();
             Logger.DecLvl();
-            return Render(maxWidth);
+            NodeBox cache = RenderCache;
+            
+            cache.MinWidth = Math.Max(0, ResolvePercentage(GetAttribute("minwidth"), maxWidth));
+            cache.MaxWidth = ResolvePercentage(GetAttribute("maxwidth"), maxWidth);
+            cache.DesiredWidth = ResolvePercentage(GetAttribute("width"), maxWidth);
+            cache.ForcedWidth = ResolvePercentage(GetAttribute("forcewidth"), maxWidth);
+
+            return cache.Render(maxWidth);
         }
 
         public string Render()

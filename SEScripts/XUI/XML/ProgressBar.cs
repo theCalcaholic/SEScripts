@@ -135,6 +135,22 @@ namespace SEScripts.XUI.XML
             segments.Add(renderString);
             Logger.DecLvl();
         }*/
+
+        public override NodeBox RenderCache
+        {
+            get
+            {
+                NodeBoxTree cache = new NodeBoxTree();
+                NodeBox prefix = new NodeBoxLeaf(
+                    (IsSelected() ? "<" : " ") + "[");
+                NodeBox suffix = new NodeBoxLeaf(
+                    "]" + (IsSelected() ? ">" : " "));
+                cache.Add(prefix);
+                cache.Add(suffix);
+
+                return cache;
+            }
+        }
     }
 
     //EMBED SEScripts.XUI.XML.XMLTree
