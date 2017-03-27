@@ -12,7 +12,6 @@ namespace SEScripts.XUI.BoxRenderer
     public class RenderBoxLeaf : RenderBox
     {
         StringBuilder Content;
-        private int _Height;
 
         public override RenderBox.FlowDirection Flow
         {
@@ -20,22 +19,29 @@ namespace SEScripts.XUI.BoxRenderer
             set { }
         }
 
-        public override int Height
+        public override int MinHeight
         {
             get
             {
-                Logger.debug("NodeBoxLeaf.Height.get");
+                Logger.debug("NodeBoxLeaf.MinHeight.get");
                 Logger.IncLvl();
-                Logger.debug("height = " + _Height);
+                Logger.debug("minheight = " + (Content.Length>0 ? Math.Max(1, _MinHeight) : _MinHeight));
                 Logger.DecLvl();
-                return _Height;
+                if(Content.Length > 0)
+                {
+                    return Math.Max(_MinHeight, 1);
+                }
+                else
+                {
+                    return _MinHeight;
+                }
             }
             set
             {
-                Logger.debug("NodeBoxLeaf.Height.set");
+                Logger.debug("NodeBoxLeaf.MinHeight.set");
                 Logger.IncLvl();
-                Logger.debug("height = " + value);
-                _Height = value;
+                Logger.debug("minheight = " + value);
+                _MinHeight = value;
                 Logger.DecLvl();
             }
         }
@@ -72,7 +78,6 @@ namespace SEScripts.XUI.BoxRenderer
         public RenderBoxLeaf()
         {
             Logger.debug("NodeBoxLeaf constructor()");
-            _Height = 0;
             Content = new StringBuilder();
         }
 
@@ -81,10 +86,6 @@ namespace SEScripts.XUI.BoxRenderer
             Logger.debug("NodeBoxLeaf constructor(StringBuilder)");
             Logger.IncLvl();
             Add(content);
-            if (Content.Length > 0)
-            {
-                _Height = 1;
-            }
             Logger.DecLvl();
         }
 
@@ -131,10 +132,10 @@ namespace SEScripts.XUI.BoxRenderer
 
         public override StringBuilder GetLine(int index)
         {
-            return GetLine(index, -1);
+            return GetLine(index, -1, -1);
         }
 
-        public override StringBuilder GetLine(int index, int maxWidth)
+        public override StringBuilder GetLine(int index, int maxWidth, int maxHeight)
         {
             Logger.debug("NodeBoxLeaf.GetLine()");
             Logger.IncLvl();

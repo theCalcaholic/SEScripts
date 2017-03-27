@@ -237,7 +237,7 @@ namespace SEScripts.XUI.XML
             Logger.debug("UIController: Render():");
             Logger.IncLvl();
             Logger.DecLvl();
-            return ui.Render(0);
+            return ui.Render(-1, -1);
         }
 
         public void RenderTo(IMyTextPanel panel)
@@ -268,6 +268,8 @@ namespace SEScripts.XUI.XML
             { }
 
             int width = (int)(((float)panelWidth) / panel.GetValue<Single>("FontSize"));
+            //TODO: Get height of screen
+            int height = 20;
             if (panel.GetValue<long>("Font") == Fonts[FONT.MONO])
             {
                 TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
@@ -280,7 +282,7 @@ namespace SEScripts.XUI.XML
 
             Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
             Logger.debug("resulting width: " + width.ToString());
-            string text = ui.Render(width);
+            string text = ui.Render(width, height);
             Logger.debug("rendering <" + text);
             panel.WritePublicText(text);
             Logger.DecLvl();

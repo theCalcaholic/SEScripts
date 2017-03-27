@@ -43,7 +43,9 @@ namespace SEScripts.XUI.Tests
             RenderBoxLeaf leaf = new RenderBoxLeaf();
             Assert.IsNotNull(leaf);
             Assert.AreEqual<string>("", leaf.GetLine(0).ToString());
-            Assert.AreEqual(0, leaf.Height);
+            Assert.AreEqual(0, leaf.MinHeight);
+            Assert.AreEqual(-1, leaf.MaxHeight);
+            Assert.AreEqual(-1, leaf.DesiredHeight);
             Assert.AreEqual(-1, leaf.MaxWidth);
             Assert.AreEqual(0, leaf.MinWidth);
             Assert.AreEqual(-1, leaf.DesiredWidth);
@@ -58,7 +60,7 @@ namespace SEScripts.XUI.Tests
             RenderBoxLeaf leaf = new RenderBoxLeaf(content);
             Assert.IsNotNull(leaf);
             Assert.AreEqual<string>(content.ToString(), leaf.GetLine(0).ToString());
-            Assert.AreEqual(1f, leaf.Height);
+            Assert.AreEqual(1f, leaf.MinHeight);
             //Assert.AreEqual(TextUtils.GetTextWidth(content), leaf.Width);
             Assert.AreEqual(-1f, leaf.MaxWidth);
             //Assert.AreEqual(leaf.Width, leaf.MinWidth);
@@ -73,9 +75,9 @@ namespace SEScripts.XUI.Tests
             string part1 = "hello ";
             string part2 = "world";
             RenderBoxLeaf leaf = new RenderBoxLeaf(part1);
-            Assert.AreEqual(1, leaf.Height);
+            Assert.AreEqual(1, leaf.MinHeight);
             leaf.Add(part2);
-            Assert.AreEqual(1, leaf.Height);
+            Assert.AreEqual(1, leaf.MinHeight);
             Assert.AreEqual<string>(part1 + part2, leaf.GetLine(0).ToString());
         }
 
@@ -83,10 +85,10 @@ namespace SEScripts.XUI.Tests
         public void GetRenderedLineTest()
         {
             RenderBoxLeaf leaf = new RenderBoxLeaf("test line");
-            Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetLine(0, 0).ToString());
-            Assert.AreEqual<string>(leaf.GetLine(1).ToString(), leaf.GetLine(1, 0).ToString());
-            Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetLine(0, 100).ToString());
-            Assert.AreEqual<string>(leaf.GetLine(1).ToString(), leaf.GetLine(1, 100).ToString());
+            Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetLine(0, 0, -1).ToString());
+            Assert.AreEqual<string>(leaf.GetLine(1).ToString(), leaf.GetLine(1, 0, -1).ToString());
+            Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetLine(0, 100, -1).ToString());
+            Assert.AreEqual<string>(leaf.GetLine(1).ToString(), leaf.GetLine(1, 100, -1).ToString());
         }
 
         [TestMethod()]

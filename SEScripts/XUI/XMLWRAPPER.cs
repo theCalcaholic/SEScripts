@@ -136,7 +136,7 @@ namespace SEScripts.XUI
                     int bracketPos = xmlString.IndexOf("<");
                     int textLength = bracketPos == -1 ? xmlString.Length : bracketPos;
                     XMLTree newNode = new XML.TextNode(xmlString.Substring(0, textLength).Trim());
-                    if (true || newNode.GetRenderBox(0) != null)
+                    if (true || newNode.GetRenderBox(-1, -1) != null)
                     {
                         currentNode.AddChild(newNode);
                     }

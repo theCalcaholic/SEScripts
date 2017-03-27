@@ -100,7 +100,7 @@ namespace SEScripts.XUI.XML
             //renderString = prefix + renderString;
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth)
+        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             Logger.debug("UIControls.GetRenderCache(int)");
             Logger.IncLvl();
@@ -123,11 +123,11 @@ namespace SEScripts.XUI.XML
 
             foreach (XMLTree child in Children)
             {
-                contentCache.Add(child.GetRenderBox(maxWidth));
+                contentCache.Add(child.GetRenderBox(maxWidth, maxHeight));
             }
             cache.Add(contentCache);
 
-            UpdateRenderCacheProperties(cache, maxWidth);
+            UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
             cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
 
             Logger.DecLvl();

@@ -143,7 +143,7 @@ namespace SEScripts.XUI.XML
             Logger.DecLvl();
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth)
+        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             Logger.debug("ProgressBar.GetRenderCache(int)");
             Logger.IncLvl();
@@ -159,11 +159,11 @@ namespace SEScripts.XUI.XML
 
             filledBar = new RenderBoxLeaf();
             filledBar.PadString = GetAttribute("filledstring");
-            filledBar.Height = 1;
+            filledBar.MinHeight = 1;
             cache.Add(filledBar);
 
             emptyBar = new RenderBoxLeaf();
-            emptyBar.Height = 1;
+            emptyBar.MinHeight = 1;
             emptyBar.PadString = GetAttribute("emptystring");
             cache.Add(emptyBar);
 
@@ -197,7 +197,7 @@ namespace SEScripts.XUI.XML
                 emptyBar.MinWidth = forcedWidth;
                 emptyBar.MaxWidth = forcedWidth;
             }
-            UpdateRenderCacheProperties(cache, maxWidth);
+            UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 
             Logger.log("filledBar: ");
             Logger.DEBUG = false;
@@ -205,7 +205,7 @@ namespace SEScripts.XUI.XML
             Logger.log("  min width: " + filledBar.MinWidth);
             Logger.log("  max width: " + filledBar.MaxWidth);
             Logger.log("  desired width: " + filledBar.DesiredWidth);
-            Logger.log("  height: " + filledBar.Height);
+            Logger.log("  minheight: " + filledBar.MinHeight);
             Logger.DEBUG = true;
             Logger.log("  actual width: " + filledBar.GetActualWidth(maxWidth));
 

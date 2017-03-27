@@ -215,7 +215,7 @@ namespace SEScripts.XUI.XML
 
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth)
+        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             Logger.debug("TextInput.GetRenderCache(int)");
             Logger.IncLvl();

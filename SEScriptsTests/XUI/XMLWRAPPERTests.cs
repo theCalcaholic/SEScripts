@@ -46,12 +46,12 @@ namespace SEScripts.XUI.Tests
                 "</container>" +
                 "<br />" +
                 "<textinput inputBinding='value' maxLength='10'/>";
-            //xmlString = "<textinput maxLength='10'/>";
+            //xmlString = "<hl/>";
             XMLTree tree = XMLWRAPPER.ParseXML(xmlString);
             Console.WriteLine("-------------------------------------------------------------");
             Console.WriteLine("Result:");
             Console.WriteLine("-------------------------------------------------------------");
-            Console.WriteLine(tree.Render(600));
+            Console.WriteLine(tree.Render(600, -1));
             Console.WriteLine("-------------------------------------------------------------");
             Console.WriteLine("Log:");
             Console.WriteLine("-------------------------------------------------------------");

@@ -37,7 +37,7 @@ namespace SEScripts.XUI.XML
             Logger.DecLvl();
         }
 
-        public override RenderBox GetRenderBox(int maxWidth)
+        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             Logger.debug("TextNode.GetRenderCache(int)");
             Logger.IncLvl();

@@ -26,6 +26,7 @@ namespace SEScripts.XUI.XML
         {
             Type = "hl";
             SetAttribute("width", "100%");
+            SetAttribute("minheight", "1");
         }
 
         /*protected override void RenderText(ref List<string> segments, int width, int availableWidth)
@@ -33,15 +34,14 @@ namespace SEScripts.XUI.XML
             segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL));
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth)
+        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             Logger.debug("HorizontalLine.GetRenderCache(int)");
             Logger.IncLvl();
             RenderBox cache = new RenderBoxLeaf();
             //cache.Add("_");
-            cache.Height = 1;
             cache.PadString = "_";
-            UpdateRenderCacheProperties(cache, maxWidth);
+            UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
             Logger.DecLvl();
             return cache;
         }

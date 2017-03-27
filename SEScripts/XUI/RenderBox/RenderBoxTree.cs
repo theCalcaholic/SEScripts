@@ -12,7 +12,6 @@ namespace SEScripts.XUI.BoxRenderer
     public class RenderBoxTree : RenderBox
     {
         List<RenderBox> Boxes;
-        private int _Height;
 
         public RenderBox this[int i]
         {
@@ -35,34 +34,43 @@ namespace SEScripts.XUI.BoxRenderer
             }
         }
 
-        public override int Height
+        public override int MinHeight
         {
             get
             {
-                Logger.debug("NodeBoxTree.Height.get");
+                Logger.debug("NodeBoxTree.MinHeight.get");
                 Logger.IncLvl();
-                int height = 0;
+                int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
+                int boxMinHeight;
                 foreach (RenderBox box in Boxes)
                 {
                     if (Flow == RenderBox.FlowDirection.HORIZONTAL)
                     {
-                        height = Math.Max(height, box.Height);
+                        minHeight = Math.Max(minHeight, box.MinHeight);
                     }
                     else
                     {
-                        height += box.Height;
+                        boxMinHeight = box.MinHeight;
+                        if (boxMinHeight > 0)
+                        {
+                            minHeight++;
+                            minHeight += boxMinHeight;
+                            Logger.debug("min height + " + boxMinHeight);
+                        }
                     }
                 }
-                Logger.debug("height = " + height.ToString());
+                if (Flow != RenderBox.FlowDirection.HORIZONTAL)
+                    minHeight = Math.Max(_MinHeight, minHeight - 1);
+                Logger.debug("minheight = " + minHeight.ToString());
                 Logger.DecLvl();
-                return height;
+                return Math.Max(0, minHeight);
             }
             set
             {
-                Logger.debug("NodeBoxTree.Height.set");
+                Logger.debug("NodeBoxTree.MinHeight.set");
                 Logger.IncLvl();
-                Logger.debug("height = " + value.ToString());
-                _Height = value;
+                Logger.debug("minheight = " + value.ToString());
+                _MinHeight = value;
                 Logger.DecLvl();
             }
         }
@@ -104,7 +112,6 @@ namespace SEScripts.XUI.BoxRenderer
         {
             Logger.debug("NodeBoxTree constructor()");
             Boxes = new List<RenderBox>();
-            _Height = 0;
         }
 
         public override void Add(string box)
@@ -152,10 +159,10 @@ namespace SEScripts.XUI.BoxRenderer
 
         public override StringBuilder GetLine(int index)
         {
-            return GetLine(index, -1);
+            return GetLine(index, -1, -1);
         }
 
-        public override StringBuilder GetLine(int index, int maxWidth)
+        public override StringBuilder GetLine(int index, int maxWidth, int maxHeight)
         {
             Logger.debug("NodeBoxTree.GetLine(int, int)");
             Logger.IncLvl();
@@ -163,18 +170,20 @@ namespace SEScripts.XUI.BoxRenderer
             //bool foundLine = false;
             if (Flow == RenderBox.FlowDirection.VERTICAL)
             {
+                int boxHeight;
                 foreach (RenderBox box in Boxes)
                 {
-                    if (index < box.Height)
+                    boxHeight = box.GetActualHeight(maxHeight);
+                    if (index < boxHeight)
                     {
-                        line = box.GetLine(index, maxWidth);
+                        line = box.GetLine(index, maxWidth, maxHeight);
                         Logger.debug("child box width is " + TextUtils.GetTextWidth(line));
                         //foundLine = true;
                         break;
                     }
                     else
                     {
-                        index -= box.Height;
+                        index -= boxHeight;
                     }
                 }
             }
@@ -188,7 +197,7 @@ namespace SEScripts.XUI.BoxRenderer
                 foreach (RenderBox box in Boxes)
                 {
                     boxMinWidth = box.MinWidth;
-                    nextLine = box.GetLine(index, 1 + floatingMaxWidth + boxMinWidth);
+                    nextLine = box.GetLine(index, 1 + floatingMaxWidth + boxMinWidth, maxHeight);
                     if (floatingMaxWidth != -1)
                         floatingMaxWidth = Math.Max(0, floatingMaxWidth - TextUtils.GetTextWidth(nextLine) + boxMinWidth);
                     line.Append(nextLine);

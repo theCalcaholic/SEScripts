@@ -500,7 +500,7 @@ else
 int bracketPos = xmlString.IndexOf("<");
 int textLength = bracketPos == -1 ? xmlString.Length : bracketPos;
 XMLTree newNode = new XML.TextNode(xmlString.Substring(0, textLength).Trim());
-if (true || newNode.GetRenderBox(0) != null)
+if (true || newNode.GetRenderBox(-1, -1) != null)
 {
 currentNode.AddChild(newNode);
 }
@@ -627,7 +627,7 @@ return Children.Count;
 }
 }
 protected bool RerenderRequired;
-public virtual RenderBox GetRenderBox(int maxWidth)
+public virtual RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("XMLTree.GetRenderCache(int)");
 Logger.IncLvl();
@@ -639,15 +639,16 @@ RenderBoxTree cache = new RenderBoxTree();
 RenderBox childCache;
 foreach (XMLTree child in Children)
 {
-childCache = child.GetRenderBox(maxWidth);
+//TODO: Problems with relative height/width values
+childCache = child.GetRenderBox(maxWidth, maxHeight);
 cache.Add(childCache);
 }
-UpdateRenderCacheProperties(cache, maxWidth);
+UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 //_renderCache = cache;
 Logger.DecLvl();
 return cache;
 }
-protected void UpdateRenderCacheProperties(RenderBox cache, int maxWidth)
+protected void UpdateRenderCacheProperties(RenderBox cache, int maxWidth, int maxHeight)
 {
 Logger.debug("XMLTree.UpdateRenderCacheProperties(NodeBox, int)");
 Logger.IncLvl();
@@ -674,8 +675,15 @@ if(forcedWidth != -1)
 cache.MinWidth = forcedWidth;
 cache.MaxWidth = forcedWidth;
 }
-if (Int32.TryParse(GetAttribute("height"), out result))
-cache.Height = result;
+cache.MinHeight = Math.Max(0, ResolveSize(GetAttribute("minheight"), maxHeight));
+cache.MaxHeight = Math.Max(0, ResolveSize(GetAttribute("maxheight"), maxHeight));
+cache.DesiredHeight = Math.Max(0, ResolveSize(GetAttribute("height"), maxHeight));
+int forcedHeight = ResolveSize(GetAttribute("forceheight"), maxWidth);
+if (forcedHeight != -1)
+{
+cache.MinHeight = forcedHeight;
+cache.MaxHeight = forcedHeight;
+}
 //cache.Height = CalculateWidth(GetAttribute("height"), -1);
 Logger.DecLvl();
 }
@@ -1339,20 +1347,20 @@ box.Add(child);
 RerenderRequired = false;
 Logger.DecLvl();
 }*/
-public virtual string Render(int maxWidth)
+public virtual string Render(int maxWidth, int maxHeight)
 {
 Logger.debug(Type + ".Render(int)");
 Logger.IncLvl();
 Logger.debug("RENDERING::PREPARE");
-RenderBox cache = GetRenderBox(maxWidth);
+RenderBox cache = GetRenderBox(maxWidth, maxHeight);
 Logger.debug("RENDERING::START");
-string result = cache.Render(maxWidth);
+string result = cache.Render(maxWidth, maxHeight);
 Logger.DecLvl();
 return result;
 }
 public string Render()
 {
-return Render(-1);
+return Render(-1, -1);
 }
 }
 
@@ -1383,7 +1391,7 @@ Logger.debug("final content: " + Content);
 RerenderRequired = true;
 Logger.DecLvl();
 }
-public override RenderBox GetRenderBox(int maxWidth)
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("TextNode.GetRenderCache(int)");
 Logger.IncLvl();
@@ -1651,7 +1659,7 @@ public string Render()
 Logger.debug("UIController: Render():");
 Logger.IncLvl();
 Logger.DecLvl();
-return ui.Render(0);
+return ui.Render(-1, -1);
 }
 public void RenderTo(IMyTextPanel panel)
 {
@@ -1679,6 +1687,8 @@ else if(panelType == "LargeBlockCorner_LCD_Flat_1" || panelType == "LargeBlockCo
 || panelType == "SmallBlockCorner_LCD_Flat_1" || panelType == "SmallBlockCorner_LCD_Flat_2")
 { }
 int width = (int)(((float)panelWidth) / panel.GetValue<Single>("FontSize"));
+//TODO: Get height of screen
+int height = 20;
 if (panel.GetValue<long>("Font") == Fonts[FONT.MONO])
 {
 TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
@@ -1690,7 +1700,7 @@ TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
 Logger.log("Font configured...");
 Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
 Logger.debug("resulting width: " + width.ToString());
-string text = ui.Render(width);
+string text = ui.Render(width, height);
 Logger.debug("rendering <" + text);
 panel.WritePublicText(text);
 Logger.DecLvl();
@@ -1973,7 +1983,7 @@ renderString += (child.IsSelected() ? ">> " : prefix);
 renderString += base.RenderChild(child, width);
 return renderString;
 }*/
-public override RenderBox GetRenderBox(int maxWidth)
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("Menu.GetRenderCache(int)");
 Logger.IncLvl();
@@ -1991,10 +2001,10 @@ else
 {
 menuPoint.Add(prefix);
 }
-menuPoint.Add(child.GetRenderBox(maxWidth));
+menuPoint.Add(child.GetRenderBox(maxWidth, maxHeight));
 cache.Add(menuPoint);
 }
-UpdateRenderCacheProperties(cache, maxWidth);
+UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 Logger.DecLvl();
 return cache;
 }
@@ -2175,7 +2185,7 @@ renderString += "]" + suffix;
 segments.Add(renderString);
 Logger.DecLvl();
 }*/
-public override RenderBox GetRenderBox(int maxWidth)
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("ProgressBar.GetRenderCache(int)");
 Logger.IncLvl();
@@ -2190,10 +2200,10 @@ suffix.MaxWidth = suffix.MinWidth;
 cache.Add(prefix);
 filledBar = new RenderBoxLeaf();
 filledBar.PadString = GetAttribute("filledstring");
-filledBar.Height = 1;
+filledBar.MinHeight = 1;
 cache.Add(filledBar);
 emptyBar = new RenderBoxLeaf();
-emptyBar.Height = 1;
+emptyBar.MinHeight = 1;
 emptyBar.PadString = GetAttribute("emptystring");
 cache.Add(emptyBar);
 cache.Add(suffix);
@@ -2225,14 +2235,14 @@ forcedWidth = (int)((width - outerWidth) * (1 - FillLevel));
 emptyBar.MinWidth = forcedWidth;
 emptyBar.MaxWidth = forcedWidth;
 }
-UpdateRenderCacheProperties(cache, maxWidth);
+UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 Logger.log("filledBar: ");
 Logger.DEBUG = false;
 Logger.log("  fillLevel: " + FillLevel);
 Logger.log("  min width: " + filledBar.MinWidth);
 Logger.log("  max width: " + filledBar.MaxWidth);
 Logger.log("  desired width: " + filledBar.DesiredWidth);
-Logger.log("  height: " + filledBar.Height);
+Logger.log("  minheight: " + filledBar.MinHeight);
 Logger.DEBUG = true;
 Logger.log("  actual width: " + filledBar.GetActualWidth(maxWidth));
 cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
@@ -2273,15 +2283,15 @@ SetAttribute("width", "100%");
 {
 segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL));
 }*/
-public override RenderBox GetRenderBox(int maxWidth)
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("HorizontalLine.GetRenderCache(int)");
 Logger.IncLvl();
 RenderBox cache = new RenderBoxLeaf();
 //cache.Add("_");
-cache.Height = 1;
+cache.MinHeight = 1;
 cache.PadString = "_";
-UpdateRenderCacheProperties(cache, maxWidth);
+UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 Logger.DecLvl();
 return cache;
 }
@@ -2362,7 +2372,7 @@ renderString = prefix + (tmpPrefix + renderString).Substring(prefixSpacesCount);
 return renderString;
 //renderString = prefix + renderString;
 }*/
-public override RenderBox GetRenderBox(int maxWidth)
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("UIControls.GetRenderCache(int)");
 Logger.IncLvl();
@@ -2383,10 +2393,10 @@ RenderBoxTree contentCache = new RenderBoxTree();
 contentCache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
 foreach (XMLTree child in Children)
 {
-contentCache.Add(child.GetRenderBox(maxWidth));
+contentCache.Add(child.GetRenderBox(maxWidth, maxHeight));
 }
 cache.Add(contentCache);
-UpdateRenderCacheProperties(cache, maxWidth);
+UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
 Logger.DecLvl();
 return cache;
@@ -2576,7 +2586,7 @@ value = "_" + value;
 }
 segments.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " " + value);
 }*/
-public override RenderBox GetRenderBox(int maxWidth)
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("TextInput.GetRenderCache(int)");
 Logger.IncLvl();
@@ -2646,7 +2656,7 @@ base.PreRender(ref segments, width, availableWidth);
 segments.Add(IsSelected() ? "  ]]" : "   ]");
 return base.PostRender(segments, width, availableWidth);
 }*/
-public override RenderBox GetRenderBox(int maxWidth)
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("SubmitButton.GetRenderCache(int)");
 Logger.IncLvl();
@@ -2658,13 +2668,13 @@ RenderBoxTree contentCache = new RenderBoxTree();
 contentCache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
 foreach (XMLTree child in Children)
 {
-contentCache.Add(child.GetRenderBox(maxWidth));
+contentCache.Add(child.GetRenderBox(maxWidth, maxHeight));
 }
 cache.Add(contentCache);
 childCache = new RenderBoxLeaf(IsSelected() ? "  ]]" : "   ]");
 childCache.MaxWidth = childCache.MinWidth;
 cache.Add(childCache);
-UpdateRenderCacheProperties(cache, maxWidth);
+UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
 Logger.DecLvl();
 return cache;
@@ -2682,12 +2692,12 @@ Type = "br";
 {
 return "";
 }*/
-public override RenderBox GetRenderBox(int maxWidth)
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("Break.GetRenderCache(int)");
 Logger.IncLvl();
 RenderBox cache = new RenderBoxLeaf();
-cache.Height = 0;
+cache.MaxHeight = 0;
 Logger.DecLvl();
 return cache;
 }
@@ -2710,12 +2720,12 @@ Logger.IncLvl();
 segments.Add(TextUtils.CreateStringOfLength(" ", width));
 Logger.DecLvl();
 }*/
-public override RenderBox GetRenderBox(int maxWidth)
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("GetRenderCache(int)");
 Logger.IncLvl();
 RenderBox cache = new RenderBoxLeaf();
-cache.Height = 1;
+cache.MinHeight = 1;
 int width = ResolveSize(GetAttribute("width"), maxWidth);
 cache.MinWidth = width;
 cache.MaxWidth = width;
@@ -2734,13 +2744,13 @@ Type = "hidden";
 {
 return null;
 }*/
-public override RenderBox GetRenderBox(int maxWidth)
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("Hidden.GetRenderCache(int)");
 Logger.IncLvl();
 RenderBox cache = new RenderBoxTree();
 cache.MaxWidth = 0;
-cache.Height = 0;
+cache.MaxHeight = 0;
 Logger.DecLvl();
 return cache;
 }
@@ -2756,13 +2766,13 @@ Type = "hiddendata";
 {
 return null;
 }*/
-public override RenderBox GetRenderBox(int maxWidth)
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 Logger.debug("HiddenData.GetRenderCache(int)");
 Logger.IncLvl();
 RenderBox cache = new RenderBoxTree();
 cache.MaxWidth = 0;
-cache.Height = 0;
+cache.MaxHeight = 0;
 Logger.DecLvl();
 return cache;
 }

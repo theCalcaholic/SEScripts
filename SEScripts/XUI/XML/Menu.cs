@@ -61,7 +61,7 @@ namespace SEScripts.XUI.XML
             return renderString;
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth)
+        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             Logger.debug("Menu.GetRenderCache(int)");
             Logger.IncLvl();
@@ -79,10 +79,10 @@ namespace SEScripts.XUI.XML
                 {
                     menuPoint.Add(prefix);
                 }
-                menuPoint.Add(child.GetRenderBox(maxWidth));
+                menuPoint.Add(child.GetRenderBox(maxWidth, maxHeight));
                 cache.Add(menuPoint);
             }
-            UpdateRenderCacheProperties(cache, maxWidth);
+            UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
             Logger.DecLvl();
             return cache;
         }

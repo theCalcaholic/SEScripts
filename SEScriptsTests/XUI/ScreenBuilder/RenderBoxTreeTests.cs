@@ -128,7 +128,9 @@ namespace SEScripts.XUI.Tests
         {
             RenderBoxTree tree = new RenderBoxTree();
             Assert.IsNotNull(tree);
-            Assert.AreEqual(0, tree.Height);
+            Assert.AreEqual(0, tree.MinHeight);
+            Assert.AreEqual(-1, tree.MaxHeight);
+            Assert.AreEqual(-1, tree.DesiredHeight);
             Assert.AreEqual(-1, tree.MaxWidth);
             Assert.AreEqual(0, tree.MinWidth);
             Assert.AreEqual(-1, tree.DesiredWidth);

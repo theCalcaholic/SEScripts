@@ -14,20 +14,23 @@ namespace SEScripts.XUI.BoxRenderer
         public String PadString;
         public enum TextAlign { LEFT, RIGHT, CENTER }
         public enum FlowDirection { HORIZONTAL, VERTICAL }
-        public abstract int Height { get; set; }
+        //public abstract int Height { get; set; }
 
         public abstract void Add(string box);
         public abstract void Add(StringBuilder box);
         public abstract void AddAt(int position, string box);
         public abstract void AddAt(int position, StringBuilder box);
         public abstract StringBuilder GetLine(int index);
-        public abstract StringBuilder GetLine(int index, int maxWidth);
+        public abstract StringBuilder GetLine(int index, int maxWidth, int maxHeight);
         public abstract void Clear();
         private RenderBox.FlowDirection _Flow;
         private RenderBox.TextAlign _Align;
         protected int _MinWidth;
         protected int _MaxWidth;
         protected int _DesiredWidth;
+        protected int _MinHeight;
+        protected int _MaxHeight;
+        protected int _DesiredHeight;
 
         public int GetActualWidth(int maxWidth)
         {
@@ -56,10 +59,38 @@ namespace SEScripts.XUI.BoxRenderer
                 }
                 Logger.DecLvl();
                 return (maxWidth == -1 ? desired : Math.Min(desired, maxWidth));
-                Logger.DecLvl();
-                return maxWidth;// Math.Max(MinWidth, maxWidth);
             }
-            
+
+        }
+        public int GetActualHeight(int maxHeight)
+        {
+            Logger.debug("NodeBox.GetActualHeight(int)");
+            Logger.IncLvl();
+            if (MaxHeight != -1)
+                maxHeight = (maxHeight == -1 ? MaxHeight : Math.Min(MaxHeight, maxHeight));
+            if (maxHeight == -1)
+            {
+                Logger.debug("actual width equals min height");
+                Logger.DecLvl();
+                return MinHeight;
+            }
+            else
+            {
+                int desired;
+                if (DesiredHeight == -1)
+                {
+                    Logger.debug("actual width equals max height");
+                    desired = maxHeight;
+                }
+                else
+                {
+                    Logger.debug("actual height equals desired height, but if desired<min -> height=min and if desired>max -> height = max");
+                    desired = Math.Max(MinHeight, DesiredHeight);
+                }
+                Logger.DecLvl();
+                return (maxHeight == -1 ? desired : Math.Min(desired, maxHeight));
+            }
+
         }
 
         public RenderBox.TextAlign Align
@@ -134,6 +165,66 @@ namespace SEScripts.XUI.BoxRenderer
             }
         }
 
+        public virtual int MinHeight
+        {
+            get
+            {
+                Logger.debug("NodeBox.MinHeight.get()");
+                Logger.IncLvl();
+                Logger.debug("minheight = " + _MinHeight);
+                Logger.DecLvl();
+                return _MinHeight;
+            }
+            set
+            {
+                Logger.debug("NodeBox.MinHeight.set()");
+                Logger.IncLvl();
+                Logger.debug("minheight = " + value);
+                _MinHeight = Math.Max(0, value);
+                Logger.DecLvl();
+            }
+        }
+
+        public int DesiredHeight
+        {
+            get
+            {
+                Logger.debug("NodeBox.DesiredHeight.get()");
+                Logger.IncLvl();
+                Logger.debug("desiredheight = " + _DesiredHeight);
+                Logger.DecLvl();
+                return _DesiredHeight;
+            }
+            set
+            {
+                Logger.debug("NodeBox.DesiredHeight.set()");
+                Logger.IncLvl();
+                Logger.debug("desiredheight = " + value);
+                _DesiredHeight = value;
+                Logger.DecLvl();
+            }
+        }
+
+        public int MaxHeight
+        {
+            get
+            {
+                Logger.debug("NodeBox.MaxHeight.get()");
+                Logger.IncLvl();
+                Logger.debug("maxheight = " + _MaxHeight);
+                Logger.DecLvl();
+                return _MaxHeight;
+            }
+            set
+            {
+                Logger.debug("NodeBox.MaxHeight.set()");
+                Logger.IncLvl();
+                Logger.debug("maxheight = " + value);
+                _MaxHeight = value;
+                Logger.DecLvl();
+            }
+        }
+
         public RenderBox()
         {
             Logger.debug("NodeBox constructor()");
@@ -143,15 +234,19 @@ namespace SEScripts.XUI.BoxRenderer
             _MinWidth = 0;
             _MaxWidth = -1;
             _DesiredWidth = -1;
+            _MinHeight = 0;
+            _MaxHeight = -1;
+            _DesiredHeight = -1;
         }
 
-        public IEnumerable<StringBuilder> GetLines(int maxWidth)
+        public IEnumerable<StringBuilder> GetLines(int maxWidth, int maxHeight)
         {
             Logger.debug("NodeBox.GetRenderedLines()");
             Logger.IncLvl();
-            for (int i = 0; i < Height; i++)
+            int height = GetActualHeight(maxHeight);
+            for (int i = 0; i < height; i++)
             {
-                yield return GetLine(i, maxWidth);
+                yield return GetLine(i, maxWidth, maxHeight);
             }
             Logger.DecLvl();
 
@@ -160,7 +255,8 @@ namespace SEScripts.XUI.BoxRenderer
         {            
             Logger.debug("NodeBox.GetLines()");
             Logger.IncLvl();
-            for (int i = 0; i < Height; i++)
+            int height = GetActualHeight(0);
+            for (int i = 0; i < height; i++)
             {
                 yield return GetLine(i);
             }
@@ -222,12 +318,12 @@ namespace SEScripts.XUI.BoxRenderer
             Logger.DecLvl();
         }
         
-        public string Render(int maxWidth)
+        public string Render(int maxWidth, int maxHeight)
         {
             Logger.debug("NodeBox.Render()");
             Logger.IncLvl();
             StringBuilder result = new StringBuilder();
-            foreach(StringBuilder line in GetLines(maxWidth))
+            foreach(StringBuilder line in GetLines(maxWidth, maxHeight))
             {
                 result.Append(line);
                 result.Append("\n");
