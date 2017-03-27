@@ -129,7 +129,7 @@ namespace SEScripts.Lib
             int lengthOfConstituent = GetTextWidth(new StringBuilder(constituent));
             if (mode == RoundMode.CEIL)
             {
-                Console.WriteLine("Ceil mode");
+                Logger.debug("Ceil mode");
                 length += lengthOfConstituent;
             }
             StringBuilder result = new StringBuilder();
@@ -180,33 +180,35 @@ namespace SEScripts.Lib
                 if(mode == PadMode.BOTH)
                 {
                     padding = CreateStringOfLength(padString, (totalWidth - width) / 2);
-                    result.AppendStringBuilder(padding);
-                    result.AppendSubstring(text, lineStart, lineEnd - lineStart);
-                    result.AppendStringBuilder(padding);
+                    result.Append(padding);
+                    SBExtensions.AppendSubstr(result, text, lineStart, lineEnd - lineStart);
+                    result.Append(padding);
                 }
                 else
                 {
                     padding = CreateStringOfLength(padString, totalWidth - width);
                     if (mode == PadMode.LEFT)
                     {
-                        result.AppendStringBuilder(padding);
-                        result.AppendSubstring(text, lineStart, lineEnd - lineStart);
+                        result.Append(padding);
+                        SBExtensions.AppendSubstr(result, text, lineStart, lineEnd - lineStart);
                     }
                     else
                     {
-                        result.AppendSubstring(text, lineStart, lineEnd - lineStart);
-                        result.AppendStringBuilder(padding);
+                        SBExtensions.AppendSubstr(result, text, lineStart, lineEnd - lineStart);
+                        result.Append(padding);
                     }
                 }
                 result.Append("\n");
             }
             while (lineEnd < text.Length);
 
-            result.TrimEnd(1);
+            if(result.Length > 0)
+                result.Remove(result.Length - 1, 1);
             Logger.DecLvl();
             return result;
         }
     }
 
     //EMBED SEScripts.Lib.Logger
+    //EMBED SEScripts.Lib.SBExtensions
 }

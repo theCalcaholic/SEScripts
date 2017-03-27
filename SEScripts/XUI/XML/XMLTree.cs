@@ -31,6 +31,7 @@ namespace SEScripts.XUI.XML
         protected bool Activated;
         protected Dictionary<string, string> Attributes;
         private bool _hasUserInputBindings;
+        private RenderBox _renderCache;
         public bool HasUserInputBindings
         {
             get { return _hasUserInputBindings; }
@@ -54,111 +55,81 @@ namespace SEScripts.XUI.XML
 
         protected bool RerenderRequired;
 
-        public virtual NodeBox RenderCache
+        public virtual RenderBox GetRenderBox(int maxWidth)
         {
-            get
+            Logger.debug("XMLTree.GetRenderCache(int)");
+            Logger.IncLvl();
+            /*if(_renderCache != null)
             {
-                NodeBoxTree cache = new NodeBoxTree();
-                NodeBox childCache;
-                foreach (XMLTree child in Children)
-                {
-                    childCache = child.RenderCache;
-                    cache.Add(childCache);
-                }
-                cache.Flow = GetAttribute("flow") == "horizontal" ? NodeBox.FlowDirection.HORIZONTAL : NodeBox.FlowDirection.VERTICAL;
+                return _renderCache;
+            }*/
 
-                switch(GetAttribute("alignself"))
-                {
-                    case "right":
-                        cache.Align = NodeBox.TextAlign.RIGHT;
-                        break;
-                    case "center":
-                        cache.Align = NodeBox.TextAlign.CENTER;
-                        break;
-                    default:
-                        cache.Align = NodeBox.TextAlign.LEFT;
-                        break;
-                }
 
-                int result;
-                if(Int32.TryParse(GetAttribute("minwidth"), out result))
-                    cache.MinWidth = result;
-                //cache.MinWidth = CalculateWidth("minwidth", -1, 0);
-                if (Int32.TryParse(GetAttribute("maxwidth"), out result))
-                    cache.MaxWidth = result;
-                //cache.MaxWidth = CalculateWidth(GetAttribute("maxwidth"), -1);
-                if (Int32.TryParse(GetAttribute("width"), out result))
-                    cache.DesiredWidth = result;
-                //cache.DesiredWidth = CalculateWidth(GetAttribute("width"), -1);
-                if (Int32.TryParse(GetAttribute("forcewidth"), out result))
-                    cache.ForcedWidth = result;
-                //cache.ForcedWidth = CalculateWidth(GetAttribute("forcewidth"), -1);
-                if (Int32.TryParse(GetAttribute("height"), out result))
-                    cache.Height = result;
-                //cache.Height = CalculateWidth(GetAttribute("height"), -1);
-
-                return cache;
+            RenderBoxTree cache = new RenderBoxTree();
+            RenderBox childCache;
+            foreach (XMLTree child in Children)
+            {
+                childCache = child.GetRenderBox(maxWidth);
+                cache.Add(childCache);
             }
+
+            UpdateRenderCacheProperties(cache, maxWidth);
+
+            //_renderCache = cache;
+            Logger.DecLvl();
+            return cache;
         }
 
-        public static int CalculateWidth(string widthDef, int maxWidth)
+        protected void UpdateRenderCacheProperties(RenderBox cache, int maxWidth)
         {
-            return CalculateWidth(widthDef, maxWidth, -1);
+            Logger.debug("XMLTree.UpdateRenderCacheProperties(NodeBox, int)");
+            Logger.IncLvl();
+            cache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
+
+            switch (GetAttribute("alignself"))
+            {
+                case "right":
+                    cache.Align = RenderBox.TextAlign.RIGHT;
+                    break;
+                case "center":
+                    cache.Align = RenderBox.TextAlign.CENTER;
+                    break;
+                default:
+                    cache.Align = RenderBox.TextAlign.LEFT;
+                    break;
+            }
+            int result;
+            cache.MinWidth = Math.Max(0, ResolveSize(GetAttribute("minwidth"), maxWidth));
+            cache.MaxWidth = ResolveSize(GetAttribute("maxwidth"), maxWidth);
+            cache.DesiredWidth = ResolveSize(GetAttribute("width"), maxWidth);
+            cache.ForcedWidth = ResolveSize(GetAttribute("forcewidth"), maxWidth);
+            if (Int32.TryParse(GetAttribute("height"), out result))
+                cache.Height = result;
+            //cache.Height = CalculateWidth(GetAttribute("height"), -1);
+            Logger.DecLvl();
         }
 
-        public static int ResolvePercentage(string widthString, int maxWidth)
+        public static int ResolveSize(string widthString, int maxWidth)
         {
+            Logger.debug("XMLTree.ResolvePercentage(string, int)");
+            Logger.IncLvl();
             float fWidth;
             if(widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
             {
+                if (maxWidth == -1)
+                    return -1;
+                Logger.DecLvl();
                 return (int)(fWidth / 100f * Math.Max(0, maxWidth));
             }
             else
             {
                 int iWidth = -1;
+                Logger.DecLvl();
                 if (Int32.TryParse(widthString, out iWidth))
                     return iWidth;
                 return -1;
             }
         }
-
-        public static int CalculateWidth(string widthDef, int maxWidth, int defaultValue)
-        {
-            Logger.debug("XMLTree.CalculateWidth(string, int, int)");
-            Logger.IncLvl();
-            if (widthDef == null)
-            {
-                Logger.DecLvl();
-                return defaultValue;
-            }
-            else if (widthDef[widthDef.Length - 1] == '%')
-            {
-                Logger.debug("is procent value.");
-                Logger.DecLvl();
-                float fwidth;
-                if (maxWidth >= 0 && Single.TryParse(widthDef.Substring(0, widthDef.Length - 1), out fwidth))
-                {
-                    return (int)(fwidth / 100f * maxWidth);
-                }
-                return Math.Max(defaultValue, maxWidth);
-            }
-            else
-            {
-                int iWidth;
-                bool parseSuccess = Int32.TryParse(widthDef, out iWidth);
-
-                if (maxWidth == -1)
-                {
-                    return parseSuccess ? iWidth : defaultValue;
-                }
-                else
-                {
-                    return parseSuccess ? Math.Max(maxWidth, iWidth) : Math.Max(defaultValue, maxWidth);
-                }
-            }
-        }
-
-        
 
         public XMLTree()
         {
@@ -332,7 +303,10 @@ namespace SEScripts.XUI.XML
             if ((Selectable || ChildrenAreSelectable) != (Selectable || ChildrenWereSelectable))
             {
                 RerenderRequired = true;
-                Parent?.UpdateSelectability(this);
+                Logger.debug("update parent selectability");
+                if(Parent != null)
+                    Parent.UpdateSelectability(this);
+                Logger.debug("parent selectability updated");
             }
 
             Logger.DecLvl();
@@ -867,19 +841,16 @@ namespace SEScripts.XUI.XML
             Logger.DecLvl();
         }*/
 
-        public string Render(int maxWidth)
+        public virtual string Render(int maxWidth)
         {
-            Logger.debug(Type + ".Render()");
+            Logger.debug(Type + ".Render(int)");
             Logger.IncLvl();
+            Logger.debug("RENDERING::PREPARE");
+            RenderBox cache = GetRenderBox(maxWidth);
+            Logger.debug("RENDERING::START");
+            string result = cache.Render(maxWidth);
             Logger.DecLvl();
-            NodeBox cache = RenderCache;
-            
-            cache.MinWidth = Math.Max(0, ResolvePercentage(GetAttribute("minwidth"), maxWidth));
-            cache.MaxWidth = ResolvePercentage(GetAttribute("maxwidth"), maxWidth);
-            cache.DesiredWidth = ResolvePercentage(GetAttribute("width"), maxWidth);
-            cache.ForcedWidth = ResolvePercentage(GetAttribute("forcewidth"), maxWidth);
-
-            return cache.Render(maxWidth);
+            return result;
         }
 
         public string Render()
@@ -890,4 +861,5 @@ namespace SEScripts.XUI.XML
 
     //EMBED SEScripts.XUI.XML.XMLParentNode
     //EMBED SEScripts.Lib.TextUtils
+    //EMBED SEScripts.XUI.ScreenBuilder.NodeBox
 }

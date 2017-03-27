@@ -15,6 +15,7 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib;
+using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
@@ -37,6 +38,33 @@ namespace SEScripts.XUI.XML
             segments.Add(IsSelected() ? "  ]]" : "   ]");
             return base.PostRender(segments, width, availableWidth);
         }*/
+
+        public override RenderBox GetRenderBox(int maxWidth)
+        {
+            Logger.debug("SubmitButton.GetRenderCache(int)");
+            Logger.IncLvl();
+            RenderBoxTree cache = new RenderBoxTree();
+            RenderBoxLeaf childCache = new RenderBoxLeaf(IsSelected() ? "[[  " : "[   ");
+            childCache.MaxWidth = childCache.MinWidth;
+            cache.Add(childCache);
+            RenderBoxTree contentCache = new RenderBoxTree();
+            contentCache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
+            foreach (XMLTree child in Children)
+            {
+                contentCache.Add(child.GetRenderBox(maxWidth));
+            }
+            cache.Add(contentCache);
+            childCache = new RenderBoxLeaf(IsSelected() ? "  ]]" : "   ]");
+            childCache.MaxWidth = childCache.MinWidth;
+            cache.Add(childCache);
+
+            UpdateRenderCacheProperties(cache, maxWidth);
+
+            cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+
+            Logger.DecLvl();
+            return cache;
+        }
     }
 
     //EMBED SEScripts.XUI.XML.MenuItem

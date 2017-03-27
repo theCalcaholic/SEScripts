@@ -213,6 +213,38 @@ namespace SEScripts.XUI.XML
             segments.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " " + value);
 
         }*/
+
+        public override RenderBox GetRenderBox(int maxWidth)
+        {
+            Logger.debug("TextInput.GetRenderCache(int)");
+            Logger.IncLvl();
+            RenderBoxTree cache = new RenderBoxTree();
+            cache.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " ");
+            cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+
+            string value = GetAttribute("value");
+            if(CursorPosition != -1)
+            {
+                cache.Add(value.Substring(0, CursorPosition));
+                cache.Add("|");
+                cache.Add(value.Substring(CursorPosition, 1));
+                cache.Add("|");
+                cache.Add(value.Substring(CursorPosition + 1));
+            }
+            else
+            {
+                if (value.Length == 0)
+                    cache.Add("_");
+                cache.Add(value);
+            }
+            for(int i = 0; i < cache.Count; i++)
+            {
+                cache[i].MaxWidth = cache[i].MinWidth;
+            }
+
+            Logger.DecLvl();
+            return cache;
+        }
     }
 
 

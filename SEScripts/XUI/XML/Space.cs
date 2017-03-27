@@ -36,6 +36,19 @@ namespace SEScripts.XUI.XML
             segments.Add(TextUtils.CreateStringOfLength(" ", width));
             Logger.DecLvl();
         }*/
+
+        public override RenderBox GetRenderBox(int maxWidth)
+        {
+            Logger.debug("GetRenderCache(int)");
+            Logger.IncLvl();
+            RenderBox cache = new RenderBoxLeaf();
+            cache.Height = 1;
+            int width = ResolveSize(GetAttribute("width"), maxWidth);
+            cache.MinWidth = width;
+            cache.ForcedWidth = width;
+            Logger.DecLvl();
+            return cache;
+        }
     }
 
 

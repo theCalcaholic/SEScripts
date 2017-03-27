@@ -34,7 +34,7 @@ namespace SEScripts.Lib.LoggerNS
         {
             Log.Append(Prefix);
             Log.Append(msg + "\n");
-            Console.WriteLine(Prefix + msg);
+            //Console.WriteLine(Prefix + msg);
             //!UNCOMMENT P.Echo(Prefix + msg);
         }
 

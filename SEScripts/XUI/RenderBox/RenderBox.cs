@@ -9,12 +9,12 @@ using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI
 {
-    public class NodeBoxTree : NodeBox
+    public class RenderBoxTree : RenderBox
     {
-        List<NodeBox> Boxes;
+        List<RenderBox> Boxes;
         private int _Height;
 
-        public NodeBox this[int i]
+        public RenderBox this[int i]
         {
             get
             {
@@ -42,9 +42,9 @@ namespace SEScripts.XUI
                 Logger.debug("NodeBoxTree.Height.get");
                 Logger.IncLvl();
                 int height = 0;
-                foreach(NodeBox box in Boxes)
+                foreach(RenderBox box in Boxes)
                 {
-                    if(Flow == NodeBox.FlowDirection.HORIZONTAL)
+                    if(Flow == RenderBox.FlowDirection.HORIZONTAL)
                     {
                         height = Math.Max(height, box.Height);
                     }
@@ -53,13 +53,17 @@ namespace SEScripts.XUI
                         height += box.Height;
                     }
                 }
+                Logger.debug("height = " + height.ToString());
                 Logger.DecLvl();
                 return height;
             }
             set
             {
-                Logger.debug("NodeBoxTree.Height.get");
+                Logger.debug("NodeBoxTree.Height.set");
+                Logger.IncLvl();
+                Logger.debug("height = " + value.ToString());
                 _Height = value;
+                Logger.DecLvl();
             }
         }
 
@@ -68,11 +72,11 @@ namespace SEScripts.XUI
             get {
                 Logger.debug("NodeBoxTree.MinWidth.get");
                 Logger.IncLvl();
-                int minWidth = (Flow == NodeBox.FlowDirection.HORIZONTAL ? 0 : _MinWidth);
+                int minWidth = (Flow == RenderBox.FlowDirection.HORIZONTAL ? 0 : _MinWidth);
                 int boxMinWidth;
-                foreach(NodeBox box in Boxes)
+                foreach(RenderBox box in Boxes)
                 {
-                    if(Flow == NodeBox.FlowDirection.HORIZONTAL)
+                    if(Flow == RenderBox.FlowDirection.HORIZONTAL)
                     {
                         boxMinWidth = box.MinWidth;
                         if (boxMinWidth > 0)
@@ -87,18 +91,18 @@ namespace SEScripts.XUI
                         minWidth = Math.Max(box.MinWidth, minWidth);
                     }
                 }
-                if (Flow == NodeBox.FlowDirection.HORIZONTAL)
+                if (Flow == RenderBox.FlowDirection.HORIZONTAL)
                     minWidth = Math.Max(_MinWidth, minWidth - 1);
-                Logger.debug("Got MinWidth (" + minWidth + ")...");
+                Logger.debug("minwidth = " + minWidth);
                 Logger.DecLvl();
                 return Math.Max(minWidth, 0);
             }
         }
 
-        public NodeBoxTree() : base()
+        public RenderBoxTree() : base()
         {
             Logger.debug("NodeBoxTree constructor()");
-            Boxes = new List<NodeBox>();
+            Boxes = new List<RenderBox>();
             _Height = 0;
         }
 
@@ -109,9 +113,9 @@ namespace SEScripts.XUI
 
         public override void AddAt(int position, string box)
         {
-            Logger.debug("NodeBoxTree.Add(string)");
+            Logger.debug("NodeBoxTree.AddAt(int, string)");
             Logger.IncLvl();
-            AddAt(position, new NodeBoxLeaf(box));
+            AddAt(position, new RenderBoxLeaf(box));
             Logger.DecLvl();
         }
 
@@ -122,21 +126,21 @@ namespace SEScripts.XUI
 
         public override void AddAt(int position, StringBuilder box)
         {
-            Logger.debug("NodeBoxTree.Add(StringBuilder)");
+            Logger.debug("NodeBoxTree.AddAt(int, StringBuilder)");
             Logger.IncLvl();
-            AddAt(position, new NodeBoxLeaf(box));
+            AddAt(position, new RenderBoxLeaf(box));
             Logger.DecLvl();
         }
 
-        public void AddAt(int position, NodeBox box)
+        public void AddAt(int position, RenderBox box)
         {
-            Logger.debug("NodeBoxTree.Add(NodeBox)");
+            Logger.debug("NodeBoxTree.AddAt(int, NodeBox)");
             Logger.IncLvl();
-            Boxes.AddOrInsert<NodeBox>(box, position);
+            Boxes.AddOrInsert<RenderBox>(box, position);
             Logger.DecLvl();
         }
 
-        public void Add(NodeBox box)
+        public void Add(RenderBox box)
         {
             Logger.debug("NodeBoxTree.Add(NodeBox)");
             Logger.IncLvl();
@@ -156,9 +160,9 @@ namespace SEScripts.XUI
             Logger.IncLvl();
             StringBuilder line = new StringBuilder();
             //bool foundLine = false;
-            if (Flow == NodeBox.FlowDirection.VERTICAL)
+            if (Flow == RenderBox.FlowDirection.VERTICAL)
             {
-                foreach (NodeBox box in Boxes)
+                foreach (RenderBox box in Boxes)
                 {
                     if (index < box.Height)
                     {
@@ -175,18 +179,24 @@ namespace SEScripts.XUI
             }
             else
             {
+                int floatingMaxWidth = maxWidth;
+                if(floatingMaxWidth != -1)
+                    floatingMaxWidth = Math.Max(floatingMaxWidth - MinWidth, 0) - 1;
                 StringBuilder nextLine;
-                foreach (NodeBox box in Boxes)
+                int boxMinWidth;
+                foreach (RenderBox box in Boxes)
                 {
-                    nextLine = box.GetLine(index, maxWidth);
-                    if(maxWidth != -1)
-                        maxWidth = Math.Max(0, maxWidth - TextUtils.GetTextWidth(nextLine));
-                    line.AppendStringBuilder(nextLine);
+                    boxMinWidth = box.MinWidth;
+                    nextLine = box.GetLine(index, 1 + floatingMaxWidth + boxMinWidth);
+                    if(floatingMaxWidth != -1)
+                        floatingMaxWidth = Math.Max(0, floatingMaxWidth - TextUtils.GetTextWidth(nextLine) + boxMinWidth);
+                    line.Append(nextLine);
                     Logger.debug("child box width is: " + TextUtils.GetTextWidth(nextLine));
                 }
                 //foundLine = index < Height;
             }
             AlignLine(ref line, maxWidth);
+            Logger.debug("line is: {" + line + "}");
             Logger.DecLvl();
             return line;
         }
@@ -202,14 +212,14 @@ namespace SEScripts.XUI
     }
 
 
-    public class NodeBoxLeaf : NodeBox
+    public class RenderBoxLeaf : RenderBox
     {
         StringBuilder Content;
         private int _Height;
 
-        public override NodeBox.FlowDirection Flow
+        public override RenderBox.FlowDirection Flow
         {
-            get { return NodeBox.FlowDirection.VERTICAL; }
+            get { return RenderBox.FlowDirection.VERTICAL; }
             set {}
         }
 
@@ -218,19 +228,18 @@ namespace SEScripts.XUI
             get
             {
                 Logger.debug("NodeBoxLeaf.Height.get");
-                if ( Content.Length > 0)
-                {
-                    return 1;
-                }
-                else
-                {
-                    return 0;
-                }
+                Logger.IncLvl();
+                Logger.debug("height = " + _Height);
+                Logger.DecLvl();
+                return _Height;
             }
             set
             {
                 Logger.debug("NodeBoxLeaf.Height.set");
+                Logger.IncLvl();
+                Logger.debug("height = " + value);
                 _Height = value;
+                Logger.DecLvl();
             }
         }
 
@@ -239,6 +248,7 @@ namespace SEScripts.XUI
             get
             {
                 Logger.debug("NodeBoxLeaf.MinWidth.get");
+                Logger.IncLvl();
                 int contentWidth = Math.Max(TextUtils.GetTextWidth(Content), _MinWidth);
                 /*if (_MinWidth >= 0 && _MinWidth < contentWidth)
                 {
@@ -248,41 +258,41 @@ namespace SEScripts.XUI
                 {
                     return contentWidth;
                 }*/
+                Logger.debug("minwidth = " + contentWidth);
+                Logger.DecLvl();
                 return contentWidth;
             }
             set
             {
                 Logger.debug("NodeBoxLeaf.MinWidth.set()");
+                Logger.IncLvl();
+                Logger.debug("minwidth = " + value);
                 _MinWidth = value;
+                Logger.DecLvl();
             }
         }
 
-        public NodeBoxLeaf()
+        public RenderBoxLeaf()
         {
             Logger.debug("NodeBoxLeaf constructor()");
             _Height = 0;
             Content = new StringBuilder();
         }
 
-        public NodeBoxLeaf(StringBuilder content) : this()
+        public RenderBoxLeaf(StringBuilder content) : this()
         {
             Logger.debug("NodeBoxLeaf constructor(StringBuilder)");
             Logger.IncLvl();
             Add(content);
-            Logger.DecLvl();
-        }
-
-        public NodeBoxLeaf(string content) : this()
-        {
-            Logger.debug("NodeBoxLeaf constructor(string)");
-            Logger.IncLvl();
-            Add(content);
-            if(Content.Length > 0)
+            if (Content.Length > 0)
             {
                 _Height = 1;
             }
             Logger.DecLvl();
         }
+
+        public RenderBoxLeaf(string content) : this(new StringBuilder(content))
+        {}
 
         public override void AddAt(int position, StringBuilder box)
         {
@@ -294,7 +304,7 @@ namespace SEScripts.XUI
             }
             else
             {
-                Content.AppendStringBuilder(box);
+                Content.Append(box);
             }
             Logger.DecLvl();
         }
@@ -303,7 +313,7 @@ namespace SEScripts.XUI
         {
             Logger.debug("NodeBoxLeaf.Add(StringBuilder)");
             Logger.IncLvl();
-            Content.AppendStringBuilder(box.Replace("\n", ""));
+            Content.Append(box.Replace("\n", ""));
             Logger.DecLvl();
         }
         public override void AddAt(int position, string box)
@@ -331,15 +341,19 @@ namespace SEScripts.XUI
         {
             Logger.debug("NodeBoxLeaf.GetLine()");
             Logger.IncLvl();
+            StringBuilder line;
             if (index == 0)
             {
-                StringBuilder line = new StringBuilder(Content.ToString());
-                AlignLine(ref line, maxWidth);
-                Logger.DecLvl();
-                return line;
+                line = new StringBuilder(Content.ToString());
             }
+            else
+            {
+                line = new StringBuilder();
+            }
+            AlignLine(ref line, maxWidth);
+            Logger.debug("line is {" + line + "}");
             Logger.DecLvl();
-            return new StringBuilder();
+            return line;
         }
 
         public override void Clear()
@@ -350,8 +364,9 @@ namespace SEScripts.XUI
 
     }
 
-    public abstract class NodeBox
+    public abstract class RenderBox
     {
+        public String PadString;
         public enum TextAlign { LEFT, RIGHT, CENTER }
         public enum FlowDirection { HORIZONTAL, VERTICAL }
         public abstract int Height { get; set; }
@@ -363,8 +378,8 @@ namespace SEScripts.XUI
         public abstract StringBuilder GetLine(int index);
         public abstract StringBuilder GetLine(int index, int maxWidth);
         public abstract void Clear();
-        private NodeBox.FlowDirection _Flow;
-        private NodeBox.TextAlign _Align;
+        private RenderBox.FlowDirection _Flow;
+        private RenderBox.TextAlign _Align;
         protected int _MinWidth;
         protected int _MaxWidth;
         protected int _DesiredWidth;
@@ -373,13 +388,19 @@ namespace SEScripts.XUI
         {
             get
             {
-                Logger.debug("NodeBox.Width.get()");
+                Logger.debug("NodeBox.ForcedWidth.get()");
+                Logger.IncLvl();
+                Logger.debug("forcedwidth = " + _ForcedWidth);
+                Logger.DecLvl();
                 return _ForcedWidth;
             }
             set
             {
-                Logger.debug("NodeBox.Width.get()");
+                Logger.debug("NodeBox.ForcedWidth.get()");
+                Logger.IncLvl();
+                Logger.debug("forcedwidth = " + value);
                 _ForcedWidth = value;
+                Logger.DecLvl();
             }
         }
 
@@ -387,6 +408,8 @@ namespace SEScripts.XUI
         {
             Logger.debug("NodeBox.GetActualWidth(int)");
             Logger.IncLvl();
+            if(MaxWidth != -1)
+                maxWidth = (maxWidth == -1 ? MaxWidth : Math.Min(MaxWidth, maxWidth));
             if (ForcedWidth == -1)
             {
                 if (maxWidth == -1)
@@ -397,9 +420,21 @@ namespace SEScripts.XUI
                 }
                 else
                 {
-                    Logger.debug("actual width equals maximum of min and max widths");
+                    int desired;
+                    if (DesiredWidth == -1)
+                    {
+                        Logger.debug("actual width equals max width");
+                        desired = maxWidth;
+                    }
+                    else
+                    {
+                        Logger.debug("actual width equals desired width, but if desired<min -> width=min and if desired>max -> width = max");
+                        desired = Math.Max(MinWidth, DesiredWidth);
+                    }
                     Logger.DecLvl();
-                    return Math.Max(MinWidth, maxWidth);
+                    return (maxWidth == -1 ? desired : Math.Min(desired, maxWidth));
+                    Logger.DecLvl();
+                    return maxWidth;// Math.Max(MinWidth, maxWidth);
                 }
             }
             else
@@ -411,13 +446,13 @@ namespace SEScripts.XUI
             
         }
 
-        public NodeBox.TextAlign Align
+        public RenderBox.TextAlign Align
         {
             get { return _Align; }
             set { _Align = value; }
         }
 
-        public virtual NodeBox.FlowDirection Flow
+        public virtual RenderBox.FlowDirection Flow
         {
             get { return _Flow; }
             set { _Flow = value; }
@@ -428,12 +463,18 @@ namespace SEScripts.XUI
             get
             {
                 Logger.debug("NodeBox.MinWidth.get()");
+                Logger.IncLvl();
+                Logger.debug("minwidth = " + _MinWidth);
+                Logger.DecLvl();
                 return _MinWidth;
             }
             set
             {
                 Logger.debug("NodeBox.MinWidth.set()");
+                Logger.IncLvl();
+                Logger.debug("minwidth = " + value);
                 _MinWidth = Math.Max(0, value);
+                Logger.DecLvl();
             }
         }
 
@@ -442,12 +483,18 @@ namespace SEScripts.XUI
             get
             {
                 Logger.debug("NodeBox.DesiredWidth.get()");
+                Logger.IncLvl();
+                Logger.debug("desiredwidth = " + _DesiredWidth);
+                Logger.DecLvl();
                 return _DesiredWidth;
             }
             set
             {
-                Logger.debug("NodeBox.DesiredWidth.get()");
+                Logger.debug("NodeBox.DesiredWidth.set()");
+                Logger.IncLvl();
+                Logger.debug("desiredwidth = " + value);
                 _DesiredWidth = value;
+                Logger.DecLvl();
             }
         }
 
@@ -456,20 +503,27 @@ namespace SEScripts.XUI
             get
             {
                 Logger.debug("NodeBox.MaxWidth.get()");
+                Logger.IncLvl();
+                Logger.debug("maxwidth = " + _MaxWidth);
+                Logger.DecLvl();
                 return _MaxWidth;
             }
             set
             {
-                Logger.debug("NodeBox.MaxWidth.get()");
+                Logger.debug("NodeBox.MaxWidth.set()");
+                Logger.IncLvl();
+                Logger.debug("maxwidth = " + value);
                 _MaxWidth = value;
+                Logger.DecLvl();
             }
         }
 
-        public NodeBox()
+        public RenderBox()
         {
             Logger.debug("NodeBox constructor()");
-            _Flow = NodeBox.FlowDirection.VERTICAL;
-            _Align = NodeBox.TextAlign.LEFT;
+            PadString = " ";
+            _Flow = RenderBox.FlowDirection.VERTICAL;
+            _Align = RenderBox.TextAlign.LEFT;
             _MinWidth = 0;
             _MaxWidth = -1;
             _DesiredWidth = -1;
@@ -523,13 +577,13 @@ namespace SEScripts.XUI
                 switch (Align)
                 {
                     case TextAlign.CENTER:
-                        line = TextUtils.PadText(line, actualWidth, TextUtils.PadMode.BOTH);
+                        line = TextUtils.PadText(line, actualWidth, TextUtils.PadMode.BOTH, PadString);
                         break;
                     case TextAlign.RIGHT:
-                        line = TextUtils.PadText(line, actualWidth, TextUtils.PadMode.LEFT);
+                        line = TextUtils.PadText(line, actualWidth, TextUtils.PadMode.LEFT, PadString);
                         break;
                     default:
-                        line = TextUtils.PadText(line, actualWidth, TextUtils.PadMode.RIGHT);
+                        line = TextUtils.PadText(line, actualWidth, TextUtils.PadMode.RIGHT, PadString);
                         break;
                 }
                 //Logger.debug("line is so far: |" + line.ToString() + "|");
@@ -542,69 +596,17 @@ namespace SEScripts.XUI
                 while (remainingWidth < 0)
                 {
                     remainingWidth += TextUtils.GetLetterWidth(line[line.Length - 1]) + 1;
-                    line.TrimEnd(1);
+                    line.Remove(line.Length - 1, 1);
                 }
             }
             else
             {
                 Logger.debug("neither padding nor clipping...");
             }
+            Logger.debug("aligned line is: {" + line + "}");
             Logger.DecLvl();
         }
-
-
-        public virtual StringBuilder RenderLine(int index, int maxWidth)
-        {
-            Logger.debug("NodeBox.RenderLine()");
-            Logger.IncLvl();
-            StringBuilder result = new StringBuilder();
-            int width = (maxWidth >= 0) ? Math.Min(maxWidth, MinWidth) : MinWidth;
-            StringBuilder line = GetLine(index, maxWidth);
-            int diff = width - TextUtils.GetTextWidth(line);
-            Logger.debug(diff.ToString());
-            if (diff <= 0)
-            {
-                Logger.debug("line to wide...");
-                Logger.debug("line was: " + line);
-                Logger.debug("Width was: " + width);
-                Logger.DecLvl();
-                return line;
-            }
-            else if (Align == NodeBox.TextAlign.CENTER)
-            {
-                Logger.debug("Aligning center...");
-                StringBuilder padding = TextUtils.CreateStringOfLength(" ", diff / 2);
-                result.AppendStringBuilder(padding);
-                result.AppendStringBuilder(line);
-                result.AppendStringBuilder(padding);
-                Logger.DecLvl();
-                return result;
-            }
-            else
-            {
-                StringBuilder padding = TextUtils.CreateStringOfLength(" ", diff);
-                if (Align == NodeBox.TextAlign.LEFT)
-                {
-                    Logger.debug("Aligning left...");
-                    result.AppendStringBuilder(line);
-                    result.AppendStringBuilder(padding);
-                    Logger.DecLvl();
-                    return result;
-                }
-                else if (Align == NodeBox.TextAlign.RIGHT)
-                {
-                    Logger.debug("Aligning right...");
-                    result.AppendStringBuilder(padding);
-                    result.AppendStringBuilder(line);
-                    Logger.DecLvl();
-                    return result;
-                }
-            }
-            Logger.DecLvl();
-            return null;
-
-        }
-
+        
         public string Render(int maxWidth)
         {
             Logger.debug("NodeBox.Render()");
@@ -612,7 +614,7 @@ namespace SEScripts.XUI
             StringBuilder result = new StringBuilder();
             foreach(StringBuilder line in GetLines(maxWidth))
             {
-                result.AppendStringBuilder(line);
+                result.Append(line);
                 result.Append("\n");
             }
             if(result.Length > 0)

@@ -15,6 +15,7 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib;
+using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
@@ -97,6 +98,40 @@ namespace SEScripts.XUI.XML
             return renderString;
             //renderString = prefix + renderString;
         }*/
+
+        public override RenderBox GetRenderBox(int maxWidth)
+        {
+            Logger.debug("UIControls.GetRenderCache(int)");
+            Logger.IncLvl();
+            RenderBoxTree cache = new RenderBoxTree();
+            if (Controller == null)
+            {
+                UpdateController();
+            }
+
+            if(IsSelectable())
+            {
+                RenderBox childCache = new RenderBoxLeaf(IsSelected() ? 
+                    new StringBuilder("<<") : 
+                    TextUtils.CreateStringOfLength(" ", TextUtils.GetTextWidth(new StringBuilder("<<"))));
+                childCache.MaxWidth = childCache.MinWidth;
+                cache.Add(childCache);
+            }
+            RenderBoxTree contentCache = new RenderBoxTree();
+            contentCache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
+
+            foreach (XMLTree child in Children)
+            {
+                contentCache.Add(child.GetRenderBox(maxWidth));
+            }
+            cache.Add(contentCache);
+
+            UpdateRenderCacheProperties(cache, maxWidth);
+            cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+
+            Logger.DecLvl();
+            return cache;
+        }
     }
 
 

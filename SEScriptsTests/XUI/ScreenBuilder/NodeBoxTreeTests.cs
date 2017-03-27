@@ -26,7 +26,7 @@ namespace SEScripts.XUI.Tests
         {
             StringBuilder line1 = new StringBuilder("abcdefg");
             StringBuilder line2 = new StringBuilder("alask");
-            NodeBoxTree tree = new NodeBoxTree();
+            RenderBoxTree tree = new RenderBoxTree();
             Assert.AreEqual(0, tree.MinWidth);
 
             tree.Add(line1);
@@ -44,7 +44,7 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual(expectedWith, tree.MinWidth);
 
             tree.MinWidth = 0;
-            tree.Flow = NodeBox.FlowDirection.HORIZONTAL;
+            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
 
             expectedWith = TextUtils.GetTextWidth(new StringBuilder(line1.ToString() + line2.ToString()));
             Assert.AreEqual(expectedWith, tree.MinWidth);
@@ -59,7 +59,7 @@ namespace SEScripts.XUI.Tests
 
             line1 = new StringBuilder("abcdefg");
             line2 = new StringBuilder("alask");
-            tree = new NodeBoxTree();
+            tree = new RenderBoxTree();
             tree.Add(line1);
             tree.Add(line2);
 
@@ -70,7 +70,7 @@ namespace SEScripts.XUI.Tests
                     ), 
                 tree.MinWidth);
 
-            tree.Flow = NodeBox.FlowDirection.HORIZONTAL;
+            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
             Assert.AreEqual(
                     TextUtils.GetTextWidth(new StringBuilder(
                         tree.GetLine(0).ToString())),
@@ -81,12 +81,12 @@ namespace SEScripts.XUI.Tests
             string leftline2 = "f";
             string rightline1 = "ghi";
             string rightline2 = "jkl";
-            tree = new NodeBoxTree();
-            tree.Flow = NodeBox.FlowDirection.HORIZONTAL;
-            NodeBoxTree leftBox = new NodeBoxTree();
+            tree = new RenderBoxTree();
+            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            RenderBoxTree leftBox = new RenderBoxTree();
             leftBox.Add(leftline1);
             leftBox.Add(leftline2);
-            NodeBoxTree rightBox = new NodeBoxTree();
+            RenderBoxTree rightBox = new RenderBoxTree();
             rightBox.Add(rightline1);
             rightBox.Add(rightline2);
 
@@ -125,25 +125,25 @@ namespace SEScripts.XUI.Tests
         [TestMethod()]
         public void NodeBoxTreeTest()
         {
-            NodeBoxTree tree = new NodeBoxTree();
+            RenderBoxTree tree = new RenderBoxTree();
             Assert.IsNotNull(tree);
             Assert.AreEqual(0, tree.Height);
             Assert.AreEqual(-1, tree.ForcedWidth);
             Assert.AreEqual(-1, tree.MaxWidth);
             Assert.AreEqual(0, tree.MinWidth);
             Assert.AreEqual(-1, tree.DesiredWidth);
-            Assert.AreEqual(NodeBox.TextAlign.LEFT, tree.Align);
+            Assert.AreEqual(RenderBox.TextAlign.LEFT, tree.Align);
             Assert.AreEqual(0, tree.Count);
-            Assert.AreEqual(NodeBox.FlowDirection.VERTICAL, tree.Flow);
+            Assert.AreEqual(RenderBox.FlowDirection.VERTICAL, tree.Flow);
         }
 
         [TestMethod()]
         public void AddTest()
         {
-            NodeBoxTree tree = new NodeBoxTree();
+            RenderBoxTree tree = new RenderBoxTree();
             Assert.AreEqual(0, tree.Count);
             string childContent = "hello world";
-            NodeBoxLeaf child = new NodeBoxLeaf(childContent);
+            RenderBoxLeaf child = new RenderBoxLeaf(childContent);
             tree.Add(child);
             Assert.AreEqual(1, tree.Count);
         }
@@ -151,9 +151,9 @@ namespace SEScripts.XUI.Tests
         [TestMethod()]
         public void AddTest1()
         {
-            NodeBoxTree tree = new NodeBoxTree();
+            RenderBoxTree tree = new RenderBoxTree();
             Assert.AreEqual(0, tree.Count);
-            NodeBoxTree child = new NodeBoxTree();
+            RenderBoxTree child = new RenderBoxTree();
             tree.Add(child);
             Assert.AreEqual(1, tree.Count);
         }
@@ -164,10 +164,10 @@ namespace SEScripts.XUI.Tests
             StringBuilder line1 = new StringBuilder("testabctest");
             StringBuilder line2 = new StringBuilder("someothercontent");
 
-            NodeBoxTree tree = new NodeBoxTree();
-            NodeBoxLeaf leaf1 = new NodeBoxLeaf(line1);
+            RenderBoxTree tree = new RenderBoxTree();
+            RenderBoxLeaf leaf1 = new RenderBoxLeaf(line1);
             leaf1.ForcedWidth = TextUtils.GetTextWidth(line1);
-            NodeBoxLeaf leaf2 = new NodeBoxLeaf(line2);
+            RenderBoxLeaf leaf2 = new RenderBoxLeaf(line2);
             leaf2.ForcedWidth = TextUtils.GetTextWidth(line2);
 
             tree.Add(leaf1);
@@ -183,7 +183,7 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual<string>(line2.ToString(), tree.GetLine(1).ToString());
             Assert.AreEqual<string>(TextUtils.CreateStringOfLength(" ", tree.ForcedWidth).ToString(), tree.GetLine(2).ToString());
 
-            tree.Flow = NodeBox.FlowDirection.HORIZONTAL;
+            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
             tree.ForcedWidth = TextUtils.GetTextWidth(line1) + TextUtils.GetTextWidth(line2) + 1;
 
             Assert.AreEqual<string>(line1.ToString() + line2, tree.GetLine(0).ToString());
@@ -194,13 +194,13 @@ namespace SEScripts.XUI.Tests
             string leftline2 = "f";
             string rightline1 = "ghi";
             string rightline2 = "jkl";
-            tree = new NodeBoxTree();
-            tree.Flow = NodeBox.FlowDirection.HORIZONTAL;
-            NodeBoxTree leftBox = new NodeBoxTree();
+            tree = new RenderBoxTree();
+            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            RenderBoxTree leftBox = new RenderBoxTree();
             leftBox.Add(leftline1);
             leftBox.Add(leftline2);
             leftBox.ForcedWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(leftline1)), TextUtils.GetTextWidth(new StringBuilder(leftline2)));
-            NodeBoxTree rightBox = new NodeBoxTree();
+            RenderBoxTree rightBox = new RenderBoxTree();
             rightBox.Add(rightline1);
             rightBox.Add(rightline2);
             rightBox.ForcedWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(rightline1)), TextUtils.GetTextWidth(new StringBuilder(rightline2)));
@@ -233,9 +233,9 @@ namespace SEScripts.XUI.Tests
             StringBuilder line1 = new StringBuilder("testabctest");
             StringBuilder line2 = new StringBuilder("someothercontent");
 
-            NodeBoxTree tree = new NodeBoxTree();
-            NodeBoxLeaf leaf1 = new NodeBoxLeaf(line1);
-            NodeBoxLeaf leaf2 = new NodeBoxLeaf(line2);
+            RenderBoxTree tree = new RenderBoxTree();
+            RenderBoxLeaf leaf1 = new RenderBoxLeaf(line1);
+            RenderBoxLeaf leaf2 = new RenderBoxLeaf(line2);
 
             tree.Add(leaf1);
             tree.Add(leaf2);
@@ -248,7 +248,7 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual<string>(line2.ToString(), tree.GetLine(1).ToString());
             Assert.AreEqual<string>(TextUtils.CreateStringOfLength(" ", tree.MinWidth).ToString(), tree.GetLine(2).ToString());
 
-            tree.Flow = NodeBox.FlowDirection.HORIZONTAL;
+            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
 
             Assert.AreEqual<string>(line1.ToString() + line2, tree.GetLine(0).ToString());
             Console.WriteLine("testing empty line, horizontal");
@@ -258,12 +258,12 @@ namespace SEScripts.XUI.Tests
             string leftline2 = "f";
             string rightline1 = "ghi";
             string rightline2 = "jkl";
-            tree = new NodeBoxTree();
-            tree.Flow = NodeBox.FlowDirection.HORIZONTAL;
-            NodeBoxTree leftBox = new NodeBoxTree();
+            tree = new RenderBoxTree();
+            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            RenderBoxTree leftBox = new RenderBoxTree();
             leftBox.Add(leftline1);
             leftBox.Add(leftline2);
-            NodeBoxTree rightBox = new NodeBoxTree();
+            RenderBoxTree rightBox = new RenderBoxTree();
             rightBox.Add(rightline1);
             rightBox.Add(rightline2);
 
@@ -299,9 +299,9 @@ namespace SEScripts.XUI.Tests
             StringBuilder line1 = new StringBuilder("testabctest");
             StringBuilder line2 = new StringBuilder("someothercontent");
 
-            NodeBoxTree tree = new NodeBoxTree();
-            NodeBoxLeaf leaf1 = new NodeBoxLeaf(line1);
-            NodeBoxLeaf leaf2 = new NodeBoxLeaf(line2);
+            RenderBoxTree tree = new RenderBoxTree();
+            RenderBoxLeaf leaf1 = new RenderBoxLeaf(line1);
+            RenderBoxLeaf leaf2 = new RenderBoxLeaf(line2);
 
             tree.Add(leaf1);
             tree.Add(leaf2);
@@ -323,7 +323,7 @@ namespace SEScripts.XUI.Tests
                 tree.GetLine(1).ToString());
             Assert.AreEqual<string>(TextUtils.CreateStringOfLength(" ", customMinWidth).ToString(), tree.GetLine(2).ToString());
 
-            tree.Flow = NodeBox.FlowDirection.HORIZONTAL;
+            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
             tree.MinWidth = tree.MinWidth - 50;
 
             Console.WriteLine("Test runs until here.");
@@ -343,12 +343,12 @@ namespace SEScripts.XUI.Tests
             string leftline2 = "f";
             string rightline1 = "ghi";
             string rightline2 = "jkl";
-            tree = new NodeBoxTree();
-            tree.Flow = NodeBox.FlowDirection.HORIZONTAL;
-            NodeBoxTree leftBox = new NodeBoxTree();
+            tree = new RenderBoxTree();
+            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            RenderBoxTree leftBox = new RenderBoxTree();
             leftBox.Add(leftline1);
             leftBox.Add(leftline2);
-            NodeBoxTree rightBox = new NodeBoxTree();
+            RenderBoxTree rightBox = new RenderBoxTree();
             rightBox.Add(rightline1);
             rightBox.Add(rightline2);
 
@@ -377,22 +377,22 @@ namespace SEScripts.XUI.Tests
             string right2 = "ghi";
             string right3 = "jklm";
 
-            NodeBoxTree frame = new NodeBoxTree();
+            RenderBoxTree frame = new RenderBoxTree();
             TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
 
-            NodeBoxLeaf leftLeaf1 = new NodeBoxLeaf(left1);
+            RenderBoxLeaf leftLeaf1 = new RenderBoxLeaf(left1);
             leftLeaf1.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(left1));
-            NodeBoxLeaf leftLeaf2 = new NodeBoxLeaf(left2);
+            RenderBoxLeaf leftLeaf2 = new RenderBoxLeaf(left2);
             leftLeaf2.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(left2));
-            NodeBoxLeaf rightLeaf1 = new NodeBoxLeaf(right1);
+            RenderBoxLeaf rightLeaf1 = new RenderBoxLeaf(right1);
             rightLeaf1.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(right1));
-            NodeBoxLeaf rightLeaf2 = new NodeBoxLeaf(right2);
+            RenderBoxLeaf rightLeaf2 = new RenderBoxLeaf(right2);
             rightLeaf2.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(right2));
-            NodeBoxLeaf rightLeaf3 = new NodeBoxLeaf(right3);
+            RenderBoxLeaf rightLeaf3 = new RenderBoxLeaf(right3);
             rightLeaf3.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(right3));
 
-            NodeBoxTree leftBox = new NodeBoxTree();
-            NodeBoxTree rightBox = new NodeBoxTree();
+            RenderBoxTree leftBox = new RenderBoxTree();
+            RenderBoxTree rightBox = new RenderBoxTree();
 
             leftBox.Add(leftLeaf1);
             leftBox.Add(leftLeaf2);
@@ -401,12 +401,12 @@ namespace SEScripts.XUI.Tests
             rightBox.Add(rightLeaf2);
             rightBox.Add(rightLeaf3);
             rightBox.ForcedWidth = Math.Max(rightLeaf1.ForcedWidth, Math.Max(rightLeaf2.ForcedWidth, rightLeaf3.ForcedWidth));
-            rightBox.Align = NodeBox.TextAlign.RIGHT;
+            rightBox.Align = RenderBox.TextAlign.RIGHT;
 
             frame.Add(leftBox);
             frame.Add(rightBox);
             frame.ForcedWidth = leftBox.ForcedWidth + 1 + rightBox.ForcedWidth;
-            frame.Flow = NodeBox.FlowDirection.HORIZONTAL;
+            frame.Flow = RenderBox.FlowDirection.HORIZONTAL;
             
             foreach(StringBuilder line in frame.GetLines())
             {
@@ -417,9 +417,9 @@ namespace SEScripts.XUI.Tests
         [TestMethod()]
         public void ClearTest()
         {
-            NodeBoxTree tree = new NodeBoxTree();
+            RenderBoxTree tree = new RenderBoxTree();
             tree.Add("test");
-            tree.Add(new NodeBoxTree());
+            tree.Add(new RenderBoxTree());
             Assert.AreEqual(2, tree.Count);
             tree.Clear();
             Assert.AreEqual(0, tree.Count);

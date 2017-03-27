@@ -20,14 +20,17 @@ namespace SEScripts.XUI.XML
 {
     public class Menu : XMLTree
     {
-        NodeBox prefix;
-        NodeBox prefixSelected;
+        RenderBox prefix;
+        RenderBox prefixSelected;
 
         public Menu() : base()
         {
             Type = "menu";
-            prefix = new NodeBoxLeaf("     ");
-            prefixSelected = new NodeBoxLeaf(">> ");
+            prefix = new RenderBoxLeaf("     ");
+            prefixSelected = new RenderBoxLeaf(">> ");
+            int prefixWidth = Math.Max(prefix.MinWidth, prefixSelected.MinWidth);
+            prefix.MaxWidth = prefixWidth;
+            prefixSelected.MaxWidth = prefixWidth;
         }
 
         public override void AddChild(XMLTree child)
@@ -57,52 +60,30 @@ namespace SEScripts.XUI.XML
             return renderString;
         }*/
 
-        public override NodeBox RenderCache
+        public override RenderBox GetRenderBox(int maxWidth)
         {
-            get
+            Logger.debug("Menu.GetRenderCache(int)");
+            Logger.IncLvl();
+            RenderBoxTree cache = new RenderBoxTree();
+            RenderBoxTree menuPoint;
+            foreach (XMLTree child in Children)
             {
-                NodeBoxTree cache = new NodeBoxTree();
-                foreach (XMLTree child in Children)
+                menuPoint = new RenderBoxTree();
+                menuPoint.Flow = RenderBox.FlowDirection.HORIZONTAL;
+                if(child.IsSelected())
                 {
-                    if(child.IsSelected())
-                    {
-                        cache.Add(prefixSelected);
-                    }
-                    else
-                    {
-                        cache.Add(prefix);
-                    }
-                    cache.Add(child.RenderCache);
+                    menuPoint.Add(prefixSelected);
                 }
-                cache.Flow = GetAttribute("flow") == "horizontal" ? NodeBox.FlowDirection.HORIZONTAL : NodeBox.FlowDirection.VERTICAL;
-
-                switch (GetAttribute("alignself"))
+                else
                 {
-                    case "right":
-                        cache.Align = NodeBox.TextAlign.RIGHT;
-                        break;
-                    case "center":
-                        cache.Align = NodeBox.TextAlign.CENTER;
-                        break;
-                    default:
-                        cache.Align = NodeBox.TextAlign.LEFT;
-                        break;
+                    menuPoint.Add(prefix);
                 }
-
-                int result;
-                if (Int32.TryParse(GetAttribute("minwidth"), out result))
-                    cache.MinWidth = result;
-                if (Int32.TryParse(GetAttribute("maxwidth"), out result))
-                    cache.MaxWidth = result;
-                if (Int32.TryParse(GetAttribute("width"), out result))
-                    cache.DesiredWidth = result;
-                if (Int32.TryParse(GetAttribute("forcewidth"), out result))
-                    cache.ForcedWidth = result;
-                if (Int32.TryParse(GetAttribute("height"), out result))
-                    cache.Height = result;
-
-                return cache;
+                menuPoint.Add(child.GetRenderBox(maxWidth));
+                cache.Add(menuPoint);
             }
+            UpdateRenderCacheProperties(cache, maxWidth);
+            Logger.DecLvl();
+            return cache;
         }
     }
 

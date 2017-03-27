@@ -15,6 +15,7 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib;
+using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
@@ -32,14 +33,14 @@ namespace SEScripts.XUI.XML
             return "";
         }*/
 
-        public override NodeBox RenderCache
+        public override RenderBox GetRenderBox(int maxWidth)
         {
-            get
-            {
-                NodeBox cache = new NodeBoxLeaf();
-                cache.Height = 1;
-                return cache;
-            }
+            Logger.debug("Break.GetRenderCache(int)");
+            Logger.IncLvl();
+            RenderBox cache = new RenderBoxLeaf();
+            cache.Height = 0;
+            Logger.DecLvl();
+            return cache;
         }
     }
 

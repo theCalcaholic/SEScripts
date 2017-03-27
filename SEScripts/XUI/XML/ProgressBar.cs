@@ -14,12 +14,17 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
+using SEScripts.Lib;
 using SEScripts.Lib.LoggerNS;
+using System.Globalization;
 
 namespace SEScripts.XUI.XML
 {
     public class ProgressBar : XMLTree
     {
+        RenderBox emptyBar;
+        RenderBox filledBar;
+
         float StepSize
         {
             get
@@ -50,6 +55,8 @@ namespace SEScripts.XUI.XML
                 {
                     return 0.0f;
                 }
+                if (fillLevel < 0 || fillLevel > 1)
+                    return 0.0f;
                 return fillLevel;
             }
             set
@@ -136,20 +143,86 @@ namespace SEScripts.XUI.XML
             Logger.DecLvl();
         }*/
 
-        public override NodeBox RenderCache
+        public override RenderBox GetRenderBox(int maxWidth)
         {
-            get
-            {
-                NodeBoxTree cache = new NodeBoxTree();
-                NodeBox prefix = new NodeBoxLeaf(
-                    (IsSelected() ? "<" : " ") + "[");
-                NodeBox suffix = new NodeBoxLeaf(
-                    "]" + (IsSelected() ? ">" : " "));
-                cache.Add(prefix);
-                cache.Add(suffix);
+            Logger.debug("ProgressBar.GetRenderCache(int)");
+            Logger.IncLvl();
+            RenderBoxTree cache = new RenderBoxTree();
+            int outerWidth = TextUtils.GetTextWidth(IsSelected() ? new StringBuilder("<[]>") : new StringBuilder(" [] ")) + 2;
+            RenderBox prefix = new RenderBoxLeaf(
+                (IsSelected() ? "<" : " ") + "[");
+            prefix.MaxWidth = prefix.MinWidth;
+            RenderBox suffix = new RenderBoxLeaf(
+                "]" + (IsSelected() ? ">" : " "));
+            suffix.MaxWidth = suffix.MinWidth;
+            cache.Add(prefix);
 
-                return cache;
+            filledBar = new RenderBoxLeaf();
+            filledBar.PadString = GetAttribute("filledstring");
+            filledBar.Height = 1;
+            cache.Add(filledBar);
+
+            emptyBar = new RenderBoxLeaf();
+            emptyBar.Height = 1;
+            emptyBar.PadString = GetAttribute("emptystring");
+            cache.Add(emptyBar);
+
+            cache.Add(suffix);
+
+            int width = ResolveSize(GetAttribute("minwidth"), maxWidth);
+            if (width >= outerWidth)
+            {
+                filledBar.MinWidth = (int)((width - outerWidth) * FillLevel);
+                emptyBar.MinWidth = (int)((width - outerWidth) * (1 - FillLevel));
             }
+            width = ResolveSize(GetAttribute("maxwidth"), maxWidth);
+            if (width >= outerWidth)
+            {
+                filledBar.MaxWidth = (int) ((width - outerWidth) * FillLevel);
+                emptyBar.MaxWidth = (int)((width - outerWidth) * (1 - FillLevel));
+            }
+            width = ResolveSize(GetAttribute("width"), maxWidth);
+            if (width >= outerWidth)
+            {
+                filledBar.DesiredWidth = (int)((width - outerWidth) * FillLevel);
+                emptyBar.DesiredWidth = (int)((width - outerWidth) * (1 - FillLevel));
+            }
+            width = ResolveSize(GetAttribute("forcewidth"), maxWidth);
+            if (width >= outerWidth)
+            {
+                filledBar.ForcedWidth = (int)((width - outerWidth) * FillLevel);
+                emptyBar.ForcedWidth = (int)((width - outerWidth) * (1 - FillLevel));
+            }
+            UpdateRenderCacheProperties(cache, maxWidth);
+
+            Logger.log("filledBar: ");
+            Logger.DEBUG = false;
+            Logger.log("  fillLevel: " + FillLevel);
+            Logger.log("  min width: " + filledBar.MinWidth);
+            Logger.log("  max width: " + filledBar.MaxWidth);
+            Logger.log("  desired width: " + filledBar.DesiredWidth);
+            Logger.log("  forced width: " + filledBar.ForcedWidth);
+            Logger.log("  height: " + filledBar.Height);
+            Logger.DEBUG = true;
+            Logger.log("  actual width: " + filledBar.GetActualWidth(maxWidth));
+
+            cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            //GetAttribute("flow") == "horizontal" ? NodeBox.FlowDirection.HORIZONTAL : NodeBox.FlowDirection.VERTICAL;
+
+            switch (GetAttribute("alignself"))
+            {
+                case "right":
+                    cache.Align = RenderBox.TextAlign.RIGHT;
+                    break;
+                case "center":
+                    cache.Align = RenderBox.TextAlign.CENTER;
+                    break;
+                default:
+                    cache.Align = RenderBox.TextAlign.LEFT;
+                    break;
+            }
+            Logger.DecLvl();
+            return cache;
         }
     }
 

@@ -25,7 +25,7 @@ namespace SEScripts.XUI.Tests
         public void MinWidthTest()
         {
             StringBuilder content = new StringBuilder("abc");
-            NodeBoxLeaf leaf = new NodeBoxLeaf(content);
+            RenderBoxLeaf leaf = new RenderBoxLeaf(content);
             Assert.AreEqual(TextUtils.GetTextWidth(content), leaf.MinWidth);
 
             leaf.MinWidth = leaf.MinWidth - 10;
@@ -39,7 +39,7 @@ namespace SEScripts.XUI.Tests
         [TestMethod()]
         public void NodeBoxLeafTest()
         {
-            NodeBoxLeaf leaf = new NodeBoxLeaf();
+            RenderBoxLeaf leaf = new RenderBoxLeaf();
             Assert.IsNotNull(leaf);
             Assert.AreEqual<string>("", leaf.GetLine(0).ToString());
             Assert.AreEqual(0, leaf.Height);
@@ -47,15 +47,15 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual(-1, leaf.MaxWidth);
             Assert.AreEqual(0, leaf.MinWidth);
             Assert.AreEqual(-1, leaf.DesiredWidth);
-            Assert.AreEqual(NodeBox.TextAlign.LEFT, leaf.Align);
-            Assert.AreEqual(NodeBox.FlowDirection.VERTICAL, leaf.Flow);
+            Assert.AreEqual(RenderBox.TextAlign.LEFT, leaf.Align);
+            Assert.AreEqual(RenderBox.FlowDirection.VERTICAL, leaf.Flow);
         }
 
         [TestMethod()]
         public void NodeBoxLeafTest1()
         {
             StringBuilder content = new StringBuilder("test");
-            NodeBoxLeaf leaf = new NodeBoxLeaf(content);
+            RenderBoxLeaf leaf = new RenderBoxLeaf(content);
             Assert.IsNotNull(leaf);
             Assert.AreEqual<string>(content.ToString(), leaf.GetLine(0).ToString());
             Assert.AreEqual(1f, leaf.Height);
@@ -63,8 +63,8 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual(-1f, leaf.MaxWidth);
             //Assert.AreEqual(leaf.Width, leaf.MinWidth);
             Assert.AreEqual(-1f, leaf.DesiredWidth);
-            Assert.AreEqual(NodeBox.TextAlign.LEFT, leaf.Align);
-            Assert.AreEqual(NodeBox.FlowDirection.VERTICAL, leaf.Flow);
+            Assert.AreEqual(RenderBox.TextAlign.LEFT, leaf.Align);
+            Assert.AreEqual(RenderBox.FlowDirection.VERTICAL, leaf.Flow);
         }
 
         [TestMethod()]
@@ -72,7 +72,7 @@ namespace SEScripts.XUI.Tests
         {
             string part1 = "hello ";
             string part2 = "world";
-            NodeBoxLeaf leaf = new NodeBoxLeaf(part1);
+            RenderBoxLeaf leaf = new RenderBoxLeaf(part1);
             Assert.AreEqual(1, leaf.Height);
             leaf.Add(part2);
             Assert.AreEqual(1, leaf.Height);
@@ -82,7 +82,7 @@ namespace SEScripts.XUI.Tests
         [TestMethod()]
         public void GetRenderedLineTest()
         {
-            NodeBoxLeaf leaf = new NodeBoxLeaf("test line");
+            RenderBoxLeaf leaf = new RenderBoxLeaf("test line");
             Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetLine(0, 0).ToString());
             Assert.AreEqual<string>(leaf.GetLine(1).ToString(), leaf.GetLine(1, 0).ToString());
             Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetLine(0, 100).ToString());
@@ -93,13 +93,13 @@ namespace SEScripts.XUI.Tests
         public void GetLineTest()
         {
             string line = "testline";
-            NodeBoxLeaf leaf = new NodeBoxLeaf(line);
+            RenderBoxLeaf leaf = new RenderBoxLeaf(line);
 
             Assert.AreEqual<string>(line, leaf.GetLine(0).ToString());
             Assert.AreEqual<string>("", leaf.GetLine(1).ToString());
             
             line = "testline\nsameline";
-            leaf = new NodeBoxLeaf(line);
+            leaf = new RenderBoxLeaf(line);
 
             Assert.AreEqual<string>(line.Replace("\n", ""), leaf.GetLine(0).ToString());
             Assert.AreEqual<string>("", leaf.GetLine(1).ToString());
@@ -108,7 +108,7 @@ namespace SEScripts.XUI.Tests
         [TestMethod()]
         public void ClearTest()
         {
-            NodeBoxLeaf leaf = new NodeBoxLeaf("test");
+            RenderBoxLeaf leaf = new RenderBoxLeaf("test");
             leaf.Clear();
             Assert.AreEqual<string>("", leaf.GetLine(0).ToString());
         }
@@ -117,7 +117,7 @@ namespace SEScripts.XUI.Tests
         public void GetLinesTest()
         {
             string line = "first line";
-            NodeBoxLeaf leaf = new NodeBoxLeaf(line);
+            RenderBoxLeaf leaf = new RenderBoxLeaf(line);
 
             int numberOfLines = 0;
             foreach(StringBuilder l in leaf.GetLines())

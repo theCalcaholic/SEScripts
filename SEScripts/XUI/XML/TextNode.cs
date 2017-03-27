@@ -26,20 +26,23 @@ namespace SEScripts.XUI.XML
         {
             Logger.debug("TextNode constructor()");
             Logger.IncLvl();
+            Logger.debug("content: " + content);
             Type = "textnode";
             Content = content;
             Content.Replace("\n", "");
             Content = Content.Trim(new char[] { '\n', ' ', '\r' });
-            RerenderRequired = false;
+            Logger.debug("final content: " + Content);
+            RerenderRequired = true;
             Logger.DecLvl();
         }
 
-        public override NodeBox RenderCache
+        public override RenderBox GetRenderBox(int maxWidth)
         {
-            get
-            {
-                return new NodeBoxLeaf(Content);
-            }
+            Logger.debug("TextNode.GetRenderCache(int)");
+            Logger.IncLvl();
+            RenderBox cache = new RenderBoxLeaf(Content);
+            Logger.DecLvl();
+            return cache;
         }
 
         //protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }

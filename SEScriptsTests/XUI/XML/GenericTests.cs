@@ -27,7 +27,7 @@ namespace SEScripts.XUI.XML.Tests
 
             // check default settings
 
-            Assert.IsInstanceOfType(tree, typeof(NodeBox));
+            Assert.IsInstanceOfType(tree, typeof(RenderBox));
             Assert.IsFalse(tree.HasUserInputBindings);
             Assert.IsNull(tree.GetParent());
             Assert.IsNull(tree.GetChild(0));
@@ -88,11 +88,11 @@ namespace SEScripts.XUI.XML.Tests
             parent.AddChild(new Generic("child1"));
 
             Assert.AreEqual<String>("child1", parent.GetChild(0).Type);
-            Assert.AreEqual<int>(1, ((NodeBoxTree) parent.RenderCache).Count);
+            Assert.AreEqual<int>(1, ((RenderBoxTree) parent.GetRenderBox(-1)).Count);
 
             parent.AddChild(new Generic("child2"));
 
-            Assert.AreEqual<int>(2, ((NodeBoxTree) parent.RenderCache).Count);
+            Assert.AreEqual<int>(2, ((RenderBoxTree) parent.GetRenderBox(-1)).Count);
             Assert.AreEqual<String>("child1", parent.GetChild(0).Type);
             Assert.AreEqual<String>("child2", parent.GetChild(1).Type);
         }
@@ -108,7 +108,7 @@ namespace SEScripts.XUI.XML.Tests
 
             parent.AddChildAt(0, new Generic("child2"));
 
-            Assert.AreEqual<int>(2, ((NodeBoxTree) parent.RenderCache).Count);
+            Assert.AreEqual<int>(2, ((RenderBoxTree) parent.GetRenderBox(-1)).Count);
             Assert.AreEqual<String>("child2", parent.GetChild(0).Type);
             Assert.AreEqual<String>("child1", parent.GetChild(1).Type);
         }
@@ -389,7 +389,7 @@ namespace SEScripts.XUI.XML.Tests
 
             tree.AddChild(leaf1);
             tree.AddChild(leaf2);
-            int minWidth = tree.RenderCache.MinWidth;
+            int minWidth = tree.GetRenderBox(-1).MinWidth;
             tree.SetAttribute("minwidth", (minWidth - 50).ToString());
 
             string expected = TextUtils.PadText(line1, TextUtils.GetTextWidth(line2), TextUtils.PadMode.RIGHT).ToString() + "\n"
@@ -398,7 +398,7 @@ namespace SEScripts.XUI.XML.Tests
                 expected,
                 tree.Render());
             
-            minWidth = tree.RenderCache.MinWidth + 100;
+            minWidth = tree.GetRenderBox(-1).MinWidth + 100;
             tree.SetAttribute("minwidth", minWidth.ToString());
 
             expected = TextUtils.PadText(line1, minWidth, TextUtils.PadMode.RIGHT).ToString() + "\n"
@@ -406,13 +406,13 @@ namespace SEScripts.XUI.XML.Tests
             Assert.AreEqual<string>(expected, tree.Render());
 
             tree.SetAttribute("flow", "horizontal");
-            minWidth = tree.RenderCache.MinWidth - 50;
+            minWidth = tree.GetRenderBox(-1).MinWidth - 50;
             tree.SetAttribute("minwidth", minWidth.ToString());
             expected = line1.ToString() + line2.ToString();
             
             Assert.AreEqual<string>(expected, tree.Render());
 
-            minWidth = tree.RenderCache.MinWidth + 100;
+            minWidth = tree.GetRenderBox(-1).MinWidth + 100;
             tree.SetAttribute("minwidth", minWidth.ToString());
             expected = TextUtils.PadText(new StringBuilder(line1.ToString() + line2), minWidth, TextUtils.PadMode.RIGHT).ToString();
             Assert.AreEqual<string>(expected, tree.Render());
@@ -433,14 +433,14 @@ namespace SEScripts.XUI.XML.Tests
             tree.AddChild(leftBox);
             tree.AddChild(rightBox);
 
-            minWidth = tree.RenderCache.MinWidth + 100;
-            int leftMinWidth = leftBox.RenderCache.MinWidth;
-            int rightMinWidth = rightBox.RenderCache.MinWidth;
+            minWidth = tree.GetRenderBox(-1).MinWidth + 100;
+            int leftMinWidth = leftBox.GetRenderBox(-1).MinWidth;
+            int rightMinWidth = rightBox.GetRenderBox(-1).MinWidth;
 
             tree.SetAttribute("minwidth", minWidth.ToString());
             expected = TextUtils.PadText(new StringBuilder(leftline1 + rightline1), minWidth, TextUtils.PadMode.RIGHT).ToString() + "\n"
                 + TextUtils.PadText(new StringBuilder(leftline2), leftMinWidth, TextUtils.PadMode.RIGHT).ToString()
-                + TextUtils.PadText(new StringBuilder(rightline2), Math.Max(rightMinWidth, tree.RenderCache.MinWidth - leftMinWidth), TextUtils.PadMode.RIGHT);
+                + TextUtils.PadText(new StringBuilder(rightline2), Math.Max(rightMinWidth, tree.GetRenderBox(-1).MinWidth - leftMinWidth), TextUtils.PadMode.RIGHT);
             Assert.AreEqual<string>(
                 expected,
                 tree.Render());
