@@ -37,11 +37,40 @@ namespace SEScripts.XUI.XML
 
         public enum TextInputMode { PUBLIC_TEXT, CUSTOM_DATA }
 
+        public enum FONT
+        {
+            Debug, Red, Green, Blue, White, DarkBlue, UrlNormal, UrlHighlight, ErrorMessageBoxCaption, ErrorMessageBoxText,
+            InfoMessageBoxCaption, InfoMessageBoxText, ScreenCaption, GameCredits, LoadingScreen, BuildInfo, BuildInfoHighlight,
+            Monospace, MONO = Monospace, DEFAULT = Debug
+        }
+
+        Dictionary<FONT, long> Fonts = new Dictionary<FONT, long> {
+            {FONT.Debug, 151057691},
+            {FONT.Red, -795103743 },
+            {FONT.Green, -161094011 },
+            {FONT.Blue, 1920284339 },
+            {FONT.White, 48665683 },
+            {FONT.DarkBlue, 1919824171 },
+            {FONT.UrlNormal, 992097699 },
+            {FONT.UrlHighlight, -807552222 },
+            {FONT.ErrorMessageBoxCaption, 1458347610 },
+            {FONT.ErrorMessageBoxText, 895781166 },
+            {FONT.InfoMessageBoxCaption, 837834442 },
+            {FONT.InfoMessageBoxText, 1833612699 },
+            {FONT.ScreenCaption, 1216738022 },
+            {FONT.GameCredits, -1859174863 },
+            {FONT.LoadingScreen, 741958017 },
+            {FONT.BuildInfo, 1184185815 },
+            {FONT.BuildInfoHighlight, -270950170 },
+            {FONT.Monospace, 1147350002 }
+        };
+
         public UIController(XMLTree rootNode)
         {
             Logger.debug("UIController constructor()");
             Logger.IncLvl();
             Type = "CTRL";
+
             UIStack = new Stack<XMLTree>();
             UserInputBindings = new List<XMLTree>();
             UserInputActive = false;
@@ -100,6 +129,23 @@ namespace SEScripts.XUI.XML
                 uint.Parse(colorString, System.Globalization.NumberStyles.AllowHexSpecifier));
                 screen.SetValue<Color>("BackgroundColor", fontColor);
             }
+
+            if(ui.GetAttribute("fontfamily") != null)
+            {
+                string font = ui.GetAttribute("font");
+                FONT fontName;
+                long fontValue;
+                if(Enum.TryParse<FONT>(font, out fontName))
+                {
+                    screen.SetValue<long>("Font", Fonts[fontName]);
+                }
+                else if(long.TryParse(font, out fontValue))
+                {
+                    screen.SetValue<long>("Font", fontValue);
+                }
+                
+            }
+
             Logger.DecLvl();
         }
 
@@ -222,6 +268,16 @@ namespace SEScripts.XUI.XML
             { }
 
             int width = (int)(((float)panelWidth) / panel.GetValue<Single>("FontSize"));
+            if (panel.GetValue<long>("Font") == Fonts[FONT.MONO])
+            {
+                TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
+            }
+            else
+            {
+                TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
+            }
+            Logger.log("Font configured...");
+
             Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
             Logger.debug("resulting width: " + width.ToString());
             string text = ui.Render(width);
