@@ -16,7 +16,7 @@ using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib;
 using SEScripts.Lib.LoggerNS;
-using System.Globalization;
+using SEScripts.XUI.BoxRenderer;
 
 namespace SEScripts.XUI.XML
 {
@@ -190,8 +190,12 @@ namespace SEScripts.XUI.XML
             width = ResolveSize(GetAttribute("forcewidth"), maxWidth);
             if (width >= outerWidth)
             {
-                filledBar.ForcedWidth = (int)((width - outerWidth) * FillLevel);
-                emptyBar.ForcedWidth = (int)((width - outerWidth) * (1 - FillLevel));
+                int forcedWidth = (int)((width - outerWidth) * FillLevel);
+                filledBar.MaxWidth = forcedWidth;
+                filledBar.MinWidth = forcedWidth;
+                forcedWidth = (int)((width - outerWidth) * (1 - FillLevel));
+                emptyBar.MinWidth = forcedWidth;
+                emptyBar.MaxWidth = forcedWidth;
             }
             UpdateRenderCacheProperties(cache, maxWidth);
 
@@ -201,7 +205,6 @@ namespace SEScripts.XUI.XML
             Logger.log("  min width: " + filledBar.MinWidth);
             Logger.log("  max width: " + filledBar.MaxWidth);
             Logger.log("  desired width: " + filledBar.DesiredWidth);
-            Logger.log("  forced width: " + filledBar.ForcedWidth);
             Logger.log("  height: " + filledBar.Height);
             Logger.DEBUG = true;
             Logger.log("  actual width: " + filledBar.GetActualWidth(maxWidth));

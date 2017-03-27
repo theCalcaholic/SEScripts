@@ -148,6 +148,14 @@ namespace SEScripts.Lib.Tests
                 TextUtils.PadText(new StringBuilder(), 88, TextUtils.PadMode.RIGHT).ToString(),
                 TextUtils.PadText(new StringBuilder(" "), 88, TextUtils.PadMode.RIGHT).ToString()
                 );
+
+            StringBuilder sourceString1 = new StringBuilder();
+            StringBuilder sourceString2 = new StringBuilder(" ");
+            int length = 101;
+            Assert.AreEqual<string>(
+                TextUtils.PadText(sourceString1, length, TextUtils.PadMode.RIGHT).ToString(),
+                TextUtils.PadText(sourceString2, length, TextUtils.PadMode.RIGHT).ToString()
+                );
         }
 
         [TestMethod()]

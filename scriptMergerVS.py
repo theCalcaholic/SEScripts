@@ -28,6 +28,7 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib.LoggerNS;
+using SEScripts.XUI.BoxRenderer;
 
 namespace """
 

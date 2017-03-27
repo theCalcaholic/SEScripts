@@ -111,6 +111,8 @@
     <Compile Include="SirHamsteralotsNN\MLP.cs" />
     <Compile Include="XUI\NodeRenderCache.cs" />
     <Compile Include="XUI\RenderBox\RenderBox.cs" />
+    <Compile Include="XUI\RenderBox\RenderBoxLeaf.cs" />
+    <Compile Include="XUI\RenderBox\RenderBoxTree.cs" />
     <Compile Include="XUI\XMLExtensions\XMLMessage.cs" />
     <Compile Include="XUI\XMLWRAPPER.cs" />
     <Compile Include="XUI\XML\Break.cs" />

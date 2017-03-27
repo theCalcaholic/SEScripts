@@ -16,6 +16,7 @@ using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib;
 using SEScripts.Lib.LoggerNS;
+using SEScripts.XUI.BoxRenderer;
 
 namespace SEScripts.XUI.XML
 {

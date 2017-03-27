@@ -8,11 +8,12 @@ using System.Threading.Tasks;
 
 using SEScripts.Lib;
 using SEScripts.Lib.LoggerNS;
+using SEScripts.XUI.BoxRenderer;
 
 namespace SEScripts.XUI.Tests
 {
     [TestClass()]
-    public class NodeBoxTreeTests
+    public class RenderBoxTreeTests
     {
         [TestInitialize()]
         public void Initialize()
@@ -128,7 +129,6 @@ namespace SEScripts.XUI.Tests
             RenderBoxTree tree = new RenderBoxTree();
             Assert.IsNotNull(tree);
             Assert.AreEqual(0, tree.Height);
-            Assert.AreEqual(-1, tree.ForcedWidth);
             Assert.AreEqual(-1, tree.MaxWidth);
             Assert.AreEqual(0, tree.MinWidth);
             Assert.AreEqual(-1, tree.DesiredWidth);
@@ -166,29 +166,34 @@ namespace SEScripts.XUI.Tests
 
             RenderBoxTree tree = new RenderBoxTree();
             RenderBoxLeaf leaf1 = new RenderBoxLeaf(line1);
-            leaf1.ForcedWidth = TextUtils.GetTextWidth(line1);
+            leaf1.MinWidth = TextUtils.GetTextWidth(line1);
+            leaf1.MaxWidth = TextUtils.GetTextWidth(line1);
             RenderBoxLeaf leaf2 = new RenderBoxLeaf(line2);
-            leaf2.ForcedWidth = TextUtils.GetTextWidth(line2);
+            leaf2.MinWidth = TextUtils.GetTextWidth(line2);
+            leaf2.MaxWidth = TextUtils.GetTextWidth(line2);
 
             tree.Add(leaf1);
             tree.Add(leaf2);
-            tree.ForcedWidth = 0;
+            tree.MinWidth = 0;
+            tree.MaxWidth = 0;
 
             Assert.AreEqual<string>("", tree.GetLine(0).ToString());
 
-            tree.ForcedWidth = Math.Max(TextUtils.GetTextWidth(line1), TextUtils.GetTextWidth(line2));
+            tree.MinWidth = Math.Max(TextUtils.GetTextWidth(line1), TextUtils.GetTextWidth(line2));
+            tree.MaxWidth = Math.Max(TextUtils.GetTextWidth(line1), TextUtils.GetTextWidth(line2));
             Assert.AreEqual<string>(
                 TextUtils.PadText(line1, TextUtils.GetTextWidth(line2), TextUtils.PadMode.RIGHT).ToString(),
                 tree.GetLine(0).ToString());
             Assert.AreEqual<string>(line2.ToString(), tree.GetLine(1).ToString());
-            Assert.AreEqual<string>(TextUtils.CreateStringOfLength(" ", tree.ForcedWidth).ToString(), tree.GetLine(2).ToString());
+            Assert.AreEqual<string>(TextUtils.CreateStringOfLength(" ", tree.MaxWidth).ToString(), tree.GetLine(2).ToString());
 
             tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
-            tree.ForcedWidth = TextUtils.GetTextWidth(line1) + TextUtils.GetTextWidth(line2) + 1;
+            tree.MinWidth = TextUtils.GetTextWidth(line1) + TextUtils.GetTextWidth(line2) + 1;
+            tree.MaxWidth = TextUtils.GetTextWidth(line1) + TextUtils.GetTextWidth(line2) + 1;
 
             Assert.AreEqual<string>(line1.ToString() + line2, tree.GetLine(0).ToString());
             Console.WriteLine("testing empty line, horizontal");
-            Assert.AreEqual<string>(TextUtils.CreateStringOfLength(" ", tree.ForcedWidth).ToString(), tree.GetLine(1).ToString());
+            Assert.AreEqual<string>(TextUtils.CreateStringOfLength(" ", tree.MaxWidth).ToString(), tree.GetLine(1).ToString());
 
             string leftline1 = "abcde";
             string leftline2 = "f";
@@ -199,15 +204,18 @@ namespace SEScripts.XUI.Tests
             RenderBoxTree leftBox = new RenderBoxTree();
             leftBox.Add(leftline1);
             leftBox.Add(leftline2);
-            leftBox.ForcedWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(leftline1)), TextUtils.GetTextWidth(new StringBuilder(leftline2)));
+            leftBox.MinWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(leftline1)), TextUtils.GetTextWidth(new StringBuilder(leftline2)));
+            leftBox.MaxWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(leftline1)), TextUtils.GetTextWidth(new StringBuilder(leftline2)));
             RenderBoxTree rightBox = new RenderBoxTree();
             rightBox.Add(rightline1);
             rightBox.Add(rightline2);
-            rightBox.ForcedWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(rightline1)), TextUtils.GetTextWidth(new StringBuilder(rightline2)));
+            rightBox.MinWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(rightline1)), TextUtils.GetTextWidth(new StringBuilder(rightline2)));
+            rightBox.MaxWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(rightline1)), TextUtils.GetTextWidth(new StringBuilder(rightline2)));
 
             tree.Add(leftBox);
             tree.Add(rightBox);
-            tree.ForcedWidth = leftBox.ForcedWidth + rightBox.ForcedWidth + 1;
+            tree.MinWidth = leftBox.MaxWidth + rightBox.MaxWidth + 1;
+            tree.MaxWidth = leftBox.MaxWidth + rightBox.MaxWidth + 1;
 
             Assert.AreEqual<string>(leftline1 + rightline1, tree.GetLine(0).ToString());
             string expected =
@@ -381,31 +389,39 @@ namespace SEScripts.XUI.Tests
             TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
 
             RenderBoxLeaf leftLeaf1 = new RenderBoxLeaf(left1);
-            leftLeaf1.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(left1));
+            leftLeaf1.MinWidth = TextUtils.GetTextWidth(new StringBuilder(left1));
+            leftLeaf1.MaxWidth = TextUtils.GetTextWidth(new StringBuilder(left1));
             RenderBoxLeaf leftLeaf2 = new RenderBoxLeaf(left2);
-            leftLeaf2.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(left2));
+            leftLeaf2.MinWidth = TextUtils.GetTextWidth(new StringBuilder(left2));
+            leftLeaf2.MaxWidth = TextUtils.GetTextWidth(new StringBuilder(left2));
             RenderBoxLeaf rightLeaf1 = new RenderBoxLeaf(right1);
-            rightLeaf1.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(right1));
+            rightLeaf1.MinWidth = TextUtils.GetTextWidth(new StringBuilder(right1));
+            rightLeaf1.MaxWidth = TextUtils.GetTextWidth(new StringBuilder(right1));
             RenderBoxLeaf rightLeaf2 = new RenderBoxLeaf(right2);
-            rightLeaf2.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(right2));
+            rightLeaf2.MinWidth = TextUtils.GetTextWidth(new StringBuilder(right2));
+            rightLeaf2.MaxWidth = TextUtils.GetTextWidth(new StringBuilder(right2));
             RenderBoxLeaf rightLeaf3 = new RenderBoxLeaf(right3);
-            rightLeaf3.ForcedWidth = TextUtils.GetTextWidth(new StringBuilder(right3));
+            rightLeaf3.MinWidth = TextUtils.GetTextWidth(new StringBuilder(right3));
+            rightLeaf3.MaxWidth = TextUtils.GetTextWidth(new StringBuilder(right3));
 
             RenderBoxTree leftBox = new RenderBoxTree();
             RenderBoxTree rightBox = new RenderBoxTree();
 
             leftBox.Add(leftLeaf1);
             leftBox.Add(leftLeaf2);
-            leftBox.ForcedWidth = Math.Max(leftLeaf1.ForcedWidth, leftLeaf2.ForcedWidth);
+            leftBox.MinWidth = Math.Max(leftLeaf1.MaxWidth, leftLeaf2.MaxWidth);
+            leftBox.MaxWidth = Math.Max(leftLeaf1.MaxWidth, leftLeaf2.MaxWidth);
             rightBox.Add(rightLeaf1);
             rightBox.Add(rightLeaf2);
             rightBox.Add(rightLeaf3);
-            rightBox.ForcedWidth = Math.Max(rightLeaf1.ForcedWidth, Math.Max(rightLeaf2.ForcedWidth, rightLeaf3.ForcedWidth));
+            rightBox.MinWidth = Math.Max(rightLeaf1.MaxWidth, Math.Max(rightLeaf2.MaxWidth, rightLeaf3.MaxWidth));
+            rightBox.MaxWidth = Math.Max(rightLeaf1.MaxWidth, Math.Max(rightLeaf2.MaxWidth, rightLeaf3.MaxWidth));
             rightBox.Align = RenderBox.TextAlign.RIGHT;
 
             frame.Add(leftBox);
             frame.Add(rightBox);
-            frame.ForcedWidth = leftBox.ForcedWidth + 1 + rightBox.ForcedWidth;
+            frame.MinWidth = leftBox.MaxWidth + 1 + rightBox.MaxWidth;
+            frame.MaxWidth = leftBox.MaxWidth + 1 + rightBox.MaxWidth;
             frame.Flow = RenderBox.FlowDirection.HORIZONTAL;
             
             foreach(StringBuilder line in frame.GetLines())

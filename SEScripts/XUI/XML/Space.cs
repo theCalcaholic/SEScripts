@@ -15,6 +15,7 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib.LoggerNS;
+using SEScripts.XUI.BoxRenderer;
 
 namespace SEScripts.XUI.XML
 {
@@ -45,7 +46,7 @@ namespace SEScripts.XUI.XML
             cache.Height = 1;
             int width = ResolveSize(GetAttribute("width"), maxWidth);
             cache.MinWidth = width;
-            cache.ForcedWidth = width;
+            cache.MaxWidth = width;
             Logger.DecLvl();
             return cache;
         }

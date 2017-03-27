@@ -16,6 +16,7 @@ using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib;
 using SEScripts.Lib.LoggerNS;
+using SEScripts.XUI.BoxRenderer;
 
 namespace SEScripts.XUI.XML
 {
@@ -34,7 +35,7 @@ namespace SEScripts.XUI.XML
             Logger.debug("HiddenData.GetRenderCache(int)");
             Logger.IncLvl();
             RenderBox cache = new RenderBoxTree();
-            cache.ForcedWidth = 0;
+            cache.MaxWidth = 0;
             cache.Height = 0;
             Logger.DecLvl();
             return cache;

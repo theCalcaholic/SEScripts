@@ -170,6 +170,8 @@ namespace SEScripts.XUI
         //EMBED SEScripts.XUI.XML.MetaNode
 
         //EMBED SEScripts.XUI.XML.DataStore
-        //EMBED SEScripts.XUI.RenderBox.RenderBox
+        //EMBED SEScripts.XUI.BoxRenderer.RenderBox
+        //EMBED SEScripts.XUI.BoxRenderer.RenderBoxLeaf
+        //EMBED SEScripts.XUI.BoxRenderer.RenderBoxTree
     }
 }

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SEScripts.Lib;
 using SEScripts.Lib.LoggerNS;
+using SEScripts.XUI.BoxRenderer;
 
 namespace SEScripts.XUI.XML.Tests
 {
