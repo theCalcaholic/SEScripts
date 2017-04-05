@@ -34,20 +34,20 @@ namespace SEScripts.XUI.XML
 
         public override void SetAttribute(string key, string value)
         {
-            Logger.debug(Type + ": SetAttribute():");
-            Logger.IncLvl();
+            ////Logger.debug(Type + ": SetAttribute():");
+            ////Logger.IncLvl();
             switch (key)
             {
                 case "route":
-                    Logger.debug("prepare to set route...");
+                    ////Logger.debug("prepare to set route...");
                     SetRoute(new Route(value));
                     if (TargetRoute == null)
                     {
-                        Logger.debug("Failure!");
+                        ////Logger.debug("Failure!");
                     }
                     else
                     {
-                        Logger.debug("Success!");
+                        ////Logger.debug("Success!");
                     }
 
                     break;
@@ -56,30 +56,30 @@ namespace SEScripts.XUI.XML
                     break;
             }
 
-            Logger.DecLvl();
+            ////Logger.DecLvl();
         }
 
         public override void OnKeyPressed(string keyCode)
         {
-            Logger.debug(Type + ": OnKeyPressed():");
+            //Logger.debug(Type + ": OnKeyPressed():");
             switch (keyCode)
             {
                 case "RIGHT/SUBMIT":
                     if (TargetRoute != null)
                     {
-                        Logger.debug("Follow Target Route!");
+                        //Logger.debug("Follow Target Route!");
                         FollowRoute(TargetRoute);
                     }
                     else
                     {
-                        Logger.debug("No route set!");
+                        //Logger.debug("No route set!");
                     }
 
                     break;
             }
 
             base.OnKeyPressed(keyCode);
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void SetRoute(Route route)

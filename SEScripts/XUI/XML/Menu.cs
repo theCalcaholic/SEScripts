@@ -36,17 +36,16 @@ namespace SEScripts.XUI.XML
 
         public override void AddChild(XMLTree child)
         {
-            Logger.debug(Type + ": Add child():");
-            Logger.IncLvl();
-            if (child.Type != "menuitem" && child.IsSelectable())
+            using (new Logger("Menu.AddChile(XMLTree)"))
             {
-                Logger.DecLvl();
-                throw new Exception(
-                    "ERROR: Only children of type <menupoint> or children that are not selectable are allowed!"
-                    + " (type was: <" + child.Type + ">)");
+                if (child.Type != "menuitem" && child.IsSelectable())
+                {
+                    throw new Exception(
+                        "ERROR: Only children of type <menupoint> or children that are not selectable are allowed!"
+                        + " (type was: <" + child.Type + ">)");
+                }
+                base.AddChild(child);
             }
-            base.AddChild(child);
-            Logger.DecLvl();
         }
 
         /*protected override string RenderChild(XMLTree child, int width)
@@ -63,28 +62,29 @@ namespace SEScripts.XUI.XML
 
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            Logger.debug("Menu.GetRenderCache(int)");
-            Logger.IncLvl();
-            RenderBoxTree cache = new RenderBoxTree();
-            RenderBoxTree menuPoint;
-            foreach (XMLTree child in Children)
+            using (new Logger("Menu.GetRenderBox(int, int)"))
             {
-                menuPoint = new RenderBoxTree();
-                menuPoint.Flow = RenderBox.FlowDirection.HORIZONTAL;
-                if(child.IsSelected())
+                RenderBoxTree cache = new RenderBoxTree();
+                cache.type = Type;
+                RenderBoxTree menuPoint;
+                foreach (XMLTree child in Children)
                 {
-                    menuPoint.Add(prefixSelected);
+                    menuPoint = new RenderBoxTree();
+                    menuPoint.Flow = RenderBox.FlowDirection.HORIZONTAL;
+                    if (child.IsSelected())
+                    {
+                        menuPoint.Add(prefixSelected);
+                    }
+                    else
+                    {
+                        menuPoint.Add(prefix);
+                    }
+                    menuPoint.Add(child.GetRenderBox(maxWidth, maxHeight));
+                    cache.Add(menuPoint);
                 }
-                else
-                {
-                    menuPoint.Add(prefix);
-                }
-                menuPoint.Add(child.GetRenderBox(maxWidth, maxHeight));
-                cache.Add(menuPoint);
+                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+                return cache;
             }
-            UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
-            Logger.DecLvl();
-            return cache;
         }
     }
 

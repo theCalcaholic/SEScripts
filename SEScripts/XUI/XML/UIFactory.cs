@@ -28,14 +28,14 @@ namespace SEScripts.XUI.XML
 
         public UIFactory(List<UIController> uiList)
         {
-            Logger.debug("UIFactory constructor");
-            Logger.IncLvl();
+            //Logger.debug("UIFactory constructor");
+            //Logger.IncLvl();
             if (uiList == null)
             {
                 UIs = new List<UIController>();
             }
             UIs = uiList;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public abstract XMLTree Render(UIController controller);

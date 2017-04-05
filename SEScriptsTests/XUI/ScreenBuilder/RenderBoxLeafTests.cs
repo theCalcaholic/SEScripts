@@ -18,7 +18,7 @@ namespace SEScripts.XUI.Tests
         [TestInitialize()]
         public void Initialize()
         {
-            Logger.DEBUG = true;
+            //Logger.debug = true;
             TextUtils.Reset();
         }
 
@@ -27,14 +27,87 @@ namespace SEScripts.XUI.Tests
         {
             StringBuilder content = new StringBuilder("abc");
             RenderBoxLeaf leaf = new RenderBoxLeaf(content);
-            Assert.AreEqual(TextUtils.GetTextWidth(content), leaf.MinWidth);
+            Assert.AreEqual(TextUtils.GetTextWidth(content.ToString()), leaf.MinWidth);
 
             leaf.MinWidth = leaf.MinWidth - 10;
-            Assert.AreEqual(TextUtils.GetTextWidth(content), leaf.MinWidth);
+            Assert.AreEqual(TextUtils.GetTextWidth(content.ToString()), leaf.MinWidth);
 
             int newMinWidth = (leaf.MinWidth + 20);
             leaf.MinWidth = newMinWidth;
-            Assert.AreEqual(TextUtils.GetTextWidth(content) + 20, leaf.MinWidth);
+            Assert.AreEqual(TextUtils.GetTextWidth(content.ToString()) + 20, leaf.MinWidth);
+        }
+
+        [TestMethod()]
+        public void GetActualWidthTest()
+        {
+            string content = "abc";
+            RenderBoxLeaf leaf = new RenderBoxLeaf(content);
+            int minwidth;
+            int maxwidth;
+            int desiredwidth;
+
+            // minwidth < maxwidth, no desired width
+            maxwidth = leaf.MinWidth + (TextUtils.GetCharWidth(' ') * 20) + 20;
+            Assert.AreEqual(maxwidth, leaf.GetActualWidth(maxwidth));
+
+            // minwidth > maxwidth, no desired width
+            maxwidth = leaf.MinWidth - TextUtils.GetCharWidth(content[content.Length - 1]) + 1;
+            Assert.AreEqual(maxwidth, leaf.GetActualWidth(maxwidth));
+
+            // minwidth < desiredwidth < maxwidth
+            maxwidth = leaf.MinWidth + (TextUtils.GetCharWidth(' ') * 20) + 20;
+            desiredwidth = leaf.MinWidth + TextUtils.GetCharWidth(' ') * 10 + 10;
+            leaf.DesiredWidth = desiredwidth;
+            Assert.AreEqual(desiredwidth, leaf.GetActualWidth(maxwidth));
+        }
+
+        [TestMethod()]
+        public void MinHeightTest()
+        {
+            string content = "abc";
+            RenderBoxLeaf leaf = new RenderBoxLeaf(content);
+            Assert.AreEqual(1, leaf.MinHeight);
+
+            leaf.MinHeight = 0;
+            Assert.AreEqual(1, leaf.MinHeight);
+            Assert.AreEqual(content, leaf.GetLine(0).ToString());
+
+            leaf.MinHeight = 5;
+            Assert.AreEqual(5, leaf.MinHeight);
+        }
+
+        [TestMethod()]
+        public void GetActualHeightTest()
+        {
+            string content = "abc";
+            RenderBoxLeaf leaf = new RenderBoxLeaf(content);
+            int minheight;
+            int maxheight;
+            int desiredheight;
+
+            // minheight < maxheight, no desiredheight
+            maxheight = leaf.MinHeight + 3;
+            Assert.AreEqual(leaf.MinHeight, leaf.GetActualHeight(maxheight));
+
+            // minheight > maxheight, no desiredheight
+            minheight = leaf.MinHeight + 3;
+            maxheight =  leaf.MinHeight + 1;
+            leaf.MinHeight = minheight;
+            Assert.AreEqual(maxheight, leaf.GetActualHeight(maxheight));
+
+            // minheight < desiredheight < maxheight
+            leaf.MinHeight = 0;
+            maxheight = leaf.MinHeight + 5;
+            desiredheight = leaf.MinHeight + 3;
+            leaf.DesiredHeight = desiredheight;
+            Assert.AreEqual(desiredheight, leaf.GetActualHeight(maxheight));
+
+            // no maxheight
+            leaf.DesiredHeight = -1;
+            leaf.MaxHeight = -1;
+            leaf.MinHeight = 0;
+
+            Assert.AreEqual(leaf.MinHeight, leaf.GetActualHeight(-1));
         }
 
         [TestMethod()]
@@ -82,29 +155,23 @@ namespace SEScripts.XUI.Tests
         }
 
         [TestMethod()]
-        public void GetRenderedLineTest()
-        {
-            RenderBoxLeaf leaf = new RenderBoxLeaf("test line");
-            Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetLine(0, 0, -1).ToString());
-            Assert.AreEqual<string>(leaf.GetLine(1).ToString(), leaf.GetLine(1, 0, -1).ToString());
-            Assert.AreEqual<string>(leaf.GetLine(0).ToString(), leaf.GetLine(0, 100, -1).ToString());
-            Assert.AreEqual<string>(leaf.GetLine(1).ToString(), leaf.GetLine(1, 100, -1).ToString());
-        }
-
-        [TestMethod()]
         public void GetLineTest()
         {
             string line = "testline";
             RenderBoxLeaf leaf = new RenderBoxLeaf(line);
 
             Assert.AreEqual<string>(line, leaf.GetLine(0).ToString());
-            Assert.AreEqual<string>("", leaf.GetLine(1).ToString());
+            Assert.AreEqual<string>(
+                TextUtils.CreateStringOfLength(' ', TextUtils.GetTextWidth(line), TextUtils.RoundMode.FLOOR).ToString(),
+                leaf.GetLine(1).ToString());
             
             line = "testline\nsameline";
             leaf = new RenderBoxLeaf(line);
 
-            Assert.AreEqual<string>(line.Replace("\n", ""), leaf.GetLine(0).ToString());
-            Assert.AreEqual<string>("", leaf.GetLine(1).ToString());
+            Assert.AreEqual<string>(line, leaf.GetLine(0).ToString());
+            Assert.AreEqual<string>(
+                TextUtils.CreateStringOfLength(' ', TextUtils.GetTextWidth(line), TextUtils.RoundMode.FLOOR).ToString(),
+                leaf.GetLine(1).ToString());
         }
 
         [TestMethod()]
@@ -120,11 +187,22 @@ namespace SEScripts.XUI.Tests
         {
             string line = "first line";
             RenderBoxLeaf leaf = new RenderBoxLeaf(line);
-
+            
             int numberOfLines = 0;
             foreach(StringBuilder l in leaf.GetLines())
             {
                 Assert.AreEqual<string>(leaf.GetLine(0).ToString(), l.ToString());
+                numberOfLines++;
+            }
+            Assert.AreEqual(1, numberOfLines);
+
+            numberOfLines = 0;
+            foreach (StringBuilder l in leaf.GetLines(600, 30))
+            {
+                if(numberOfLines == 0)
+                    Assert.AreEqual<string>(leaf.GetLine(0, 600, 30).ToString(), l.ToString());
+                else
+                    Assert.AreEqual<string>(leaf.GetLine(1, 600, 30).ToString(), l.ToString());
                 numberOfLines++;
             }
             Assert.AreEqual(1, numberOfLines);

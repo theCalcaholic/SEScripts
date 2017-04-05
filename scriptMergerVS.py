@@ -2,6 +2,7 @@ import re
 import os
 import codecs
 import sys
+from functools import reduce
 
 parselib_path = "C:\\Users\\Tobias\\informatics\\SEScripts\\SEScripts\\ParseLib\\"
 
@@ -15,6 +16,7 @@ parselib_header = """using System;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 using VRageMath;
 using VRage.Game;
@@ -39,128 +41,185 @@ generic_header = """namespace SEScripts.Merged
 generic_footer = """
 }"""
 
+
 class ScriptProvider:
-  def __init__(self, root_namespace, root_path):
-    self.scripts = dict()
-    self.namespace = root_namespace
-    self.path = os.path.abspath(root_path)
+    def __init__(self, root_ns, root_path):
+        self.scripts = dict()
+        self.namespace = root_ns
+        self.path = os.path.abspath(root_path)
 
-  def get_path_from_namespace(self, namespace):
-    relative_namespace = namespace.replace(self.namespace + ".", "")
-    namespace_split = relative_namespace.split(".")
-    path = os.path.join(self.path, os.path.join(*namespace_split))
-    return path
+    def get_path_from_namespace(self, namespace):
+        relative_namespace = namespace.replace(self.namespace + ".", "")
+        namespace_split = relative_namespace.split(".")
+        path = os.path.join(self.path, os.path.join(*namespace_split))
+        return path
 
-  def get_script(self, namespace, no_dirs):
-    if namespace in self.scripts:
-      return self.scripts[namespace]
-    embed_path = self.get_path_from_namespace(namespace)
-    embed_text = ""
-    if not os.path.exists(embed_path) and not os.path.exists(embed_path + ".cs"):
-      #console.write("WARNING: No file or directory found for " + namespace + "\n")
-      print("WARNING: No file or directory found for " + namespace + "\n")
-    elif os.path.isdir(embed_path) and not no_dirs:
-      #console.write("embed is dir\n")
-      embed_text = ""
-      for subdir in os.listdir(embed_path):
-        embed_text += this.get(os.join(embed_path, subdir))
-    elif os.path.isfile(embed_path + ".cs"):
-      #console.write("embed is file\n")
-      text = ""
-      with open(embed_path + ".cs", encoding='utf-8-sig', mode='r') as f:
-        text = f.read()
+    def get_script(self, namespace, no_dirs):
+        if namespace in self.scripts:
+            return self.scripts[namespace]
+        embed_path = self.get_path_from_namespace(namespace)
+        embed_text = ""
+        if not os.path.exists(embed_path) and not os.path.exists(embed_path + ".cs"):
+            # console.write("WARNING: No file or directory found for " + namespace + "\n")
+            print("WARNING: No file or directory found for " + namespace + "\n")
+        elif os.path.isdir(embed_path) and not no_dirs:
+            # console.write("embed is dir\n")
+            embed_text = ""
+            for subdir in os.listdir(embed_path):
+                embed_text += this.get(os.join(embed_path, subdir))
+        elif os.path.isfile(embed_path + ".cs"):
+            # console.write("embed is file\n")
+            with open(embed_path + ".cs", encoding='utf-8-sig', mode='r') as f:
+                text = f.read()
 
-      regexHeader = re.compile(r'.*namespace\s*?(?P<namespace>[\w.]+)\s*{', flags=re.DOTALL | re.UNICODE)
-      matches = regexHeader.search(text)
-      parent_namespace = matches.group("namespace")
-      embed_text = text[matches.end():text.rfind("}")]
-      self.scripts[namespace] = embed_text
+            regex_header = re.compile(r'.*namespace\s*?(?P<namespace>[\w.]+)\s*\{', flags=re.DOTALL | re.UNICODE)
+            matches = regex_header.search(text)
+            parent_namespace = matches.group("namespace")
+            embed_text = text[matches.end():text.rfind("}")]
+            self.scripts[namespace] = embed_text
 
-    return embed_text
+        return embed_text
 
-  def build(self, namespace):
-    #console.write("build()\n")
-    print("build()\n")
-    file_path = self.get_path_from_namespace(namespace)
-    build_dir = os.path.join(os.path.dirname(file_path), "Build")
-    file_base_name = os.path.basename(file_path)
-    build_base_name = file_base_name.replace("WRAPPER", "")
-    build_path = os.path.join(build_dir,  build_base_name + ".cs")
-    content = self.build_rec(namespace)
-    """wrapperRegex = re.compile(r'\w+WRAPPER', flags=re.UNICODE)
-    if file_base_name != build_base_name:
-      content = content.replace(file_base_name, build_base_name)"""
-    parselib_namespace = namespace[namespace.find(".") + 1:namespace.rfind(".")]
-    content = minify(content)
-    parselib_content = parselib_header + "SEScripts.ParseLib." + parselib_namespace + " {\n" + preamble + content + generic_footer
+    def build(self, namespace):
+        # console.write("build()\n")
+        print("build()\n")
+        file_path = self.get_path_from_namespace(namespace)
+        build_dir = os.path.join(os.path.dirname(file_path), "Build")
+        file_base_name = os.path.basename(file_path)
+        build_base_name = file_base_name.replace("WRAPPER", "")
+        build_path = os.path.join(build_dir, build_base_name + ".cs")
+        content = self.build_rec(namespace)
+        remove_regex = re.compile(r'^[^\n]*//REMOVE$', flags=re.UNICODE | re.MULTILINE)
+        content = remove_regex.sub("", content)
+        #content = ScriptProvider.inject_profiler(content)
+        """wrapperRegex = re.compile(r'\w+WRAPPER', flags=re.UNICODE)
+        if file_base_name != build_base_name:
+        content = content.replace(file_base_name, build_base_name)"""
+        parselib_namespace = namespace[namespace.find(".") + 1:namespace.rfind(".")]
+        content = minify(content)
+        parselib_content = parselib_header + "SEScripts.ParseLib." + parselib_namespace + " {\n" \
+            + preamble + content + generic_footer
 
-    if not os.path.isdir(build_dir):
-      os.makedirs(build_dir)
-    with open(build_path, "w", encoding='utf-8-sig') as file:
-      print("Saving raw file at: <" + build_path)
-      file.write(generic_header + content + generic_footer)
+        if not os.path.isdir(build_dir):
+            os.makedirs(build_dir)
+        with open(build_path, "w", encoding='utf-8-sig') as file:
+            print("Saving raw file at: <" + build_path)
+            file.write(generic_header + content + generic_footer)
 
-    if not os.path.isdir(parselib_path):
-      os.makedirs(parselib_path)
-    with open(os.path.join(parselib_path, build_base_name + ".cs"), "w", encoding='utf-8-sig') as file:
-      print("Saving parseLib file at: <" + os.path.join(parselib_path,build_base_name + ".cs"))
-      file.write(parselib_content)
-    return content
+        if not os.path.isdir(parselib_path):
+            os.makedirs(parselib_path)
+        with open(os.path.join(parselib_path, build_base_name + ".cs"), "w", encoding='utf-8-sig') as file:
+            print("Saving parseLib file at: <" + os.path.join(parselib_path, build_base_name + ".cs"))
+            file.write(parselib_content)
+        return content
 
+    def build_rec(self, namespace):
+        print("build script " + namespace + "\n")
+        print("=======================================================\n")
+        content = self.get_script(namespace, True)
 
-  def build_rec(self, namespace):
-    print("build script " + namespace + "\n")
-    print("=======================================================\n")
-    content = self.get_script(namespace, True)
+        regex = re.compile(r'(?<=(//EMBED ))\S+')
+        prematch_length = len("//EMBED ")
+        match = regex.search(content)
 
-    regex = re.compile(r'(?<=(//EMBED ))\S+')
-    prematch_length = len("//EMBED ")
-    match = regex.search(content)
+        while match is not None:
+            dep_namespace = match.group(0).strip()
+            if dep_namespace not in self.scripts:
+                dep_content = self.build_rec(dep_namespace)
+            else:
+                dep_content = ""
+            content = content[:match.start(0) - prematch_length] + dep_content + content[match.end(0) + 1:]
+            match = regex.search(content)
 
-    while match != None:
-      dep_namespace = match.group(0).strip()
-      if(not dep_namespace in self.scripts):
-        dep_content = self.build_rec(dep_namespace)
-      else:
-        dep_content = ""
-      content = content[:match.start(0) - prematch_length] + dep_content + content[match.end(0) + 1:]
-      match = regex.search(content)
+        name = namespace[namespace.rfind(".") + 1:]
+        if name[-7:] == "WRAPPER":
+            content = content.replace(name, name[:-7])
+        content = content.replace("//UNCOMMENT ", "")
+        print("-------------------------------------------------------\n")
+        return content
 
-    name = namespace[namespace.rfind(".") + 1:]
-    if name[-7:] == "WRAPPER":
-      content = content.replace(name, name[:-7])
-    content = content.replace("//UNCOMMENT ", "")
-    print("-------------------------------------------------------\n")
-    return content
+    @staticmethod
+    def inject_profiler(content):
+        method_head_regex = re.compile(r'(\w*\s*\([^)]*\)[\s]*\{)')
+        new_content = ""
+        start_pos = 0
+        for match in method_head_regex.findall(content):
+            print((u"match: " + content[match.start(0):match.end(0)]).encode(sys.stdout.encoding, errors='replace'))
+            print((u"remaining content: " + content[match.end(0):]).encode(sys.stdout.encoding, errors='replace'))
+            new_content += content[start_pos:match.end(0)]
+            new_content += "\nusing(new Profiler(P))\n"
+            start_pos = ScriptProvider.find_closing_bracket(content, match.end(0))
+            new_content += content[match.end(0) + 1:start_pos]
+            new_content += "\n}\n"
+            start_pos += 1
+        new_content += content[start_pos:]
+        return new_content
+
+    @staticmethod
+    def find_closing_bracket(content, startpos):
+        bracket_count = 1
+        while bracket_count > 0:
+            #print((u"remaining content:\n" + content[startpos:]).encode(sys.stdout.encoding, errors='replace'))
+            next_quote = content.find('"', startpos)
+            next_opening = content.find('{', startpos)
+            next_closing = content.find('}', startpos)
+            minimum = next_quote
+            for i in [next_opening, next_closing]:
+                if i != -1:
+                    minimum = min(minimum, i)
+            if next_closing == -1:
+                raise Exception("No closing bracket found!")
+
+            if minimum == next_quote:
+                startpos = content.find('"', next_quote + 1) + 1
+                if startpos == -1:
+                    raise Exception("Unterminated quote!")
+                continue
+
+            if minimum == next_opening:
+                bracket_count += 1
+            elif minimum == next_opening:
+                bracket_count -= 1
+                if bracket_count == 0:
+                    return next_opening
+        raise Exception("Ending bracket not found!")
+
 
 def minify(text):
+    minified_text = ""
+    for line in text.splitlines():
+        if len(line) != 0:
+            minified_text += line.strip() + "\n"
+    minified_text = minified_text.replace("\n\r", "\n")
+    return minified_text
 
-  minified_text = ""
-  for line in text.splitlines():
-    if len(line) != 0:
-      minified_text += line.strip() + "\n"
-  minified_text = minified_text.replace("\n\r", "\n")
-  return minified_text
 
 print("arg1: " + sys.argv[0])
 print("arg2: " + sys.argv[1])
 print("arg3: " + sys.argv[2])
 print("arg4: " + sys.argv[3])
 
-
 if not len(sys.argv) == 4:
-  print("You're doing it wrong!")
+    print("You're doing it wrong!")
 else:
-  root_path = sys.argv[1]
-  root_namespace = sys.argv[2]
-  build_file = sys.argv[3].replace(os.path.dirname(os.path.normpath(root_path)), "").replace("\\", ".").strip(".")
-  if build_file[-3:] == ".cs" or build_file[-3:] == ".CS":
-    build_file = build_file[:-3]
-  print("root_path: " + root_path)
-  print("root_namespace: " + root_namespace)
-  print("build_file: " + build_file)
+    root_path = sys.argv[1]
+    root_namespace = sys.argv[2]
+    build_file = sys.argv[3].replace(os.path.dirname(os.path.normpath(root_path)), "").replace("\\", ".").strip(".")
+    if build_file[-3:] == ".cs" or build_file[-3:] == ".CS":
+        build_file = build_file[:-3]
+    print("root_path: " + root_path)
+    print("root_namespace: " + root_namespace)
+    print("build_file: " + build_file)
 
-  ScriptStore = ScriptProvider(root_namespace, root_path)
-  ScriptStore.build(build_file)
-  print("build finished")
+    ScriptStore = ScriptProvider(root_namespace, root_path)
+    ScriptStore.build(build_file)
+    print("build finished")
 
+
+def get_minimum_geq_zero(x, y):
+    if x == -1:
+        return y
+    elif y == -1:
+        return x
+    else:
+        return min(x, y)

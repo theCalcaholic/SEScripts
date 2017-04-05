@@ -58,142 +58,149 @@ namespace SEScripts.XUI.XML
 
         public virtual RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            Logger.debug("XMLTree.GetRenderCache(int)");
-            Logger.IncLvl();
-            /*if(_renderCache != null)
+            using (Logger logger = new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)", Logger.Mode.LOG))
             {
-                return _renderCache;
-            }*/
+                //Logger.debug("XMLTree.GetRenderCache(int)");
+                //Logger.IncLvl();
+                /*if(_renderCache != null)
+                {
+                    return _renderCache;
+                }*/
 
 
-            RenderBoxTree cache = new RenderBoxTree();
-            RenderBox childCache;
-            foreach (XMLTree child in Children)
-            {
-                //TODO: Problems with relative height/width values
-                childCache = child.GetRenderBox(maxWidth, maxHeight);
-                cache.Add(childCache);
+                RenderBoxTree cache = new RenderBoxTree();
+                cache.type = Type;
+                logger.log("1", Logger.Mode.LOG);
+                RenderBox childCache;
+                foreach (XMLTree child in Children)
+                {
+                    //TODO: Problems with relative height/width values
+                    childCache = child.GetRenderBox(maxWidth, maxHeight);
+                    logger.log("-", Logger.Mode.LOG);
+                    cache.Add(childCache);
+                }
+
+                logger.log("2", Logger.Mode.LOG);
+                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+
+                //_renderCache = cache;
+                return cache;
             }
-
-            UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
-
-            //_renderCache = cache;
-            Logger.DecLvl();
-            return cache;
         }
 
         protected void UpdateRenderCacheProperties(RenderBox cache, int maxWidth, int maxHeight)
         {
-            Logger.debug("XMLTree.UpdateRenderCacheProperties(NodeBox, int)");
-            Logger.IncLvl();
-            cache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
+            using (Logger logger = new Logger("XMLTree<" + Type + ">.UpdateRenderCacheProperties(NodeBox, int)", Logger.Mode.LOG))
+            {
+                //Logger.IncLvl();
+                cache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
 
-            switch (GetAttribute("alignself"))
-            {
-                case "right":
-                    cache.Align = RenderBox.TextAlign.RIGHT;
-                    break;
-                case "center":
-                    cache.Align = RenderBox.TextAlign.CENTER;
-                    break;
-                default:
-                    cache.Align = RenderBox.TextAlign.LEFT;
-                    break;
+                switch (GetAttribute("alignself"))
+                {
+                    case "right":
+                        cache.Align = RenderBox.TextAlign.RIGHT;
+                        break;
+                    case "center":
+                        cache.Align = RenderBox.TextAlign.CENTER;
+                        break;
+                    default:
+                        cache.Align = RenderBox.TextAlign.LEFT;
+                        break;
+                }
+                cache.MinWidth = Math.Max(0, ResolveSize(GetAttribute("minwidth"), maxWidth));
+                cache.MaxWidth = ResolveSize(GetAttribute("maxwidth"), maxWidth);
+                cache.DesiredWidth = ResolveSize(GetAttribute("width"), maxWidth);
+                int forcedWidth = ResolveSize(GetAttribute("forcewidth"), maxWidth);
+                if (forcedWidth != -1)
+                {
+                    cache.MinWidth = forcedWidth;
+                    cache.MaxWidth = forcedWidth;
+                }
+                cache.MinHeight = Math.Max(0, ResolveSize(GetAttribute("minheight"), maxHeight));
+                cache.MaxHeight = ResolveSize(GetAttribute("maxheight"), maxHeight);
+                cache.DesiredHeight = ResolveSize(GetAttribute("height"), maxHeight);
+                int forcedHeight = ResolveSize(GetAttribute("forceheight"), maxWidth);
+                if (forcedHeight != -1)
+                {
+                    logger.log("Apply forced height (" + forcedHeight + ")", Logger.Mode.LOG);
+                    cache.MinHeight = forcedHeight;
+                    cache.MaxHeight = forcedHeight;
+                }
+                //cache.Height = CalculateWidth(GetAttribute("height"), -1);
             }
-            int result;
-            cache.MinWidth = Math.Max(0, ResolveSize(GetAttribute("minwidth"), maxWidth));
-            cache.MaxWidth = ResolveSize(GetAttribute("maxwidth"), maxWidth);
-            cache.DesiredWidth = ResolveSize(GetAttribute("width"), maxWidth);
-            int forcedWidth = ResolveSize(GetAttribute("forcewidth"), maxWidth);
-            if(forcedWidth != -1)
-            {
-                cache.MinWidth = forcedWidth;
-                cache.MaxWidth = forcedWidth;
-            }
-            cache.MinHeight = Math.Max(0, ResolveSize(GetAttribute("minheight"), maxHeight));
-            cache.MaxHeight = ResolveSize(GetAttribute("maxheight"), maxHeight);
-            cache.DesiredHeight = ResolveSize(GetAttribute("height"), maxHeight);
-            int forcedHeight = ResolveSize(GetAttribute("forceheight"), maxWidth);
-            if (forcedHeight != -1)
-            {
-                cache.MinHeight = forcedHeight;
-                cache.MaxHeight = forcedHeight;
-            }
-            //cache.Height = CalculateWidth(GetAttribute("height"), -1);
-            Logger.DecLvl();
         }
 
         public static int ResolveSize(string widthString, int maxWidth)
         {
-            Logger.debug("XMLTree.ResolvePercentage(string, int)");
-            Logger.IncLvl();
-            float fWidth;
-            if(widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
+            using (Logger logger = new Logger("XMLTree.ResolvePercentage(string, int)", Logger.Mode.LOG))
             {
-                if (maxWidth == -1)
+                widthString = widthString?.Trim();
+                float fWidth;
+                if (widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
+                {
+                    if (maxWidth == -1)
+                        return -1;
+                    return (int)(fWidth / 100f * Math.Max(0, maxWidth));
+                }
+                else
+                {
+                    int iWidth = -1;
+                    if (Int32.TryParse(widthString, out iWidth))
+                        return iWidth;
                     return -1;
-                Logger.DecLvl();
-                return (int)(fWidth / 100f * Math.Max(0, maxWidth));
-            }
-            else
-            {
-                int iWidth = -1;
-                Logger.DecLvl();
-                if (Int32.TryParse(widthString, out iWidth))
-                    return iWidth;
-                return -1;
+                }
             }
         }
 
         public XMLTree()
         {
-            Logger.debug("XMLTree constructor");
-            Logger.IncLvl();
-            HasUserInputBindings = false;
-            PreventDefaults = new List<string>();
-            Parent = null;
-            Children = new List<XMLTree>();
-            Selectable = false;
-            ChildrenAreSelectable = false;
-            Selected = false;
-            SelectedChild = -1;
-            Activated = false;
-            Attributes = new Dictionary<string, string>();
-            RerenderRequired = true;
-            Type = "NULL";
+            using (Logger logger = new Logger("XMLTree constructor", Logger.Mode.LOG))
+            {
+                HasUserInputBindings = false;
+                PreventDefaults = new List<string>();
+                Parent = null;
+                Children = new List<XMLTree>();
+                Selectable = false;
+                ChildrenAreSelectable = false;
+                Selected = false;
+                SelectedChild = -1;
+                Activated = false;
+                Attributes = new Dictionary<string, string>();
+                RerenderRequired = true;
+                Type = "NULL";
 
-            // set attribute defaults
-            SetAttribute("alignself", "left");
-            SetAttribute("aligntext", "left");
-            SetAttribute("selected", "false");
-            SetAttribute("selectable", "false");
-            SetAttribute("flow", "vertical");
-            Logger.DecLvl();
+                // set attribute defaults
+                SetAttribute("alignself", "left");
+                SetAttribute("aligntext", "left");
+                SetAttribute("selected", "false");
+                SetAttribute("selectable", "false");
+                SetAttribute("flow", "vertical");
+            }
         }
 
         public bool IsSelectable()
         {
-            Logger.debug(Type + ": IsSelectable():");
-            Logger.IncLvl();
-            Logger.DecLvl();
+            //Logger.debug(Type + ": IsSelectable():");
+            //Logger.IncLvl();
+            //Logger.DecLvl();
             return Selectable || ChildrenAreSelectable;
         }
 
         public bool IsSelected()
         {
-            Logger.debug(Type + ": IsSelected():");
-            Logger.IncLvl();
-            Logger.DecLvl();
+            //Logger.debug(Type + ": IsSelected():");
+            //Logger.IncLvl();
+            //Logger.DecLvl();
             return Selected;
         }
 
         public XMLTree GetSelectedSibling()
         {
-            Logger.debug(Type + ": GetSelectedSibling():");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": GetSelectedSibling():");
+            //Logger.IncLvl();
             if (!Selected)
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return null;
                 //throw new Exception( 
                 //    "Node is not selected. You can only get the selected Node from one of it's parent nodes!"); 
@@ -201,28 +208,28 @@ namespace SEScripts.XUI.XML
 
             if (SelectedChild == -1)
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return this;
             }
             else
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return Children[SelectedChild].GetSelectedSibling();
             }
         }
 
         public virtual void AddChild(XMLTree child)
         {
-            Logger.debug(Type + ": AddChild():");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": AddChild():");
+            //Logger.IncLvl();
             AddChildAt(Children.Count, child);
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public virtual void AddChildAt(int position, XMLTree child)
         {
-            Logger.debug(Type + ":AddChildAt()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ":AddChildAt()");
+            //Logger.IncLvl();
             if( position > Children.Count )
             {
                 throw new Exception("XMLTree.AddChildAt - Exception: position must be less than number of children!");
@@ -232,34 +239,34 @@ namespace SEScripts.XUI.XML
             child.SetParent(this as XMLParentNode);
             UpdateSelectability(child);
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void SetParent(XMLParentNode parent)
         {
-            Logger.debug(Type + ": SetParent():");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": SetParent():");
+            //Logger.IncLvl();
             Parent = parent;
             if(HasUserInputBindings && Parent != null)
             {
                 Parent.HasUserInputBindings = true;
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public XMLParentNode GetParent()
         {
-            Logger.debug(Type + ": GetParent():");
-            Logger.IncLvl();
-            Logger.DecLvl();
+            //Logger.debug(Type + ": GetParent():");
+            //Logger.IncLvl();
+            //Logger.DecLvl();
             return Parent;
         }
 
         public XMLTree GetChild(int i)
         {
-            Logger.debug(Type + ": GetChild():");
-            Logger.IncLvl();
-            Logger.DecLvl();
+            //Logger.debug(Type + ": GetChild():");
+            //Logger.IncLvl();
+            //Logger.DecLvl();
             return i < Children.Count ? Children[i] : null;
         }
 
@@ -310,26 +317,26 @@ namespace SEScripts.XUI.XML
 
         public virtual void UpdateSelectability(XMLTree child)
         {
-            Logger.debug(Type + ": UpdateSelectability():");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": UpdateSelectability():");
+            //Logger.IncLvl();
             bool ChildrenWereSelectable = ChildrenAreSelectable;
             ChildrenAreSelectable = ChildrenAreSelectable || child.IsSelectable();
             if ((Selectable || ChildrenAreSelectable) != (Selectable || ChildrenWereSelectable))
             {
                 RerenderRequired = true;
-                Logger.debug("update parent selectability");
+                //Logger.debug("update parent selectability");
                 if(Parent != null)
                     Parent.UpdateSelectability(this);
-                Logger.debug("parent selectability updated");
+                //Logger.debug("parent selectability updated");
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public bool SelectFirst()
         {
-            Logger.debug(Type + ": SelectFirst():");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": SelectFirst():");
+            //Logger.IncLvl();
             if (SelectedChild != -1)
             {
                 Children[SelectedChild].Unselect();
@@ -337,45 +344,45 @@ namespace SEScripts.XUI.XML
 
             SelectedChild = -1;
             bool success = (Selectable || ChildrenAreSelectable) ? SelectNext() : false;
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return success;
         }
 
         public bool SelectLast()
         {
-            Logger.debug(Type + ": SelectLast():");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": SelectLast():");
+            //Logger.IncLvl();
             if (SelectedChild != -1)
             {
                 Children[SelectedChild].Unselect();
             }
 
             SelectedChild = -1;
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return (Selectable || ChildrenAreSelectable) ? SelectPrevious() : false;
         }
 
         public void Unselect()
         {
-            Logger.debug(Type + ": Unselect():");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": Unselect():");
+            //Logger.IncLvl();
             if (SelectedChild != -1)
             {
                 Children[SelectedChild].Unselect();
             }
             Selected = false;
             Activated = false;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public virtual bool SelectNext()
         {
-            Logger.debug(Type + ": SelectNext():");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": SelectNext():");
+            //Logger.IncLvl();
             bool WasSelected = IsSelected();
             if (SelectedChild == -1 || !Children[SelectedChild].SelectNext())
             {
-                Logger.debug(Type + ": find next child to select...");
+                //Logger.debug(Type + ": find next child to select...");
                 SelectedChild++;
                 while ((SelectedChild < Children.Count && (!Children[SelectedChild].SelectFirst())))
                 {
@@ -403,14 +410,14 @@ namespace SEScripts.XUI.XML
                 RerenderRequired = true;
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return Selected;
         }
 
         public virtual bool SelectPrevious()
         {
-            Logger.debug(Type + ": SelectPrevious():");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": SelectPrevious():");
+            //Logger.IncLvl();
             bool WasSelected = IsSelected();
             if (SelectedChild == -1) { SelectedChild = Children.Count; }
             if (SelectedChild == Children.Count || !Children[SelectedChild].SelectPrevious())
@@ -441,7 +448,7 @@ namespace SEScripts.XUI.XML
                 RerenderRequired = true;
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return Selected;
         }
 
@@ -449,11 +456,11 @@ namespace SEScripts.XUI.XML
 
         public virtual string GetAttribute(string key)
         {
-            Logger.debug(Type + ": GetAttribute(" + key + "):");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": GetAttribute(" + key + "):");
+            //Logger.IncLvl();
             if (Attributes.ContainsKey(key))
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return Attributes[key];
             }
             else if( key == "flowdirection" && Attributes.ContainsKey("flow"))
@@ -461,14 +468,14 @@ namespace SEScripts.XUI.XML
                 return Attributes["flow"];
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return null;
         }
 
         public virtual void SetAttribute(string key, string value)
         {
-            Logger.debug(Type + ": SetAttribute():");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": SetAttribute():");
+            //Logger.IncLvl();
             if (key == "selectable")
             {
                 bool shouldBeSelectable = value == "true";
@@ -533,7 +540,7 @@ namespace SEScripts.XUI.XML
             }
 
             Attributes[key] = value;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public XMLParentNode RetrieveRoot()
@@ -549,22 +556,22 @@ namespace SEScripts.XUI.XML
 
         public void KeyPress(string keyCode)
         {
-            Logger.debug(Type + ": _KeyPress():");
-            Logger.IncLvl();
-            Logger.debug("button: " + keyCode);
+            //Logger.debug(Type + ": _KeyPress():");
+            //Logger.IncLvl();
+            //Logger.debug("button: " + keyCode);
             OnKeyPressed(keyCode);
             if (Parent != null && !PreventDefaults.Contains(keyCode))
             {
                 Parent.KeyPress(keyCode);
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public virtual void OnKeyPressed(string keyCode)
         {
-            Logger.debug(Type + ": OnKeyPressed()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": OnKeyPressed()");
+            //Logger.IncLvl();
             switch (keyCode)
             {
                 case "ACTIVATE":
@@ -574,63 +581,63 @@ namespace SEScripts.XUI.XML
                     break;
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public virtual void ToggleActivation()
         {
-            Logger.debug(Type + ": ToggleActivation()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": ToggleActivation()");
+            //Logger.IncLvl();
             Activated = !Activated;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void PreventDefault(string keyCode)
         {
-            Logger.debug(Type + ": PreventDefault()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": PreventDefault()");
+            //Logger.IncLvl();
             if (!PreventDefaults.Contains(keyCode))
             {
                 PreventDefaults.Add(keyCode);
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void AllowDefault(string keyCode)
         {
-            Logger.debug(Type + ": AllowDefault()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": AllowDefault()");
+            //Logger.IncLvl();
             if (PreventDefaults.Contains(keyCode))
             {
                 PreventDefaults.Remove(keyCode);
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void FollowRoute(Route route)
         {
-            Logger.debug(Type + ": FollowRoute");
-            Logger.IncLvl();
+            //Logger.debug(Type + ": FollowRoute");
+            //Logger.IncLvl();
             if (Parent != null)
             {
                 Parent.FollowRoute(route);
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public virtual Dictionary<string, string> GetValues(Func<XMLTree, bool> filter)
         {
-            Logger.log(Type + ": GetValues()");
-            Logger.IncLvl();
+            //Logger.log(Type + ": GetValues()");
+            //Logger.IncLvl();
             Dictionary<string, string> dict = new Dictionary<string, string>();
             string name = GetAttribute("name");
             string value = GetAttribute("value");
             if (name != null && value != null)
             {
-                Logger.log($"Added entry {{{name}: {value}}}");
+                //Logger.log($"Added entry {{{name}: {value}}}");
                 dict[name] = value;
             }
 
@@ -647,18 +654,18 @@ namespace SEScripts.XUI.XML
                 }
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return dict;
         }
 
         /*public int GetWidth(int maxWidth)
         {
-            Logger.debug(Type + ".GetWidth()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ".GetWidth()");
+            //Logger.IncLvl();
             string attributeWidthValue = GetAttribute("width");
             if (attributeWidthValue == null)
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return 0;
                 //return maxWidth;
             }
@@ -666,18 +673,18 @@ namespace SEScripts.XUI.XML
             {
                 if (attributeWidthValue[attributeWidthValue.Length - 1] == '%')
                 {
-                    Logger.debug("is procent value (" + Single.Parse(attributeWidthValue.Substring(0, attributeWidthValue.Length - 1)).ToString() + ")");
-                    Logger.DecLvl();
+                    //Logger.debug("is procent value (" + Single.Parse(attributeWidthValue.Substring(0, attributeWidthValue.Length - 1)).ToString() + ")");
+                    //Logger.DecLvl();
                     return (int)(Single.Parse(attributeWidthValue.Substring(0, attributeWidthValue.Length - 1)) / 100f * maxWidth);
                 }
                 else if (maxWidth == 0)
                 {
-                    Logger.DecLvl();
+                    //Logger.DecLvl();
                     return Int32.Parse(attributeWidthValue);
                 }
                 else
                 {
-                    Logger.DecLvl();
+                    //Logger.DecLvl();
                     return Math.Min(maxWidth, Int32.Parse(attributeWidthValue));
                 }
             }
@@ -685,15 +692,15 @@ namespace SEScripts.XUI.XML
 
         public string RenderOld(int availableWidth)
         {
-            Logger.debug(Type + ".Render()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ".Render()");
+            //Logger.IncLvl();
             List<string> segments = new List<string>();
             int width = GetWidth(availableWidth);
             PreRender(ref segments, width, availableWidth);
             RenderText(ref segments, width, availableWidth);
             string renderString = PostRender(segments, width, availableWidth);
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return renderString;
         }
 
@@ -704,24 +711,24 @@ namespace SEScripts.XUI.XML
 
         public NodeBox Render(int availableWidth, int availableHeight)
         {
-            Logger.debug(Type + ".Render()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ".Render()");
+            //Logger.IncLvl();
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return Cache;
         }
 
         protected virtual void PreRender(ref List<string> segments, int width, int availableWidth)
         {
-            Logger.debug(Type + ".PreRender()");
-            Logger.IncLvl();
-            Logger.DecLvl();
+            //Logger.debug(Type + ".PreRender()");
+            //Logger.IncLvl();
+            //Logger.DecLvl();
         }
 
         protected virtual void RenderText(ref List<string> segments, int width, int availableWidth)
         {
-            Logger.debug(Type + ".RenderText()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ".RenderText()");
+            //Logger.IncLvl();
             for (int i = 0; i < Children.Count; i++)
             {
                 if (GetAttribute("flow") == "vertical")
@@ -753,13 +760,13 @@ namespace SEScripts.XUI.XML
                 }
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         protected virtual string PostRender(List<string> segments, int width, int availableWidth)
         {
-            Logger.debug(Type + ".PostRender()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ".PostRender()");
+            //Logger.IncLvl();
             string renderString = "";
             string flowdir = GetAttribute("flow");
             string alignChildren = GetAttribute("alignchildren");
@@ -804,25 +811,25 @@ namespace SEScripts.XUI.XML
             {
                 if (alignSelf == "center")
                 {
-                    Logger.log("Center element...");
+                    //Logger.log("Center element...");
                     renderString = TextUtils.CenterText(renderString, availableWidth);
                 }
                 else if (alignSelf == "right")
                 {
-                    Logger.log("Aligning element right...");
+                    //Logger.log("Aligning element right...");
                     renderString = TextUtils.PadText(renderString, availableWidth, TextUtils.PadMode.RIGHT);
                 }
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return renderString;
         }
         
         protected virtual string RenderChild(XMLTree child, int availableWidth)
         {
-            Logger.log(Type + ".RenderChild()");
-            Logger.IncLvl();
-            Logger.DecLvl();
+            //Logger.log(Type + ".RenderChild()");
+            //Logger.IncLvl();
+            //Logger.DecLvl();
             return child.Render(availableWidth);
         }*/
 
@@ -843,8 +850,8 @@ namespace SEScripts.XUI.XML
 
         /*protected virtual void BuildRenderCache()
         {
-            Logger.debug(Type + ".BuildRenderCache()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ".BuildRenderCache()");
+            //Logger.IncLvl();
             //base.Clear();
             NodeBoxTree box = this;
             foreach (XMLTree child in Children)
@@ -852,19 +859,23 @@ namespace SEScripts.XUI.XML
                 box.Add(child);
             }
             RerenderRequired = false;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }*/
 
         public virtual string Render(int maxWidth, int maxHeight)
         {
-            Logger.debug(Type + ".Render(int)");
-            Logger.IncLvl();
-            Logger.debug("RENDERING::PREPARE");
-            RenderBox cache = GetRenderBox(maxWidth, maxHeight);
-            Logger.debug("RENDERING::START");
-            string result = cache.Render(maxWidth, maxHeight);
-            Logger.DecLvl();
-            return result;
+            using (Logger logger = new Logger("XMLTree<" + Type + ">.Render(int, int)", Logger.Mode.LOG))
+            {
+                //Logger.debug(Type + ".Render(int)");
+                //Logger.IncLvl();
+                //Logger.log("RENDERING::PREPARE");
+                RenderBox cache = GetRenderBox(maxWidth, maxHeight);
+                logger.log("Rendering::START", Logger.Mode.LOG);
+                //Logger.log("RENDERING::START");
+                string result = cache.Render(maxWidth, maxHeight);
+                //Logger.DecLvl();
+                return result;
+            }
         }
 
         public string Render()

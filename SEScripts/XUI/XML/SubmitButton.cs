@@ -42,9 +42,10 @@ namespace SEScripts.XUI.XML
 
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            Logger.debug("SubmitButton.GetRenderCache(int)");
-            Logger.IncLvl();
+            //Logger.debug("SubmitButton.GetRenderCache(int)");
+            //Logger.IncLvl();
             RenderBoxTree cache = new RenderBoxTree();
+            cache.type = Type;
             RenderBoxLeaf childCache = new RenderBoxLeaf(IsSelected() ? "[[  " : "[   ");
             childCache.MaxWidth = childCache.MinWidth;
             cache.Add(childCache);
@@ -63,7 +64,7 @@ namespace SEScripts.XUI.XML
 
             cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return cache;
         }
     }

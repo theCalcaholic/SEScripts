@@ -27,7 +27,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public ReceiveMessageProtocol(Agent agent) : base(agent)
         {
-            Logger.debug("ReceiveMessageProtocol constructor()");
+            //Logger.debug("ReceiveMessageProtocol constructor()");
         }
         public override void Restart(){}
 
@@ -35,8 +35,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
         
         public virtual void ReceiveMessage(AgentMessage msg)
         {
-            Logger.debug("ReceiveMessageProtocol.ReceiveMessage()");
-            Logger.IncLvl();
+            //Logger.debug("ReceiveMessageProtocol.ReceiveMessage()");
+            //Logger.IncLvl();
 
             AgentMessage.StatusCodes responseStatus = AgentMessage.StatusCodes.UNDEFINED;
             bool isValidReceiver = msg.Receiver.Matches(Holder.Id);
@@ -76,7 +76,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
 
             Stop();
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         private bool AssignChat(AgentMessage msg, ref AgentMessage.StatusCodes status)

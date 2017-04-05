@@ -16,45 +16,77 @@ using VRage.Game.ObjectBuilders.Definitions;
 
 namespace SEScripts.Lib.LoggerNS
 {
-    public static class Logger
+    public class Logger : IDisposable
     {
+        public enum Mode { DEBUG, LOG, ERROR, WARNING, CONSOLE};
         private static StringBuilder Log = new StringBuilder();
+        static public bool DEBUG = false;
+        protected static StringBuilder Prefix = new StringBuilder();
+        protected Program Prog;
+        protected Mode logMode;
+        private bool disposed;
         public static string Output
         {
             get { return Log.ToString(); }
         }
-        static IMyTextPanel DebugPanel;
-        static public bool DEBUG = false;
-        public static int offset = 0;
-        private static StringBuilder Prefix = new StringBuilder();
-        
 
+        public Logger(string message, 
+            [System.Runtime.CompilerServices.CallerMemberName] string methodName = "") : this(message, Mode.DEBUG, methodName) {}
 
-        public static void log(string msg)
+        public Logger(string message, Mode mode,
+            [System.Runtime.CompilerServices.CallerMemberName] string methodName = "") : this(message, mode, null, methodName) {}
+
+        public Logger(string message, Mode mode, Program program,
+            [System.Runtime.CompilerServices.CallerMemberName] string methodName = "")
         {
-            Log.Append(Prefix);
-            Log.Append(msg + "\n");
-            //Console.WriteLine(Prefix + msg);
-            //!UNCOMMENT P.Echo(Prefix + msg);
+            disposed = false;
+            if (!DEBUG && mode == Mode.DEBUG)
+                return;
+            Prog = program;
+            logMode = mode;
+            log(message, logMode);
+            IncLvl();
         }
 
-        public static void debug(string msg)
+        public void log(string message, Mode mode)
         {
-            if (DEBUG)
+            log(new StringBuilder(message), mode);
+        }
+        public void log(StringBuilder message, Mode mode)
+        {
+
+            StringBuilder msg = new StringBuilder().Append(Prefix);
+            if (logMode != Mode.LOG && logMode != Mode.CONSOLE)
+                msg.Append(logMode.ToString()).Append(": ");
+            msg.Append(message);
+            Log.Append(msg).Append("\n");
+
+            if (logMode == Mode.CONSOLE)
             {
-                log(msg);
+                Console.WriteLine(msg); //REMOVE
+                Prog?.Echo(msg.ToString());
             }
+            //MERGESCRIPT TEST
         }
 
-        public static void IncLvl()
+        private void IncLvl()
         {
             Prefix.Append("  ");
         }
 
-        public static void DecLvl()
+        private void DecLvl()
         {
             if( Prefix.Length >= 2)
                 Prefix.Remove(Prefix.Length - 2, 2);
+        }
+        
+        public virtual void Dispose()
+        {
+            if (!disposed)
+            {
+                DecLvl();
+            }
+            disposed = true;
         }
     }
 

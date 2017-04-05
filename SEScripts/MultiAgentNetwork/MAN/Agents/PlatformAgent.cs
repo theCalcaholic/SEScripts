@@ -97,9 +97,9 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
                 message.Receiver.Platform = "local";
             }
 
-            Logger.log("Looking for agent '" + message.Receiver + "'...");
+            //Logger.log("Looking for agent '" + message.Receiver + "'...");
             AgentMessage.StatusCodes status = AssignMessage(message);
-            Logger.log("Status: " + status.ToString());
+            //Logger.log("Status: " + status.ToString());
             ReceiveMessage(message, status);
         }
 
@@ -114,10 +114,10 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
 
             if (status == AgentMessage.StatusCodes.RECEIVERNOTFOUND || status == AgentMessage.StatusCodes.PLATFORMNOTFOUND)
             {
-                Logger.log("no receiver found; looking for service '" + message.Service + "'...");
+                //Logger.log("no receiver found; looking for service '" + message.Service + "'...");
                 if (message.Service != null && PlatformServices.ContainsKey(message.Service))
                 {
-                    Logger.log("service is known.");
+                    //Logger.log("service is known.");
                     if (message.Receiver.MatchesPlatform(Id))
                     {
                         if(PlatformServices.ContainsKey(message.Service))
@@ -163,7 +163,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
         {
             if (base.SendMessage(ref message))
             {
-                Logger.log("base.SendMessage(message) did succeed.");
+                //Logger.log("base.SendMessage(message) did succeed.");
                 return true;
             }
             else if (message.Sender.Platform == "local")
@@ -173,7 +173,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
 
             if (message.Receiver.Platform != Id.Name)
             {
-                Logger.log("Calling SendToPlatform(message, platform)...");
+                //Logger.log("Calling SendToPlatform(message, platform)...");
                 return SendToPlatform(message, message.Receiver.Platform);
             }
             else
@@ -185,8 +185,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
 
         public bool SendToPlatform(AgentMessage message, string platform)
         {
-            Logger.IncLvl();
-            Logger.debug("PlatformAgent.SendToPlatform()");
+            //Logger.IncLvl();
+            //Logger.debug("PlatformAgent.SendToPlatform()");
             if (platform == "ALL" || platform == "ANY")
             {
                 List<IMyTerminalBlock> buffers = new List<IMyTerminalBlock>();
@@ -211,24 +211,24 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
                         }
                     }
                 }
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return success;
             }
             else
             {
-                Logger.log("Trying to send to platform '" + platform + "'...");
+                //Logger.log("Trying to send to platform '" + platform + "'...");
                 IMyTextPanel buffer = GTS.GetBlockWithName("RBUFFER-" + platform) as IMyTextPanel;
                 if (buffer == null)
                 {
-                    Logger.log("No corresponding buffer found with name 'RBUFFER-" + platform + "'.");
-                    Logger.DecLvl();
+                    //Logger.log("No corresponding buffer found with name 'RBUFFER-" + platform + "'.");
+                    //Logger.DecLvl();
                     return false;
                 }
                 else
                 {
-                    Logger.log("Writing message to reception buffer of platform '" + platform + "'...");
+                    //Logger.log("Writing message to reception buffer of platform '" + platform + "'...");
                     buffer.CustomData += message.ToString();
-                    Logger.DecLvl();
+                    //Logger.DecLvl();
                     return true;
                 }
             }
@@ -237,8 +237,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
 
         public static string GenerateSuffix()
         {
-            Logger.debug("PlatformAgent.GenerateSuffix()");
-            Logger.IncLvl();
+            //Logger.debug("PlatformAgent.GenerateSuffix()");
+            //Logger.IncLvl();
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             Random rnd = new Random();
             char[] title = new char[8];
@@ -246,7 +246,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
             {
                 title[i] = chars[rnd.Next(0, chars.Length)];
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return new string(title);
         }
 

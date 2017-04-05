@@ -34,23 +34,23 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public RequestRouteProtocol(Agent agent) : base(agent)
         {
-            Logger.debug("RequestRouteProtocol constructor()");
+            //Logger.debug("RequestRouteProtocol constructor()");
         }
 
         public override void Restart()
         {
-            Logger.debug("RequestRouteProtocol.Restart()");
-            Logger.IncLvl();
+            //Logger.debug("RequestRouteProtocol.Restart()");
+            //Logger.IncLvl();
             if (RouteDefinition != null) {
                 RequestRoute(RouteDefinition);
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public override void ReceiveMessage(AgentMessage msg)
         {
-            Logger.debug("RequestRouteProtocol.ReceiveMessage()");
-            Logger.IncLvl();
+            //Logger.debug("RequestRouteProtocol.ReceiveMessage()");
+            //Logger.IncLvl();
             if (msg.Status != AgentMessage.StatusCodes.OK)
             {
                 base.ReceiveMessage(msg);
@@ -72,34 +72,34 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
                 } catch
                 {
-                    Logger.log("WARNING: Invalid UI received from " + msg.Sender);
+                    //Logger.log("WARNING: Invalid UI received from " + msg.Sender);
                 }
                 //UIAgent.Call(new List<string> { "" });
                 Stop();
             }
             else 
             {
-                Logger.log("WARNING: Agent is no UITerminalAgent. Can not display UI.");
+                //Logger.log("WARNING: Agent is no UITerminalAgent. Can not display UI.");
                 base.ReceiveMessage(msg);
                 Stop();
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return;
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public bool RequestRoute(string routeString)
         {
-            Logger.log("RequestRouteProtocol.RequestRoute()");
-            Logger.IncLvl();
+            //Logger.log("RequestRouteProtocol.RequestRoute()");
+            //Logger.IncLvl();
             string mafRoutePattern = @"(?<provider>[\w{}\s_\-#]+@[\w{}\s_\-#]+)::(?<service>[\w\-]+)(\((?<argument>[^)]*)\)){0,1}";
             System.Text.RegularExpressions.Regex mafRouteRegex = new System.Text.RegularExpressions.Regex(mafRoutePattern);
             System.Text.RegularExpressions.Match mafRouteMatch = mafRouteRegex.Match(routeString);
             if(!mafRouteMatch.Success)
             {
                 throw new Exception("WARNING: Route not understood: <<" + routeString + ">>");
-                Logger.log("WARNING: Route not understood: <<" + routeString + ">>");
-                Logger.DecLvl();
+                //Logger.log("WARNING: Route not understood: <<" + routeString + ">>");
+                //Logger.DecLvl();
                 Stop();
                 return false;
             }
@@ -126,7 +126,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             request.TargetInterface = AgentMessage.Interfaces.UI;
             request.SenderChatId = ChatId;
             Holder.ScheduleMessage(request);
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return true;
         }
 
@@ -144,8 +144,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public override void Setup()
         {
-            Logger.debug("RequestRouteProtocol.RegisterServices()");
-            Logger.IncLvl();
+            //Logger.debug("RequestRouteProtocol.RegisterServices()");
+            //Logger.IncLvl();
             /*Holder.RegisterService(
                 GetProtocolId(),
                 (agent) => {
@@ -157,7 +157,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                 request.UI = controller;
                 request.RequestRoute(def);
             });
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
     }

@@ -54,7 +54,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                     {
                         if(!service.HasPermissions(msg.Sender))
                         {
-                            Logger.log("no permissions: " + service.Id);
+                            //Logger.log("no permissions: " + service.Id);
                         }
                     }
                 }

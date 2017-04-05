@@ -57,14 +57,14 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public UIServerProtocol(Agent holder) : base(holder)
         {
-            Logger.debug("UIServerProtocol constructor");
-            Logger.IncLvl();
+            //Logger.debug("UIServerProtocol constructor");
+            //Logger.IncLvl();
             if(!GetPageGenerators().ContainsKey("404"))
             {
                 GetPageGenerators()["404"] = (agent, msg, data) => "Page not found!<hl/><uicontrols>BACK</uicontrols>";
             }
             ApplicationId = "";
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void SetPageGenerator(string id, Func<UIServerProtocol, AgentMessage, Dictionary<string, string>, string> pageGenerator)
@@ -74,11 +74,11 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         private void SetPageGenerator(string id, Func<UIServerProtocol, AgentMessage, Dictionary<string, string>, string> pageGenerator, bool global)
         {
-            Logger.debug("UIServerProtocol.SetPageGenerator()");
-            Logger.IncLvl();
+            //Logger.debug("UIServerProtocol.SetPageGenerator()");
+            //Logger.IncLvl();
             string pageId = global ? id : ApplicationId + "_" + id;
             GetPageGenerators()[pageId] = pageGenerator;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public Func<UIServerProtocol, AgentMessage, Dictionary<string, string>, string> GetPageGenerator(string id)
@@ -93,29 +93,29 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         private Func<UIServerProtocol, AgentMessage, Dictionary<string, string>, string> GetPageGenerator(string id, bool global)
         {
-            Logger.debug("UIServerProtocol.GetPageGenerator()");
-            Logger.IncLvl();
+            //Logger.debug("UIServerProtocol.GetPageGenerator()");
+            //Logger.IncLvl();
             string pageId = global ? id : ApplicationId + "_" + id;
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return GetPageGenerators()?.GetValueOrDefault(pageId, GetPageGenerators()["404"] ?? ((a,m,b) => "404") );
         }
 
         private Dictionary<string, Func<UIServerProtocol, AgentMessage, Dictionary<string, string>, string>> GetPageGenerators()
         {
-            Logger.debug("UIServerProtocol.GetPageGenerators()");
-            Logger.IncLvl();
+            //Logger.debug("UIServerProtocol.GetPageGenerators()");
+            //Logger.IncLvl();
             if (Holder.GetKnowledgeEntry("UIPAGES", this) == null)
             {
                 Holder.SetKnowledgeEntry("UIPAGES", new Dictionary<string, Func<UIServerProtocol, AgentMessage, Dictionary<string, string>, string>>(), this);
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return Holder.GetKnowledgeEntry("UIPAGES", this) as Dictionary<string, Func<UIServerProtocol, AgentMessage, Dictionary<string, string>, string>>;
         }
 
         public override void ReceiveMessage(AgentMessage msg)
         {
-            Logger.debug("UIServerProtocol.ReceiveMessage()");
-            Logger.IncLvl();
+            //Logger.debug("UIServerProtocol.ReceiveMessage()");
+            //Logger.IncLvl();
             if (msg.Status == AgentMessage.StatusCodes.OK)
             {
                 Dictionary<string, string> data = Parser.GetXMLAttributes(msg.Content);
@@ -144,19 +144,19 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             {
                 base.ReceiveMessage(msg);
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public static bool CreateApplication(Agent holder, string id, string title, Dictionary<string, Func<UIServerProtocol, AgentMessage, Dictionary<string, string>, string>> pages)
         {
-            Logger.debug("UIServerProtocol.CreateApplication()");
-            Logger.IncLvl();
+            //Logger.debug("UIServerProtocol.CreateApplication()");
+            //Logger.IncLvl();
             UIServerProtocol setup = new UIServerProtocol(holder);
             setup.SelectApplication(id);
             setup.Pages = pages;
             if(holder.Services.ContainsKey(id))
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return false;
             }
 
@@ -174,7 +174,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                     {"providesui", "true"}
                 }
             );
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return true;
         }
 

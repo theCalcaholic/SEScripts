@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 using SEScripts.XUI.XML;
 using SEScripts.Lib.LoggerNS;
+using SEScripts.XUI.BoxRenderer;
 
 namespace SEScripts.XUI.Tests
 {
@@ -30,10 +31,10 @@ namespace SEScripts.XUI.Tests
         [TestMethod()]
         public void ParseXMLTest()
         {
-            Logger.DEBUG = true;
+            //Logger.debug = true;
 
 
-            string xmlString = "<meta fontsize='0.8' fontcolor='00AA00'/>" +
+            string xmlString = "" + //"<meta fontsize='0.8' fontcolor='00AA00'/>" +
                 "<uicontrols alignSelf='center'>Main Menu</uicontrols>" +
                 "<hl/>" +
                 "<container alignChildren='center' width='100%'>" +
@@ -51,7 +52,7 @@ namespace SEScripts.XUI.Tests
             Console.WriteLine("-------------------------------------------------------------");
             Console.WriteLine("Result:");
             Console.WriteLine("-------------------------------------------------------------");
-            Console.WriteLine(tree.Render(600, -1));
+            Console.WriteLine(tree.Render(600, 20));
             Console.WriteLine("-------------------------------------------------------------");
             Console.WriteLine("Log:");
             Console.WriteLine("-------------------------------------------------------------");

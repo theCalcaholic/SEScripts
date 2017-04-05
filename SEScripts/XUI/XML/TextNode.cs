@@ -25,25 +25,29 @@ namespace SEScripts.XUI.XML
 
         public TextNode(string content) : base()
         {
-            Logger.debug("TextNode constructor()");
-            Logger.IncLvl();
-            Logger.debug("content: " + content);
+            //Logger.debug("TextNode constructor()");
+            //Logger.IncLvl();
+            //Logger.debug("content: " + content);
             Type = "textnode";
             Content = content;
             Content.Replace("\n", "");
             Content = Content.Trim(new char[] { '\n', ' ', '\r' });
-            Logger.debug("final content: " + Content);
+            //Logger.debug("final content: " + Content);
             RerenderRequired = true;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            Logger.debug("TextNode.GetRenderCache(int)");
-            Logger.IncLvl();
-            RenderBox cache = new RenderBoxLeaf(Content);
-            Logger.DecLvl();
-            return cache;
+            using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
+            {
+                //Logger.debug("TextNode.GetRenderCache(int)");
+                //Logger.IncLvl();
+                RenderBox cache = new RenderBoxLeaf(Content);
+                cache.type = Type;
+                //Logger.DecLvl();
+                return cache;
+            }
         }
 
         //protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }
@@ -56,10 +60,10 @@ namespace SEScripts.XUI.XML
 
         /*protected override void BuildRenderCache()
         {
-            Logger.debug(Type + ".BuildRenderCache()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ".BuildRenderCache()");
+            //Logger.IncLvl();
             RerenderRequired = false;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }*/
     }
 

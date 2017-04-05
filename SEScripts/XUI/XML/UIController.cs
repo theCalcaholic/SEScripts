@@ -21,7 +21,7 @@ namespace SEScripts.XUI.XML
 {
     public class UIController : XMLParentNode
     {
-        XMLTree ui;
+        public XMLTree ui;
         public Stack<XMLTree> UIStack;
         public string Type;
         bool UserInputActive;
@@ -67,8 +67,8 @@ namespace SEScripts.XUI.XML
 
         public UIController(XMLTree rootNode)
         {
-            Logger.debug("UIController constructor()");
-            Logger.IncLvl();
+            //Logger.debug("UIController constructor()");
+            //Logger.IncLvl();
             Type = "CTRL";
 
             UIStack = new Stack<XMLTree>();
@@ -84,22 +84,22 @@ namespace SEScripts.XUI.XML
 
             CollectUserInputBindings();
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public static UIController FromXML(string xml)
         {
-            Logger.debug("UIController FromXMLString()");
-            Logger.IncLvl();
+            //Logger.debug("UIController FromXMLString()");
+            //Logger.IncLvl();
             XMLTree rootNode = XMLWRAPPER.ParseXML(xml);
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return new UIController(rootNode);
         }
 
         public void ApplyScreenProperties(IMyTextPanel screen)
         {
-            Logger.debug("UIController.ApplyScreenProperties()");
-            Logger.IncLvl();
+            //Logger.debug("UIController.ApplyScreenProperties()");
+            //Logger.IncLvl();
             if (ui.GetAttribute("fontcolor") != null)
             {
                 string colorString = ui.GetAttribute("fontcolor");
@@ -146,13 +146,13 @@ namespace SEScripts.XUI.XML
                 
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void Call(List<string> parameters)
         {
-            Logger.debug("UIController.Main()");
-            Logger.IncLvl();
+            //Logger.debug("UIController.Main()");
+            //Logger.IncLvl();
 
             switch (parameters[0])
             {
@@ -178,7 +178,7 @@ namespace SEScripts.XUI.XML
                     break;
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return;
         }
 
@@ -189,8 +189,8 @@ namespace SEScripts.XUI.XML
 
         public void LoadUI(XMLTree rootNode)
         {
-            Logger.debug("UIController: LoadUI():");
-            Logger.IncLvl();
+            //Logger.debug("UIController: LoadUI():");
+            //Logger.IncLvl();
             if (ui.GetAttribute("historydisabled") == null || ui.GetAttribute("historydisabled") != "true")
             {
                 UIStack.Push(ui);
@@ -208,7 +208,7 @@ namespace SEScripts.XUI.XML
             UserInputBindings = new List<XMLTree>();
             CollectUserInputBindings();
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void ClearUIStack()
@@ -218,35 +218,35 @@ namespace SEScripts.XUI.XML
 
         public void RevertUI()
         {
-            Logger.log("UIController: RevertUI():");
-            Logger.IncLvl();
+            //Logger.log("UIController: RevertUI():");
+            //Logger.IncLvl();
             if (UIStack.Count == 0)
             {
-                Logger.log("Error: Can't revert: UI stack is empty.");
-                Logger.DecLvl();
+                //Logger.log("Error: Can't revert: UI stack is empty.");
+                //Logger.DecLvl();
                 return;
             }
 
             ui = UIStack.Pop();
             ui.SetParent(this);
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public string Render()
         {
-            Logger.debug("UIController: Render():");
-            Logger.IncLvl();
-            Logger.DecLvl();
+            //Logger.debug("UIController: Render():");
+            //Logger.IncLvl();
+            //Logger.DecLvl();
             return ui.Render(-1, -1);
         }
 
         public void RenderTo(IMyTextPanel panel)
         {
-            Logger.debug("UIController.RenderTo()");
-            Logger.IncLvl();
+            //Logger.debug("UIController.RenderTo()");
+            //Logger.IncLvl();
             int panelWidth = 0;
             string panelType = panel.BlockDefinition.SubtypeId;
-            Logger.debug("Type: " + panelType);
+            //Logger.debug("Type: " + panelType);
 
             if (panelType == "LargeTextPanel" || panelType == "SmallTextPanel")
             {
@@ -278,20 +278,20 @@ namespace SEScripts.XUI.XML
             {
                 TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
             }
-            Logger.log("Font configured...");
+            //Logger.log("Font configured...");
 
-            Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
-            Logger.debug("resulting width: " + width.ToString());
+            //Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
+            //Logger.debug("resulting width: " + width.ToString());
             string text = ui.Render(width, height);
-            Logger.debug("rendering <" + text);
+            //Logger.debug("rendering <" + text);
             panel.WritePublicText(text);
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void KeyPress(string keyCode)
         {
-            Logger.debug("UIController: KeyPress():");
-            Logger.IncLvl();
+            //Logger.debug("UIController: KeyPress():");
+            //Logger.IncLvl();
             switch (keyCode)
             {
                 case "LEFT/ABORT":
@@ -299,31 +299,31 @@ namespace SEScripts.XUI.XML
                     break;
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public XMLTree GetSelectedNode()
         {
-            Logger.debug("UIController: GetSelectedNode():");
-            Logger.IncLvl();
+            //Logger.debug("UIController: GetSelectedNode():");
+            //Logger.IncLvl();
             XMLTree sibling = ui.GetSelectedSibling();
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return sibling;
         }
 
         public XMLTree GetNode(Func<XMLTree, bool> filter)
         {
-            Logger.debug("UIController: GetNode()");
-            Logger.IncLvl();
-            Logger.DecLvl();
+            //Logger.debug("UIController: GetNode()");
+            //Logger.IncLvl();
+            //Logger.DecLvl();
             return ui.GetNode(filter);
         }
 
         public List<XMLTree> GetAllNodes(Func<XMLTree, bool> filter)
         {
-            Logger.debug("UIController: GetAllNodes()");
-            Logger.IncLvl();
-            Logger.DecLvl();
+            //Logger.debug("UIController: GetAllNodes()");
+            //Logger.IncLvl();
+            //Logger.DecLvl();
             return ui.GetAllNodes(filter);
         }
 
@@ -331,10 +331,10 @@ namespace SEScripts.XUI.XML
 
         public void FollowRoute(Route route)
         {
-            Logger.debug("UIController: FollowRoute():");
-            Logger.IncLvl();
+            //Logger.debug("UIController: FollowRoute():");
+            //Logger.IncLvl();
             route.Follow(this);
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public XMLParentNode GetParent()
@@ -344,22 +344,22 @@ namespace SEScripts.XUI.XML
 
         public Dictionary<string, string> GetValues()
         {
-            Logger.debug("UIController.GetValues()");
-            Logger.IncLvl();
+            //Logger.debug("UIController.GetValues()");
+            //Logger.IncLvl();
             return GetValues((node) => true);
         }
 
         public Dictionary<string, string> GetValues(Func<XMLTree, bool> filter)
         {
-            Logger.debug("UIController.GetValues()");
-            Logger.IncLvl();
+            //Logger.debug("UIController.GetValues()");
+            //Logger.IncLvl();
             if (ui == null)
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return null;
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return ui.GetValues(filter);
         }
 
@@ -378,9 +378,9 @@ namespace SEScripts.XUI.XML
 
         public string GetPackedValues()
         {
-            Logger.debug("UIController.GetPackedValues()");
-            Logger.IncLvl();
-            Logger.DecLvl();
+            //Logger.debug("UIController.GetPackedValues()");
+            //Logger.IncLvl();
+            //Logger.DecLvl();
             return GetPackedValues(node => true);
         }
 
@@ -416,8 +416,8 @@ namespace SEScripts.XUI.XML
 
         public bool UpdateUserInput()
         {
-            Logger.debug("UIController.RefreshUserInput()");
-            Logger.IncLvl();
+            //Logger.debug("UIController.RefreshUserInput()");
+            //Logger.IncLvl();
             if(!UserInputActive || UserInputSource == null)
             {
                 return false;
@@ -440,8 +440,8 @@ namespace SEScripts.XUI.XML
                 inputHasChanged = false;
             }
 
-            Logger.debug("input has " + (inputHasChanged ? "" : "not ") + "changed");
-            Logger.debug("Iterating input bindings (" + UserInputBindings.Count + " bindings registered).");
+            //Logger.debug("input has " + (inputHasChanged ? "" : "not ") + "changed");
+            //Logger.debug("Iterating input bindings (" + UserInputBindings.Count + " bindings registered).");
 
             // update ui input bindings
             string binding;
@@ -451,18 +451,18 @@ namespace SEScripts.XUI.XML
                 binding = node.GetAttribute("inputbinding");
                 if(binding != null)
                 {
-                    Logger.debug("binding found at " + node.Type + " node for field: " + binding);
+                    //Logger.debug("binding found at " + node.Type + " node for field: " + binding);
                     fieldValue = node.GetAttribute(binding.ToLower());
-                    Logger.debug("field is " + (fieldValue ?? "EMPTY") + ".");
+                    //Logger.debug("field is " + (fieldValue ?? "EMPTY") + ".");
                     if(!inputHasChanged && fieldValue != null && fieldValue != InputDataCache)
                     {
-                        Logger.debug("applying field value: " + fieldValue);
+                        //Logger.debug("applying field value: " + fieldValue);
                         inputData = fieldValue;
                         inputHasChanged = true;
                     }
                     else if(inputHasChanged)
                     {
-                        Logger.debug("Updating field value to input: " + inputData);
+                        //Logger.debug("Updating field value to input: " + inputData);
                         node.SetAttribute(binding.ToLower(), inputData);
                     }
                 }
@@ -491,7 +491,7 @@ namespace SEScripts.XUI.XML
 
         private void CollectUserInputBindings()
         {
-            Logger.debug("UIController.CollectUserInputBindings()");
+            //Logger.debug("UIController.CollectUserInputBindings()");
             XMLTree node;
             Queue<XMLParentNode> nodes = new Queue<XMLParentNode>();
             nodes.Enqueue(ui);
@@ -500,11 +500,11 @@ namespace SEScripts.XUI.XML
                 node = nodes.Dequeue() as XMLTree;
                 if(!node.HasUserInputBindings)
                 {
-                    Logger.debug("node has no userinputbindings");
+                    //Logger.debug("node has no userinputbindings");
                 }
                 if (node != null && node.HasUserInputBindings)
                 {
-                    Logger.debug("Checking " + node.Type + " node...");
+                    //Logger.debug("Checking " + node.Type + " node...");
                     for (int i = 0; i < node.NumberOfChildren; i++)
                     {
                         nodes.Enqueue(node.GetChild(i));

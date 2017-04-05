@@ -32,8 +32,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
             public override void ReceiveMessage(AgentMessage msg)
             {
-                Logger.debug("ServiceRegistrationProtocol.ReceiveMessage(AgentMessage)");
-                Logger.IncLvl();
+                //Logger.debug("ServiceRegistrationProtocol.ReceiveMessage(AgentMessage)");
+                //Logger.IncLvl();
                 List<XML.XMLTree> services = XML.ParseXML(msg.Content).GetAllNodes((node) => (node.Type == "service"));
                 PlatformAgent platform = Holder as PlatformAgent;
                 AgentMessage response;
@@ -55,7 +55,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                 foreach (XML.XMLTree serviceNode in services)
                 {
                     service = PlatformService.FromXMLNode(serviceNode);
-                    Logger.log("Register service '" + service.Id + "' of '" + sender + "'.");
+                    //Logger.log("Register service '" + service.Id + "' of '" + sender + "'.");
                     if (service != null)
                     {
 
@@ -74,7 +74,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                 response.SenderChatId = ChatId;
                 Holder.SendMessage(ref response);
                 Stop();
-                Logger.DecLvl();
+                //Logger.DecLvl();
             }
 
             public override void Restart() { }
@@ -97,7 +97,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
         {
             if (msg.Status == AgentMessage.StatusCodes.OK && msg.Content == "services registered")
             {
-                Logger.log("Setting agent platform to '" + msg.Sender.Name + "'.");
+                //Logger.log("Setting agent platform to '" + msg.Sender.Name + "'.");
                 Holder.Id.Platform = msg.Sender.Name;
                 Holder.Event("register");
                 Stop();

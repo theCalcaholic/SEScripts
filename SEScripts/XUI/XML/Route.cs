@@ -50,16 +50,16 @@ namespace SEScripts.XUI.XML
 
         public Route(string definition)
         {
-            Logger.debug("Route constructor():");
-            Logger.IncLvl();
+            //Logger.debug("Route constructor():");
+            //Logger.IncLvl();
             Definition = definition;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void Follow(UIController controller)
         {
-            Logger.debug("Route.Follow()");
-            Logger.IncLvl();
+            //Logger.debug("Route.Follow()");
+            //Logger.IncLvl();
             string[] DefTypeAndValue = Definition.Split(new char[] { ':' }, 2);
             if (Route.RouteHandlers.ContainsKey(DefTypeAndValue[0].ToLower()))
             {
@@ -68,7 +68,7 @@ namespace SEScripts.XUI.XML
                 );
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         static public void RegisterRouteFunction(string id, Action<UIController> fn)

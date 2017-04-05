@@ -250,7 +250,7 @@ namespace SEScripts.XUI
         }
         public int Width
         {
-            get { return TextUtils.GetTextWidth(new StringBuilder(Content)); }
+            get { return TextUtils.GetTextWidth(Content); }
         }
 
         public int Length

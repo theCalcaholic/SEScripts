@@ -17,7 +17,7 @@ namespace SEScripts.XUI.XML.Tests
         [TestInitialize()]
         public void Initialize()
         {
-            Logger.DEBUG = true;
+            //Logger.debug = true;
             TextUtils.Reset();
         }
 
@@ -259,9 +259,9 @@ namespace SEScripts.XUI.XML.Tests
 
             XMLTree tree = new Generic("rootnode");
             XMLTree leaf1 = new TextNode(line1.ToString());
-            leaf1.SetAttribute("forcewidth", TextUtils.GetTextWidth(line1).ToString());
+            leaf1.SetAttribute("forcewidth", TextUtils.GetTextWidth(line1.ToString()).ToString());
             TextNode leaf2 = new TextNode(line2.ToString());
-            leaf2.SetAttribute("forcewidth", TextUtils.GetTextWidth(line2).ToString());
+            leaf2.SetAttribute("forcewidth", TextUtils.GetTextWidth(line2.ToString()).ToString());
 
             tree.AddChild(leaf1);
             tree.AddChild(leaf2);
@@ -269,13 +269,13 @@ namespace SEScripts.XUI.XML.Tests
 
             Assert.AreEqual<string>("\n", tree.Render());
 
-            int width = Math.Max(TextUtils.GetTextWidth(line1), TextUtils.GetTextWidth(line2));
+            int width = Math.Max(TextUtils.GetTextWidth(line1.ToString()), TextUtils.GetTextWidth(line2.ToString()));
             tree.SetAttribute("forcewidth", width.ToString());
-            string expected = TextUtils.PadText(line1, width, TextUtils.PadMode.RIGHT).ToString() + "\n"
-                + TextUtils.PadText(line2, width, TextUtils.PadMode.RIGHT).ToString();
+            string expected = TextUtils.PadText(line1.ToString(), width, TextUtils.PadMode.RIGHT).ToString() + "\n"
+                + TextUtils.PadText(line2.ToString(), width, TextUtils.PadMode.RIGHT).ToString();
             Assert.AreEqual<string>(expected, tree.Render());
 
-            width = TextUtils.GetTextWidth(line1) + TextUtils.GetTextWidth(line2) + 1;
+            width = TextUtils.GetTextWidth(line1.ToString()) + TextUtils.GetTextWidth(line2.ToString()) + 1;
             tree.SetAttribute("flow", "horizontal");
             tree.SetAttribute("forcewidth", width.ToString());
 
@@ -291,12 +291,12 @@ namespace SEScripts.XUI.XML.Tests
             XMLTree leftBox = new Generic("generic");
             leftBox.AddChild(new TextNode(leftline1));
             leftBox.AddChild(new TextNode(leftline2));
-            int leftWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(leftline1)), TextUtils.GetTextWidth(new StringBuilder(leftline2)));
+            int leftWidth = Math.Max(TextUtils.GetTextWidth(leftline1), TextUtils.GetTextWidth(leftline2));
             leftBox.SetAttribute("forcewidth", leftWidth.ToString());
             XMLTree rightBox = new Generic("generic");
             rightBox.AddChild(new TextNode(rightline1));
             rightBox.AddChild(new TextNode(rightline2));
-            int rightWidth = Math.Max(TextUtils.GetTextWidth(new StringBuilder(rightline1)), TextUtils.GetTextWidth(new StringBuilder(rightline2)));
+            int rightWidth = Math.Max(TextUtils.GetTextWidth(rightline1), TextUtils.GetTextWidth(rightline2));
             rightBox.SetAttribute("forcewidth", rightWidth.ToString());
             width = leftWidth + rightWidth + 1;
             tree.AddChild(leftBox);
@@ -305,15 +305,15 @@ namespace SEScripts.XUI.XML.Tests
             
             expected =
                 leftline1 + rightline1 + "\n"
-                + TextUtils.PadText(new StringBuilder(leftline2),
+                + TextUtils.PadText(leftline2,
                 Math.Max(
-                    TextUtils.GetTextWidth(new StringBuilder(leftline1)),
-                    TextUtils.GetTextWidth(new StringBuilder(leftline2))
+                    TextUtils.GetTextWidth(leftline1),
+                    TextUtils.GetTextWidth(leftline2)
                 ), TextUtils.PadMode.RIGHT).ToString()
-                + TextUtils.PadText(new StringBuilder(rightline2),
+                + TextUtils.PadText(rightline2,
                     Math.Max(
-                        TextUtils.GetTextWidth(new StringBuilder(rightline1)),
-                        TextUtils.GetTextWidth(new StringBuilder(rightline2))
+                        TextUtils.GetTextWidth(rightline1),
+                        TextUtils.GetTextWidth(rightline2)
                     ), TextUtils.PadMode.RIGHT);
             Assert.AreEqual<string>(expected,
                 tree.Render());
@@ -334,10 +334,10 @@ namespace SEScripts.XUI.XML.Tests
             tree.AddChild(leaf2);
 
             Console.WriteLine("Test first line vertical no fixed width.");
-            int width = Math.Max(TextUtils.GetTextWidth(line1), TextUtils.GetTextWidth(line2));
+            int width = Math.Max(TextUtils.GetTextWidth(line1.ToString()), TextUtils.GetTextWidth(line2.ToString()));
             string expected =
-                TextUtils.PadText(line1, width, TextUtils.PadMode.RIGHT).ToString() + "\n"
-                + TextUtils.PadText(line2, width, TextUtils.PadMode.RIGHT).ToString();
+                TextUtils.PadText(line1.ToString(), width, TextUtils.PadMode.RIGHT).ToString() + "\n"
+                + TextUtils.PadText(line2.ToString(), width, TextUtils.PadMode.RIGHT).ToString();
             Assert.AreEqual<string>(expected, tree.Render());
 
             tree.SetAttribute("flow", "horizontal");
@@ -363,15 +363,15 @@ namespace SEScripts.XUI.XML.Tests
 
             expected =
                 leftline1 + rightline1 + "\n"
-                + TextUtils.PadText(new StringBuilder(leftline2),
+                + TextUtils.PadText(leftline2,
                 Math.Max(
-                    TextUtils.GetTextWidth(new StringBuilder(leftline1)),
-                    TextUtils.GetTextWidth(new StringBuilder(leftline2))
+                    TextUtils.GetTextWidth(leftline1),
+                    TextUtils.GetTextWidth(leftline2)
                 ), TextUtils.PadMode.RIGHT).ToString()
-                + TextUtils.PadText(new StringBuilder(rightline2),
+                + TextUtils.PadText(rightline2,
                     Math.Max(
-                        TextUtils.GetTextWidth(new StringBuilder(rightline1)),
-                        TextUtils.GetTextWidth(new StringBuilder(rightline2))
+                        TextUtils.GetTextWidth(rightline1),
+                        TextUtils.GetTextWidth(rightline2)
                     ), TextUtils.PadMode.RIGHT);
             Assert.AreEqual<string>(
                 expected,
@@ -393,7 +393,7 @@ namespace SEScripts.XUI.XML.Tests
             int minWidth = tree.GetRenderBox(-1, -1).MinWidth;
             tree.SetAttribute("minwidth", (minWidth - 50).ToString());
 
-            string expected = TextUtils.PadText(line1, TextUtils.GetTextWidth(line2), TextUtils.PadMode.RIGHT).ToString() + "\n"
+            string expected = TextUtils.PadText(line1.ToString(), TextUtils.GetTextWidth(line2.ToString()), TextUtils.PadMode.RIGHT).ToString() + "\n"
                 + line2.ToString();
             Assert.AreEqual<string>(
                 expected,
@@ -402,8 +402,8 @@ namespace SEScripts.XUI.XML.Tests
             minWidth = tree.GetRenderBox(-1, -1).MinWidth + 100;
             tree.SetAttribute("minwidth", minWidth.ToString());
 
-            expected = TextUtils.PadText(line1, minWidth, TextUtils.PadMode.RIGHT).ToString() + "\n"
-                + TextUtils.PadText(line2, minWidth, TextUtils.PadMode.RIGHT).ToString();
+            expected = TextUtils.PadText(line1.ToString(), minWidth, TextUtils.PadMode.RIGHT).ToString() + "\n"
+                + TextUtils.PadText(line2.ToString(), minWidth, TextUtils.PadMode.RIGHT).ToString();
             Assert.AreEqual<string>(expected, tree.Render());
 
             tree.SetAttribute("flow", "horizontal");
@@ -415,7 +415,7 @@ namespace SEScripts.XUI.XML.Tests
 
             minWidth = tree.GetRenderBox(-1, -1).MinWidth + 100;
             tree.SetAttribute("minwidth", minWidth.ToString());
-            expected = TextUtils.PadText(new StringBuilder(line1.ToString() + line2), minWidth, TextUtils.PadMode.RIGHT).ToString();
+            expected = TextUtils.PadText(line1.ToString() + line2, minWidth, TextUtils.PadMode.RIGHT).ToString();
             Assert.AreEqual<string>(expected, tree.Render());
 
             string leftline1 = "abcde";
@@ -439,9 +439,9 @@ namespace SEScripts.XUI.XML.Tests
             int rightMinWidth = rightBox.GetRenderBox(-1, -1).MinWidth;
 
             tree.SetAttribute("minwidth", minWidth.ToString());
-            expected = TextUtils.PadText(new StringBuilder(leftline1 + rightline1), minWidth, TextUtils.PadMode.RIGHT).ToString() + "\n"
-                + TextUtils.PadText(new StringBuilder(leftline2), leftMinWidth, TextUtils.PadMode.RIGHT).ToString()
-                + TextUtils.PadText(new StringBuilder(rightline2), Math.Max(rightMinWidth, tree.GetRenderBox(-1, -1).MinWidth - leftMinWidth), TextUtils.PadMode.RIGHT);
+            expected = TextUtils.PadText(leftline1 + rightline1, minWidth, TextUtils.PadMode.RIGHT).ToString() + "\n"
+                + TextUtils.PadText(leftline2, leftMinWidth, TextUtils.PadMode.RIGHT).ToString()
+                + TextUtils.PadText(rightline2, Math.Max(rightMinWidth, tree.GetRenderBox(-1, -1).MinWidth - leftMinWidth), TextUtils.PadMode.RIGHT);
             Assert.AreEqual<string>(
                 expected,
                 tree.Render());

@@ -51,12 +51,12 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public SendLocalMessageProtocol(Agent agent) : base(agent)
         {
-            Logger.debug("SendLocalMessageProtocol constructor()");
-            Logger.IncLvl();
+            //Logger.debug("SendLocalMessageProtocol constructor()");
+            //Logger.IncLvl();
             ChatIdValue = ChatCount;
             ChatCountValue++;
             Holder = agent;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public override void Restart()
@@ -68,9 +68,9 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
         
         public virtual void ReceiveMessage(AgentMessage msg)
         {
-            Logger.debug("SendLocalMessageProtocol.ReceiveMessage()");
-            Logger.IncLvl();
-            Logger.log("Sending message of '" + msg.Sender + "' to '" + msg.Receiver + "'...");
+            //Logger.debug("SendLocalMessageProtocol.ReceiveMessage()");
+            //Logger.IncLvl();
+            //Logger.log("Sending message of '" + msg.Sender + "' to '" + msg.Receiver + "'...");
 
             IMyProgrammableBlock receiverBlock;
             if (msg.Receiver.MatchesPlatform(Holder.Id))
@@ -79,12 +79,12 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
                 if (receiverBlock == null)
                 {
-                    Logger.log("WARNING: Receiver with id '" + msg.Receiver + "' not found locally!");
+                    //Logger.log("WARNING: Receiver with id '" + msg.Receiver + "' not found locally!");
                 }
             }
             else
             {
-                Logger.log("Receiver not local. Trying to find corresponding platform agent.");
+                //Logger.log("Receiver not local. Trying to find corresponding platform agent.");
                 receiverBlock = Holder.GTS.GetBlockWithName(msg.Receiver.Platform) as IMyProgrammableBlock;
                 if (receiverBlock == null)
                 {
@@ -94,7 +94,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                     }
                     if (receiverBlock == null)
                     {
-                        Logger.log("WARNING: Not registered at any platform! Only local communication possible!");
+                        //Logger.log("WARNING: Not registered at any platform! Only local communication possible!");
                     }
                 }
             }
@@ -112,7 +112,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                         );
                     Holder.SendMessage(ref sendMsg);
                 }
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 Stop();
                 return;
             }
@@ -127,7 +127,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                 Holder.ScheduleMessage(msg);
             }
             Stop();
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public static void RegisterServices(Agent agent) {

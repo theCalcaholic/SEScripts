@@ -60,33 +60,33 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public AgentProtocol(Agent agent)
         {
-            Logger.debug("AgentProtocol constructor()");
-            Logger.IncLvl();
+            //Logger.debug("AgentProtocol constructor()");
+            //Logger.IncLvl();
             ChatIdValue = ChatCount;
             ChatCountValue++;
             Holder = agent;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public bool TrySetId(int id)
         {
-            Logger.debug("AgentProtocol.TrySetId()");
-            Logger.IncLvl();
+            //Logger.debug("AgentProtocol.TrySetId()");
+            //Logger.IncLvl();
             if (id == ChatId)
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return true;
             }
             else if (id >= ChatCount)
             {
                 ChatCountValue = id + 1;
                 ChatIdValue = id;
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return true;
             }
             else
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return false;
             }
         }
@@ -97,19 +97,19 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public virtual void Stop()
         {
-            Logger.debug("AgentProtocol.Stop()");
+            //Logger.debug("AgentProtocol.Stop()");
             if (ChatId == ChatCount - 1)
             {
                 ChatCountValue = ChatId;
             }
             Holder.StopChat(ChatId);
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public virtual void ReceiveMessage(AgentMessage msg)
         {
-            Logger.debug("AgentProtocol.ReceiveMessage()");
-            Logger.IncLvl();
+            //Logger.debug("AgentProtocol.ReceiveMessage()");
+            //Logger.IncLvl();
             if (msg.Status == AgentMessage.StatusCodes.CHATIDNOTACCEPTED)
             {
                 string[] contentSplit = msg.Content.Split(':');
@@ -119,7 +119,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                     int desiredId = -1;
                     if (!Int32.TryParse(contentSplit[1], out desiredId))
                     {
-                        Logger.log("WARNING: Invalid chat id requested!");
+                        //Logger.log("WARNING: Invalid chat id requested!");
                         Stop();
                     } else
                     {
@@ -130,13 +130,13 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                         }
                         else
                         {
-                            Logger.log("ERROR: Could not change chat id");
+                            //Logger.log("ERROR: Could not change chat id");
                             Stop();
                         }
                     }
                 }
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public static string MakeRoute(AgentId aid, string protocolId, string argument)

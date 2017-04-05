@@ -34,8 +34,8 @@ namespace SEScripts.Lib.DataStorage
 
         private DataStorage() : base()
         {
-            Logger.log("DataStore constructor()");
-            Logger.IncLvl();
+            //Logger.log("DataStore constructor()");
+            //Logger.IncLvl();
             String2Type = new Dictionary<string, Type> {
             {"string", typeof(String) },
             {"int", typeof(int) },
@@ -51,35 +51,35 @@ namespace SEScripts.Lib.DataStorage
             StringEntries = new Dictionary<string, string>();
             IntegerEntries = new Dictionary<string, int>();
             FloatEntries = new Dictionary<string, float>();
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public static DataStorage GetInstance()
         {
-            Logger.log("DataStore.GetInstance()");
-            Logger.IncLvl();
+            //Logger.log("DataStore.GetInstance()");
+            //Logger.IncLvl();
             if (Instance == null)
             {
                 Instance = new DataStorage();
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return Instance;
         }
 
         public void Save(out string data)
         {
-            Logger.log("DataStore.Save(string)");
-            Logger.IncLvl();
+            //Logger.log("DataStore.Save(string)");
+            //Logger.IncLvl();
             UpdateAttributes();
             DataStorage.SetUp();
             data = "<data " + Parser.PackData(GetValues((node) => true)) + "/>";
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         private void UpdateAttributes()
         {
-            Logger.log("DataStore.UpdateAttributes()");
-            Logger.IncLvl();
+            //Logger.log("DataStore.UpdateAttributes()");
+            //Logger.IncLvl();
             foreach (KeyValuePair<string, string> entry in StringEntries)
             {
                 Attributes[entry.Key] = "string:" + entry.Value;
@@ -92,13 +92,13 @@ namespace SEScripts.Lib.DataStorage
             {
                 Attributes[entry.Key] = "float:" + entry.Value.ToString();
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public static DataStorage Load(string Storage)
         {
-            Logger.log("DataStore.Load()");
-            Logger.IncLvl();
+            //Logger.log("DataStore.Load()");
+            //Logger.IncLvl();
             DataStorage.SetUp();
 
             XML.XMLTree xml = XML.ParseXML(Storage);
@@ -112,14 +112,14 @@ namespace SEScripts.Lib.DataStorage
                     Instance = ds;
                 }
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return DataStorage.GetInstance();
         }
 
         public void Set<T>(string key, T value)
         {
-            Logger.log("DataStore.Set<T>(string, T)");
-            Logger.IncLvl();
+            //Logger.log("DataStore.Set<T>(string, T)");
+            //Logger.IncLvl();
             Type type = GetEntryType(key);
             if (type != null && type != typeof(T))
             {
@@ -138,38 +138,38 @@ namespace SEScripts.Lib.DataStorage
             {
                 FloatEntries[key] = (float)(object)value;
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public Type GetEntryType(string key)
         {
-            Logger.log("DataStore.GetEntryType(string)");
-            Logger.IncLvl();
+            //Logger.log("DataStore.GetEntryType(string)");
+            //Logger.IncLvl();
             if (StringEntries.ContainsKey(key))
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return typeof(string);
             }
             else if (IntegerEntries.ContainsKey(key))
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return typeof(int);
             }
             else if (FloatEntries.ContainsKey(key))
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return typeof(float);
             }
             else
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return null;
             }
         }
         public T Get<T>(string key)
         {
-            Logger.log("DataStore.Get(string)");
-            Logger.IncLvl();
+            //Logger.log("DataStore.Get(string)");
+            //Logger.IncLvl();
             if (!Exists<T>(key))
             {
                 throw new Exception("No entry found for key '" + key + "' of type '" + typeof(T).ToString() + "'!");
@@ -177,17 +177,17 @@ namespace SEScripts.Lib.DataStorage
 
             if (typeof(T) == typeof(string))
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return (T)(object)StringEntries[key];
             }
             else if (typeof(T) == typeof(int))
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return (T)(object)IntegerEntries[key];
             }
             else if (typeof(T) == typeof(float))
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return (T)(object)FloatEntries[key];
             }
             else
@@ -198,37 +198,37 @@ namespace SEScripts.Lib.DataStorage
 
         public bool Exists(string key)
         {
-            Logger.log("DataStore.Exists(string)");
+            //Logger.log("DataStore.Exists(string)");
             return (Exists<string>(key) || Exists<int>(key) || Exists<float>(key));
         }
 
         public bool Exists<T>(string key)
         {
-            Logger.log("Exists<T>(string)");
-            Logger.IncLvl();
+            //Logger.log("Exists<T>(string)");
+            //Logger.IncLvl();
             if (typeof(T) == typeof(string))
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return StringEntries.ContainsKey(key);
             }
             else if (typeof(T) == typeof(int))
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return IntegerEntries.ContainsKey(key);
             }
             else if (typeof(T) == typeof(float))
             {
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return FloatEntries.ContainsKey(key);
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return false;
         }
 
         public List<string> GetKeys()
         {
-            Logger.log("DataStore.GetKeys()");
-            Logger.IncLvl();
+            //Logger.log("DataStore.GetKeys()");
+            //Logger.IncLvl();
             List<string> keys = new List<string>(
                 StringEntries.Keys.Count +
                 IntegerEntries.Keys.Count +
@@ -237,29 +237,29 @@ namespace SEScripts.Lib.DataStorage
             keys.AddRange(StringEntries.Keys);
             keys.AddRange(IntegerEntries.Keys);
             keys.AddRange(FloatEntries.Keys);
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return keys;
         }
 
         public static void SetUp()
         {
-            Logger.log("DataStore.SetUp()");
-            Logger.IncLvl();
+            //Logger.log("DataStore.SetUp()");
+            //Logger.IncLvl();
             if (!XML.NodeRegister.ContainsKey("data"))
             {
                 XML.NodeRegister.Add("data", () => DataStorage.GetInstance());
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public override void SetAttribute(string key, string value)
         {
-            Logger.log("DataStore.SetAttribute(string, string)");
-            Logger.IncLvl();
+            //Logger.log("DataStore.SetAttribute(string, string)");
+            //Logger.IncLvl();
             if (StringEntries == null || IntegerEntries == null || FloatEntries == null)
             {
                 base.SetAttribute(key, value);
-                Logger.DecLvl();
+                //Logger.DecLvl();
                 return;
             }
             Type type = typeof(string);
@@ -292,7 +292,7 @@ namespace SEScripts.Lib.DataStorage
                     Set(key, floatValue);
                 }
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
     }
 

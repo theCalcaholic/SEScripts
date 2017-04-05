@@ -25,8 +25,8 @@ namespace SEScripts.XUI.XML
 
         public TextInput()
         {
-            Logger.log("TextInput constructor()");
-            Logger.IncLvl();
+            //Logger.log("TextInput constructor()");
+            //Logger.IncLvl();
             Type = "textinput";
             Selectable = true;
             CursorPosition = -1;
@@ -35,7 +35,7 @@ namespace SEScripts.XUI.XML
             SetAttribute("maxlength", "10");
             SetAttribute("value", "");
             SetAttribute("allowedchars", " a-z0-9");
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public override void OnKeyPressed(string keyCode)
@@ -76,8 +76,8 @@ namespace SEScripts.XUI.XML
 
         private void IncreaseLetter()
         {
-            Logger.log("TextInput.IncreaseLetter()");
-            Logger.IncLvl();
+            //Logger.log("TextInput.IncreaseLetter()");
+            //Logger.IncLvl();
             if (CursorPosition == -1)
             {
                 return;
@@ -90,24 +90,24 @@ namespace SEScripts.XUI.XML
                 if ((charSets[i].Length == 1 && charSets[i][0] == value[CursorPosition])
                     || (charSets[i].Length == 3 && charSets[i][2] == value[CursorPosition]))
                 {
-                    Logger.log("letter outside class, setting to: " + charSets[i == 0 ? charSets.Length - 1 : i - 1][0] + ". (chars[" + ((i + 1) % charSets.Length) + "])");
+                    //Logger.log("letter outside class, setting to: " + charSets[i == 0 ? charSets.Length - 1 : i - 1][0] + ". (chars[" + ((i + 1) % charSets.Length) + "])");
                     value[CursorPosition] = charSets[(i + 1) % charSets.Length][0];
                     SetAttribute("value", new string(value));
-                    Logger.DecLvl();
+                    //Logger.DecLvl();
                     return;
                 }
             }
 
-            Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) + 1));
+            //Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) + 1));
             value[CursorPosition] = (char)(((int)value[CursorPosition]) + 1);
             SetAttribute("value", new string(value));
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         private void DecreaseLetter()
         {
-            Logger.log("TextInput.DecreaseLetter()");
-            Logger.IncLvl();
+            //Logger.log("TextInput.DecreaseLetter()");
+            //Logger.IncLvl();
             if (CursorPosition == -1)
             {
                 return;
@@ -120,16 +120,16 @@ namespace SEScripts.XUI.XML
                 if(charSets[i][0] == value[CursorPosition])
                 {
                     int index = (i == 0 ? charSets.Length - 1 : i - 1);
-                    Logger.log("letter outside class, setting to: " + charSets[index][charSets[index].Length - 1] + ". (chars[" + (index) + "])");
+                    //Logger.log("letter outside class, setting to: " + charSets[index][charSets[index].Length - 1] + ". (chars[" + (index) + "])");
                     value[CursorPosition] = charSets[index][charSets[index].Length - 1];
                     SetAttribute("value", new string(value));
                     return;
                 }
             }
-            Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) - 1));
+            //Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) - 1));
             value[CursorPosition] = (char)(((int)value[CursorPosition]) - 1);
             SetAttribute("value", new string(value));
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         private string[] GetAllowedCharSets()
@@ -217,9 +217,10 @@ namespace SEScripts.XUI.XML
 
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            Logger.debug("TextInput.GetRenderCache(int)");
-            Logger.IncLvl();
+            //Logger.debug("TextInput.GetRenderCache(int)");
+            //Logger.IncLvl();
             RenderBoxTree cache = new RenderBoxTree();
+            cache.type = Type;
             cache.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " ");
             cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
 
@@ -243,7 +244,7 @@ namespace SEScripts.XUI.XML
                 cache[i].MaxWidth = cache[i].MinWidth;
             }
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return cache;
         }
     }

@@ -1,40 +1,60 @@
 ﻿namespace SEScripts.Merged
 {
 
-public static class Logger
+public class Logger : IDisposable
 {
+public enum Mode { DEBUG, LOG, ERROR, WARNING, CONSOLE};
 private static StringBuilder Log = new StringBuilder();
+static public bool DEBUG = false;
+protected static StringBuilder Prefix = new StringBuilder();
+protected Program Prog;
+protected Mode logMode;
 public static string Output
 {
 get { return Log.ToString(); }
 }
-static IMyTextPanel DebugPanel;
-static public bool DEBUG = false;
-public static int offset = 0;
-private static StringBuilder Prefix = new StringBuilder();
-
-public static void log(string msg)
+public Logger(string message) : this(message, Mode.DEBUG) {}
+public Logger(string message, Mode mode)
 {
-Log.Append(Prefix);
-Log.Append(msg + "\n");
-//Console.WriteLine(Prefix + msg);
-//!UNCOMMENT P.Echo(Prefix + msg);
 }
-public static void debug(string msg)
+public Logger(string message, Mode mode, Program program)
 {
-if (DEBUG)
+if (!DEBUG && mode == Mode.DEBUG)
+return;
+Prog = program;
+logMode = mode;
+log(message, logMode);
+IncLvl();
+}
+public void log(string message, Mode mode)
 {
-log(msg);
+log(new StringBuilder(message), mode);
 }
+public void log(StringBuilder message, Mode mode)
+{
+StringBuilder msg = new StringBuilder().Append(Prefix);
+if (logMode != Mode.LOG && logMode != Mode.CONSOLE)
+msg.Append(logMode.ToString()).Append(": ");
+msg.Append(message);
+Log.Append(msg).Append("\n");
+if (logMode == Mode.CONSOLE)
+{
+Prog?.Echo(msg.ToString());
 }
-public static void IncLvl()
+//MERGESCRIPT TEST
+}
+public void IncLvl()
 {
 Prefix.Append("  ");
 }
-public static void DecLvl()
+public void DecLvl()
 {
 if( Prefix.Length >= 2)
 Prefix.Remove(Prefix.Length - 2, 2);
+}
+public virtual void Dispose()
+{
+DecLvl();
 }
 }
 
@@ -51,8 +71,10 @@ return dataString.ToString();
 }
 public static string Sanitize(string xmlDefinition)
 {
-Logger.debug("Parser.Sanitize()");
+using (new Logger("Parser.Sanitize"))
+{
 return xmlDefinition.Replace("\"", "\\\"").Replace("'", "\\'");
+}
 }
 public static string UnescapeQuotes(string xmlDefinition)
 {
@@ -68,15 +90,15 @@ return GetNextUnescaped(needles, haystack, start, haystack.Length - start);
 }
 public static int GetNextUnescaped(char[] needles, string haystack, int start, int count)
 {
-//Logger.debug("GetNextUnescaped():");
-//Logger.IncLvl();
+////Logger.debug("GetNextUnescaped():");
+////Logger.IncLvl();
 int end = start + count - 1;
 int needlePos = haystack.IndexOfAny(needles, start, end - start + 1);
 while (needlePos > 0 && haystack[needlePos - 1] == '\\')
 {
 needlePos = haystack.IndexOfAny(needles, needlePos + 1, end - needlePos);
 }
-//Logger.DecLvl();
+////Logger.DecLvl();
 return needlePos;
 }
 public static int GetNextOutsideQuotes(char needle, string haystack)
@@ -97,14 +119,12 @@ string haystack,
 bool ignoreEscapedQuotes
 )
 {
-//Logger.debug("GetNextOutsideQuotes():");
-//Logger.IncLvl();
+using (Logger logger = new Logger("GetNextOutsideQuotes():"))
+{
 char[] quoteChars = new char[] { '\'', '"' };
 int needlePos = -1;
 int quoteEnd = -1;
 int quoteStart;
-//Logger.debug("needle: |" + new string(needles) + "|");
-//Logger.debug("haystack: |" + haystack + "|");
 while (needlePos == -1)
 {
 if (ignoreEscapedQuotes)
@@ -115,18 +135,12 @@ else
 {
 quoteStart = haystack.IndexOfAny(quoteChars, quoteEnd + 1);
 }
-//Logger.debug("quoteStart position: " + quoteStart.ToString()
-//    + ", quoteEnd position: " + quoteEnd.ToString());
 if (quoteStart == -1)
 {
-//Logger.debug("searching for needle in:: " + haystack.Substring(quoteEnd + 1));
 needlePos = GetNextUnescaped(needles, haystack, quoteEnd + 1);
 }
 else
 {
-//Logger.debug("found start quote: " + haystack.Substring(quoteStart));
-//Logger.debug("searching for needle in: "
-//    + haystack.Substring(quoteEnd + 1, quoteStart - quoteEnd));
 needlePos = GetNextUnescaped(
 needles,
 haystack,
@@ -135,7 +149,7 @@ quoteStart - quoteEnd - 1
 );
 if (needlePos != -1)
 {
-Logger.debug("found needle: " + haystack.Substring(needlePos));
+//Logger.log("found needle: " + haystack.Substring(needlePos), Logger.Mode.DEBUG);
 }
 if (ignoreEscapedQuotes)
 {
@@ -149,17 +163,15 @@ else
 {
 quoteEnd = haystack.IndexOf(haystack[quoteStart], quoteStart + 1);
 }
-//Logger.debug("found end quote: " + haystack.Substring(quoteEnd));
 }
 }
-//Logger.debug("yay!");
-//Logger.DecLvl();
 return needlePos;
+}
 }
 public static List<String> ParamString2List(string arg)
 {
-//Logger.debug("Parser.ParamString2List()");
-//Logger.IncLvl();
+using (new Logger("Parser.ParamString2List(string)"))
+{
 arg = arg.Trim() + " ";
 List<string> argList = new List<string>();
 char[] quoteChars = new char[] { '\'', '"' };
@@ -170,41 +182,32 @@ arg = arg.Substring(spacePos + 1);
 spacePos = Parser.GetNextOutsideQuotes(new char[] { ' ', '\n' }, arg);
 argList.Add(arg.Substring(0, spacePos).Trim(quoteChars));
 }
-//Logger.DecLvl();
 return argList;
+}
 }
 public static Dictionary<string, string> GetXMLAttributes(string attributeString)
 {
-//Logger.debug("GetXMLAttributes():");
-//Logger.IncLvl();
-//Logger.debug("attribute string is: <" + attributeString + ">");
+using (new Logger("Parser.GetXMLAttributes(string)"))
+{
 Dictionary<string, string> attributes = new Dictionary<string, string>();
 char[] quoteChars = new char[] { '\'', '"' };
 List<string> attributeList = ParamString2List(attributeString);
-int equalSign;
+int equalChar;
 foreach (string attribute in attributeList)
 {
-equalSign = attribute.IndexOf('=');
-if (equalSign == -1)
+equalChar = attribute.IndexOf('=');
+if (equalChar == -1)
 {
 attributes[attribute.Substring(0).ToLower()] = "true";
 }
 else
 {
-attributes[attribute.Substring(0, equalSign).ToLower()] =
-attribute.Substring(equalSign + 1).Trim(quoteChars);
+attributes[attribute.Substring(0, equalChar).ToLower()] =
+attribute.Substring(equalChar + 1).Trim(quoteChars);
 }
 }
-//Logger.debug("attribute dict: {");
-//Logger.IncLvl();
-//foreach (string key in attributes.Keys)
-//{
-//Logger.debug(key + ": " + attributes[key]);
-//}
-//Logger.debug("}");
-//Logger.DecLvl();
-//Logger.DecLvl();
 return attributes;
+}
 }
 }
 
@@ -213,20 +216,9 @@ public static class TextUtils
 public enum FONT { DEFAULT, MONOSPACE };
 public static bool DEBUG = true;
 private static FONT selectedFont = FONT.DEFAULT;
-/*private static Dictionary<FONT, Dictionary<char, int>> LetterWidths = new Dictionary<FONT, Dictionary<char, int>>{
-{
-FONT.DEFAULT,
-new Dictionary<char, int> {
-{' ', 8 }, { '!', 8 }, { '"', 10}, {'#', 19}, {'$', 20}, {'%', 24}, {'&', 20}, {'\'', 6}, {'(', 9}, {')', 9}, {'*', 11}, {'+', 18}, {',', 9}, {'-', 10}, {'.', 9}, {'/', 14}, {'0', 19}, {'1', 9}, {'2', 19}, {'3', 17}, {'4', 19}, {'5', 19}, {'6', 19}, {'7', 16}, {'8', 19}, {'9', 19}, {':', 9}, {';', 9}, {'<', 18}, {'=', 18}, {'>', 18}, {'?', 16}, {'@', 25}, {'A', 21}, {'B', 21}, {'C', 19}, {'D', 21}, {'E', 18}, {'F', 17}, {'G', 20}, {'H', 20}, {'I', 8}, {'J', 16}, {'K', 17}, {'L', 15}, {'M', 26}, {'N', 21}, {'O', 21}, {'P', 20}, {'Q', 21}, {'R', 21}, {'S', 21}, {'T', 17}, {'U', 20}, {'V', 20}, {'W', 31}, {'X', 19}, {'Y', 20}, {'Z', 19}, {'[', 9}, {'\\', 12}, {']', 9}, {'^', 18}, {'_', 15}, {'`', 8}, {'a', 17}, {'b', 17}, {'c', 16}, {'d', 17}, {'e', 17}, {'f', 9}, {'g', 17}, {'h', 17}, {'i', 8}, {'j', 8}, {'k', 17}, {'l', 8}, {'m', 27}, {'n', 17}, {'o', 17}, {'p', 17}, {'q', 17}, {'r', 10}, {'s', 17}, {'t', 9}, {'u', 17}, {'v', 15}, {'w', 27}, {'x', 15}, {'y', 17}, {'z', 16}, {'{', 9}, {'|', 6}, {'}', 9}, {'~', 18}, {' ', 8}, {'¡', 8}, {'¢', 16}, {'£', 17}, {'¤', 19}, {'¥', 19}, {'¦', 6}, {'§', 20}, {'¨', 8}, {'©', 25}, {'ª', 10}, {'«', 15}, {'¬', 18}, {'­', 10}, {'®', 25}, {'¯', 8}, {'°', 12}, {'±', 18}, {'²', 11}, {'³', 11}, {'´', 8}, {'µ', 17}, {'¶', 18}, {'·', 9}, {'¸', 8}, {'¹', 11}, {'º', 10}, {'»', 15}, {'¼', 27}, {'½', 29}, {'¾', 28}, {'¿', 16}, {'À', 21}, {'Á', 21}, {'Â', 21}, {'Ã', 21}, {'Ä', 21}, {'Å', 21}, {'Æ', 31}, {'Ç', 19}, {'È', 18}, {'É', 18}, {'Ê', 18}, {'Ë', 18}, {'Ì', 8}, {'Í', 8}, {'Î', 8}, {'Ï', 8}, {'Ð', 21}, {'Ñ', 21}, {'Ò', 21}, {'Ó', 21}, {'Ô', 21}, {'Õ', 21}, {'Ö', 21}, {'×', 18}, {'Ø', 21}, {'Ù', 20}, {'Ú', 20}, {'Û', 20}, {'Ü', 20}, {'Ý', 17}, {'Þ', 20}, {'ß', 19}, {'à', 17}, {'á', 17}, {'â', 17}, {'ã', 17}, {'ä', 17}, {'å', 17}, {'æ', 28}, {'ç', 16}, {'è', 17}, {'é', 17}, {'ê', 17}, {'ë', 17}, {'ì', 8}, {'í', 8}, {'î', 8}, {'ï', 8}, {'ð', 17}, {'ñ', 17}, {'ò', 17}, {'ó', 17}, {'ô', 17}, {'õ', 17}, {'ö', 17}, {'÷', 18}, {'ø', 17}, {'ù', 17}, {'ú', 17}, {'û', 17}, {'ü', 17}, {'ý', 17}, {'þ', 17}, {'ÿ', 17}, {'Ā', 20}, {'ā', 17}, {'Ă', 21}, {'ă', 17}, {'Ą', 21}, {'ą', 17}, {'Ć', 19}, {'ć', 16}, {'Ĉ', 19}, {'ĉ', 16}, {'Ċ', 19}, {'ċ', 16}, {'Č', 19}, {'č', 16}, {'Ď', 21}, {'ď', 17}, {'Đ', 21}, {'đ', 17}, {'Ē', 18}, {'ē', 17}, {'Ĕ', 18}, {'ĕ', 17}, {'Ė', 18}, {'ė', 17}, {'Ę', 18}, {'ę', 17}, {'Ě', 18}, {'ě', 17}, {'Ĝ', 20}, {'ĝ', 17}, {'Ğ', 20}, {'ğ', 17}, {'Ġ', 20}, {'ġ', 17}, {'Ģ', 20}, {'ģ', 17}, {'Ĥ', 20}, {'ĥ', 17}, {'Ħ', 20}, {'ħ', 17}, {'Ĩ', 8}, {'ĩ', 8}, {'Ī', 8}, {'ī', 8}, {'Į', 8}, {'į', 8}, {'İ', 8}, {'ı', 8}, {'Ĳ', 24}, {'ĳ', 14}, {'Ĵ', 16}, {'ĵ', 8}, {'Ķ', 17}, {'ķ', 17}, {'Ĺ', 15}, {'ĺ', 8}, {'Ļ', 15}, {'ļ', 8}, {'Ľ', 15}, {'ľ', 8}, {'Ŀ', 15}, {'ŀ', 10}, {'Ł', 15}, {'ł', 8}, {'Ń', 21}, {'ń', 17}, {'Ņ', 21}, {'ņ', 17}, {'Ň', 21}, {'ň', 17}, {'ŉ', 17}, {'Ō', 21}, {'ō', 17}, {'Ŏ', 21}, {'ŏ', 17}, {'Ő', 21}, {'ő', 17}, {'Œ', 31}, {'œ', 28}, {'Ŕ', 21}, {'ŕ', 10}, {'Ŗ', 21}, {'ŗ', 10}, {'Ř', 21}, {'ř', 10}, {'Ś', 21}, {'ś', 17}, {'Ŝ', 21}, {'ŝ', 17}, {'Ş', 21}, {'ş', 17}, {'Š', 21}, {'š', 17}, {'Ţ', 17}, {'ţ', 9}, {'Ť', 17}, {'ť', 9}, {'Ŧ', 17}, {'ŧ', 9}, {'Ũ', 20}, {'ũ', 17}, {'Ū', 20}, {'ū', 17}, {'Ŭ', 20}, {'ŭ', 17}, {'Ů', 20}, {'ů', 17}, {'Ű', 20}, {'ű', 17}, {'Ų', 20}, {'ų', 17}, {'Ŵ', 31}, {'ŵ', 27}, {'Ŷ', 17}, {'ŷ', 17}, {'Ÿ', 17}, {'Ź', 19}, {'ź', 16}, {'Ż', 19}, {'ż', 16}, {'Ž', 19}, {'ž', 16}, {'ƒ', 19}, {'Ș', 21}, {'ș', 17}, {'Ț', 17}, {'ț', 9}, {'ˆ', 8}, {'ˇ', 8}, {'ˉ', 6}, {'˘', 8}, {'˙', 8}, {'˚', 8}, {'˛', 8}, {'˜', 8}, {'˝', 8}, {'Ё', 19}, {'Ѓ', 16}, {'Є', 18}, {'Ѕ', 21}, {'І', 8}, {'Ї', 8}, {'Ј', 16}, {'Љ', 28}, {'Њ', 21}, {'Ќ', 19}, {'Ў', 17}, {'Џ', 18}, {'А', 19}, {'Б', 19}, {'В', 19}, {'Г', 15}, {'Д', 19}, {'Е', 18}, {'Ж', 21}, {'З', 17}, {'И', 19}, {'Й', 19}, {'К', 17}, {'Л', 17}, {'М', 26}, {'Н', 18}, {'О', 20}, {'П', 19}, {'Р', 19}, {'С', 19}, {'Т', 19}, {'У', 19}, {'Ф', 20}, {'Х', 19}, {'Ц', 20}, {'Ч', 16}, {'Ш', 26}, {'Щ', 29}, {'Ъ', 20}, {'Ы', 24}, {'Ь', 19}, {'Э', 18}, {'Ю', 27}, {'Я', 20}, {'а', 16}, {'б', 17}, {'в', 16}, {'г', 15}, {'д', 17}, {'е', 17}, {'ж', 20}, {'з', 15}, {'и', 16}, {'й', 16}, {'к', 17}, {'л', 15}, {'м', 25}, {'н', 16}, {'о', 16}, {'п', 16}, {'р', 17}, {'с', 16}, {'т', 14}, {'у', 17}, {'ф', 21}, {'х', 15}, {'ц', 17}, {'ч', 15}, {'ш', 25}, {'щ', 27}, {'ъ', 16}, {'ы', 20}, {'ь', 16}, {'э', 14}, {'ю', 23}, {'я', 17}, {'ё', 17}, {'ђ', 17}, {'ѓ', 16}, {'є', 14}, {'ѕ', 16}, {'і', 8}, {'ї', 8}, {'ј', 7}, {'љ', 22}, {'њ', 25}, {'ћ', 17}, {'ќ', 16}, {'ў', 17}, {'џ', 17}, {'Ґ', 15}, {'ґ', 13}, {'–', 15}, {'—', 31}, {'‘', 6}, {'’', 6}, {'‚', 6}, {'“', 12}, {'”', 12}, {'„', 12}, {'†', 20}, {'‡', 20}, {'•', 15}, {'…', 31}, {'‰', 31}, {'‹', 8}, {'›', 8}, {'€', 19}, {'™', 30}, {'−', 18}, {'∙', 8}, {'□', 21}, {'', 40}, {'', 40}, {'', 40}, {'', 40}, {'', 41}, {'', 41}, {'', 32}, {'', 32}, {'', 40}, {'', 40}, {'', 34}, {'', 34}, {'', 40}, {'', 40}, {'', 40}, {'', 41}, {'', 32}, {'', 41}, {'', 32}, {'', 40}, {'', 40}, {'', 40}, {'', 40}, {'', 40}, {'', 40}, {'', 40}, {'', 40}
-}
-},
-{
-FONT.MONOSPACE,
-new Dictionary<char, int> {
-{' ', 24 }, { '!', 24 }, { '"', 24}, {'#', 24}, {'$', 24}, {'%', 24}, {'&', 24}, {'\'', 24}, {'(', 24}, {')', 24}, {'*', 24}, {'+', 24}, {',', 24}, {'-', 24}, {'.', 24}, {'/', 24}, {'0', 24}, {'1', 24}, {'2', 24}, {'3', 24}, {'4', 24}, {'5', 24}, {'6', 24}, {'7', 24}, {'8', 24}, {'9', 24}, {':', 24}, {';', 24}, {'<', 24}, {'=', 24}, {'>', 24}, {'?', 24}, {'@', 24}, {'A', 24}, {'B', 24}, {'C', 24}, {'D', 24}, {'E', 24}, {'F', 24}, {'G', 24}, {'H', 24}, {'I', 24}, {'J', 24}, {'K', 24}, {'L', 24}, {'M', 24}, {'N', 24}, {'O', 24}, {'P', 24}, {'Q', 24}, {'R', 24}, {'S', 24}, {'T', 24}, {'U', 24}, {'V', 24}, {'W', 24}, {'X', 24}, {'Y', 24}, {'Z', 24}, {'[', 24}, {'\\', 24}, {']', 24}, {'^', 24}, {'_', 24}, {'`', 24}, {'a', 24}, {'b', 24}, {'c', 24}, {'d', 24}, {'e', 24}, {'f', 24}, {'g', 24}, {'h', 24}, {'i', 24}, {'j', 24}, {'k', 24}, {'l', 24}, {'m', 24}, {'n', 24}, {'o', 24}, {'p', 24}, {'q', 24}, {'r', 24}, {'s', 24}, {'t', 24}, {'u', 24}, {'v', 24}, {'w', 24}, {'x', 24}, {'y', 24}, {'z', 24}, {'{', 24}, {'|', 24}, {'}', 24}, {'~', 24}, {' ', 24}, {'¡', 24}, {'¢', 24}, {'£', 24}, {'¤', 24}, {'¥', 24}, {'¦', 24}, {'§', 24}, {'¨', 24}, {'©', 24}, {'ª', 24}, {'«', 24}, {'¬', 24}, {'­', 24}, {'®', 24}, {'¯', 24}, {'°', 24}, {'±', 24}, {'²', 24}, {'³', 24}, {'´', 24}, {'µ', 24}, {'¶', 24}, {'·', 24}, {'¸', 24}, {'¹', 24}, {'º', 24}, {'»', 24}, {'¼', 24}, {'½', 24}, {'¾', 24}, {'¿', 24}, {'À', 24}, {'Á', 24}, {'Â', 24}, {'Ã', 24}, {'Ä', 24}, {'Å', 24}, {'Æ', 24}, {'Ç', 24}, {'È', 24}, {'É', 24}, {'Ê', 24}, {'Ë', 24}, {'Ì', 24}, {'Í', 24}, {'Î', 24}, {'Ï', 24}, {'Ð', 24}, {'Ñ', 24}, {'Ò', 24}, {'Ó', 24}, {'Ô', 24}, {'Õ', 24}, {'Ö', 24}, {'×', 24}, {'Ø', 24}, {'Ù', 24}, {'Ú', 24}, {'Û', 24}, {'Ü', 24}, {'Ý', 24}, {'Þ', 24}, {'ß', 24}, {'à', 24}, {'á', 24}, {'â', 24}, {'ã', 24}, {'ä', 24}, {'å', 24}, {'æ', 24}, {'ç', 24}, {'è', 24}, {'é', 24}, {'ê', 24}, {'ë', 24}, {'ì', 24}, {'í', 24}, {'î', 24}, {'ï', 24}, {'ð', 24}, {'ñ', 24}, {'ò', 24}, {'ó', 24}, {'ô', 24}, {'õ', 24}, {'ö', 24}, {'÷', 24}, {'ø', 24}, {'ù', 24}, {'ú', 24}, {'û', 24}, {'ü', 24}, {'ý', 24}, {'þ', 24}, {'ÿ', 24}, {'Ā', 24}, {'ā', 24}, {'Ă', 24}, {'ă', 24}, {'Ą', 24}, {'ą', 24}, {'Ć', 24}, {'ć', 24}, {'Ĉ', 24}, {'ĉ', 24}, {'Ċ', 24}, {'ċ', 24}, {'Č', 24}, {'č', 24}, {'Ď', 24}, {'ď', 24}, {'Đ', 24}, {'đ', 24}, {'Ē', 24}, {'ē', 24}, {'Ĕ', 24}, {'ĕ', 24}, {'Ė', 24}, {'ė', 24}, {'Ę', 24}, {'ę', 24}, {'Ě', 24}, {'ě', 24}, {'Ĝ', 24}, {'ĝ', 24}, {'Ğ', 24}, {'ğ', 24}, {'Ġ', 24}, {'ġ', 24}, {'Ģ', 24}, {'ģ', 24}, {'Ĥ', 24}, {'ĥ', 24}, {'Ħ', 24}, {'ħ', 24}, {'Ĩ', 24}, {'ĩ', 24}, {'Ī', 24}, {'ī', 24}, {'Į', 24}, {'į', 24}, {'İ', 24}, {'ı', 24}, {'Ĳ', 24}, {'ĳ', 24}, {'Ĵ', 24}, {'ĵ', 24}, {'Ķ', 24}, {'ķ', 24}, {'Ĺ', 24}, {'ĺ', 24}, {'Ļ', 24}, {'ļ', 24}, {'Ľ', 24}, {'ľ', 24}, {'Ŀ', 24}, {'ŀ', 24}, {'Ł', 24}, {'ł', 24}, {'Ń', 24}, {'ń', 24}, {'Ņ', 24}, {'ņ', 24}, {'Ň', 24}, {'ň', 24}, {'ŉ', 24}, {'Ō', 24}, {'ō', 24}, {'Ŏ', 24}, {'ŏ', 24}, {'Ő', 24}, {'ő', 24}, {'Œ', 24}, {'œ', 24}, {'Ŕ', 24}, {'ŕ', 24}, {'Ŗ', 24}, {'ŗ', 24}, {'Ř', 24}, {'ř', 24}, {'Ś', 24}, {'ś', 24}, {'Ŝ', 24}, {'ŝ', 24}, {'Ş', 24}, {'ş', 24}, {'Š', 24}, {'š', 24}, {'Ţ', 24}, {'ţ', 24}, {'Ť', 24}, {'ť', 24}, {'Ŧ', 24}, {'ŧ', 24}, {'Ũ', 24}, {'ũ', 24}, {'Ū', 24}, {'ū', 24}, {'Ŭ', 24}, {'ŭ', 24}, {'Ů', 24}, {'ů', 24}, {'Ű', 24}, {'ű', 24}, {'Ų', 24}, {'ų', 24}, {'Ŵ', 24}, {'ŵ', 24}, {'Ŷ', 24}, {'ŷ', 24}, {'Ÿ', 24}, {'Ź', 24}, {'ź', 24}, {'Ż', 24}, {'ż', 24}, {'Ž', 24}, {'ž', 24}, {'ƒ', 24}, {'Ș', 24}, {'ș', 24}, {'Ț', 24}, {'ț', 24}, {'ˆ', 24}, {'ˇ', 24}, {'ˉ', 24}, {'˘', 24}, {'˙', 24}, {'˚', 24}, {'˛', 24}, {'˜', 24}, {'˝', 24}, {'Ё', 24}, {'Ѓ', 24}, {'Є', 24}, {'Ѕ', 24}, {'І', 24}, {'Ї', 24}, {'Ј', 24}, {'Љ', 24}, {'Њ', 24}, {'Ќ', 24}, {'Ў', 24}, {'Џ', 24}, {'А', 24}, {'Б', 24}, {'В', 24}, {'Г', 24}, {'Д', 24}, {'Е', 24}, {'Ж', 24}, {'З', 24}, {'И', 24}, {'Й', 24}, {'К', 24}, {'Л', 24}, {'М', 24}, {'Н', 24}, {'О', 24}, {'П', 24}, {'Р', 24}, {'С', 24}, {'Т', 24}, {'У', 24}, {'Ф', 24}, {'Х', 24}, {'Ц', 24}, {'Ч', 24}, {'Ш', 24}, {'Щ', 24}, {'Ъ', 24}, {'Ы', 24}, {'Ь', 24}, {'Э', 24}, {'Ю', 24}, {'Я', 24}, {'а', 24}, {'б', 24}, {'в', 24}, {'г', 24}, {'д', 24}, {'е', 24}, {'ж', 24}, {'з', 24}, {'и', 24}, {'й', 24}, {'к', 24}, {'л', 24}, {'м', 24}, {'н', 24}, {'о', 24}, {'п', 24}, {'р', 24}, {'с', 24}, {'т', 24}, {'у', 24}, {'ф', 24}, {'х', 24}, {'ц', 24}, {'ч', 24}, {'ш', 24}, {'щ', 24}, {'ъ', 24}, {'ы', 24}, {'ь', 24}, {'э', 24}, {'ю', 24}, {'я', 24}, {'ё', 24}, {'ђ', 24}, {'ѓ', 24}, {'є', 24}, {'ѕ', 24}, {'і', 24}, {'ї', 24}, {'ј', 24}, {'љ', 24}, {'њ', 24}, {'ћ', 24}, {'ќ', 24}, {'ў', 24}, {'џ', 24}, {'Ґ', 24}, {'ґ', 24}, {'–', 24}, {'—', 24}, {'‘', 24}, {'’', 24}, {'‚', 24}, {'“', 24}, {'”', 24}, {'„', 24}, {'†', 24}, {'‡', 24}, {'•', 24}, {'…', 24}, {'‰', 24}, {'‹', 24}, {'›', 24}, {'€', 24}, {'™', 24}, {'−', 24}, {'∙', 24}, {'□', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}, {'', 24}
-}
-}
-};*/
+private static Dictionary<char, int> LetterWidths = new Dictionary<char, int>{
+{ ' ', 8 }, { '!', 8 }, { '"', 10}, {'#', 19}, {'$', 20}, {'%', 24}, {'&', 20}, {'\'', 6}, {'(', 9}, {')', 9}, {'*', 11}, {'+', 18}, {',', 9}, {'-', 10}, {'.', 9}, {'/', 14}, {'0', 19}, {'1', 9}, {'2', 19}, {'3', 17}, {'4', 19}, {'5', 19}, {'6', 19}, {'7', 16}, {'8', 19}, {'9', 19}, {':', 9}, {';', 9}, {'<', 18}, {'=', 18}, {'>', 18}, {'?', 16}, {'@', 25}, {'A', 21}, {'B', 21}, {'C', 19}, {'D', 21}, {'E', 18}, {'F', 17}, {'G', 20}, {'H', 20}, {'I', 8}, {'J', 16}, {'K', 17}, {'L', 15}, {'M', 26}, {'N', 21}, {'O', 21}, {'P', 20}, {'Q', 21}, {'R', 21}, {'S', 21}, {'T', 17}, {'U', 20}, {'V', 20}, {'W', 31}, {'X', 19}, {'Y', 20}, {'Z', 19}, {'[', 9}, {'\\', 12}, {']', 9}, {'^', 18}, {'_', 15}, {'`', 8}, {'a', 17}, {'b', 17}, {'c', 16}, {'d', 17}, {'e', 17}, {'f', 9}, {'g', 17}, {'h', 17}, {'i', 8}, {'j', 8}, {'k', 17}, {'l', 8}, {'m', 27}, {'n', 17}, {'o', 17}, {'p', 17}, {'q', 17}, {'r', 10}, {'s', 17}, {'t', 9}, {'u', 17}, {'v', 15}, {'w', 27}, {'x', 15}, {'y', 17}, {'z', 16}, {'{', 9}, {'|', 6}, {'}', 9}, {'~', 18}, {' ', 8}, {'¡', 8}, {'¢', 16}, {'£', 17}, {'¤', 19}, {'¥', 19}, {'¦', 6}, {'§', 20}, {'¨', 8}, {'©', 25}, {'ª', 10}, {'«', 15}, {'¬', 18}, {'­', 10}, {'®', 25}, {'¯', 8}, {'°', 12}, {'±', 18}, {'²', 11}, {'³', 11}, {'´', 8}, {'µ', 17}, {'¶', 18}, {'·', 9}, {'¸', 8}, {'¹', 11}, {'º', 10}, {'»', 15}, {'¼', 27}, {'½', 29}, {'¾', 28}, {'¿', 16}, {'À', 21}, {'Á', 21}, {'Â', 21}, {'Ã', 21}, {'Ä', 21}, {'Å', 21}, {'Æ', 31}, {'Ç', 19}, {'È', 18}, {'É', 18}, {'Ê', 18}, {'Ë', 18}, {'Ì', 8}, {'Í', 8}, {'Î', 8}, {'Ï', 8}, {'Ð', 21}, {'Ñ', 21}, {'Ò', 21}, {'Ó', 21}, {'Ô', 21}, {'Õ', 21}, {'Ö', 21}, {'×', 18}, {'Ø', 21}, {'Ù', 20}, {'Ú', 20}, {'Û', 20}, {'Ü', 20}, {'Ý', 17}, {'Þ', 20}, {'ß', 19}, {'à', 17}, {'á', 17}, {'â', 17}, {'ã', 17}, {'ä', 17}, {'å', 17}, {'æ', 28}, {'ç', 16}, {'è', 17}, {'é', 17}, {'ê', 17}, {'ë', 17}, {'ì', 8}, {'í', 8}, {'î', 8}, {'ï', 8}, {'ð', 17}, {'ñ', 17}, {'ò', 17}, {'ó', 17}, {'ô', 17}, {'õ', 17}, {'ö', 17}, {'÷', 18}, {'ø', 17}, {'ù', 17}, {'ú', 17}, {'û', 17}, {'ü', 17}, {'ý', 17}, {'þ', 17}, {'ÿ', 17}, {'Ā', 20}, {'ā', 17}, {'Ă', 21}, {'ă', 17}, {'Ą', 21}, {'ą', 17}, {'Ć', 19}, {'ć', 16}, {'Ĉ', 19}, {'ĉ', 16}, {'Ċ', 19}, {'ċ', 16}, {'Č', 19}, {'č', 16}, {'Ď', 21}, {'ď', 17}, {'Đ', 21}, {'đ', 17}, {'Ē', 18}, {'ē', 17}, {'Ĕ', 18}, {'ĕ', 17}, {'Ė', 18}, {'ė', 17}, {'Ę', 18}, {'ę', 17}, {'Ě', 18}, {'ě', 17}, {'Ĝ', 20}, {'ĝ', 17}, {'Ğ', 20}, {'ğ', 17}, {'Ġ', 20}, {'ġ', 17}, {'Ģ', 20}, {'ģ', 17}, {'Ĥ', 20}, {'ĥ', 17}, {'Ħ', 20}, {'ħ', 17}, {'Ĩ', 8}, {'ĩ', 8}, {'Ī', 8}, {'ī', 8}, {'Į', 8}, {'į', 8}, {'İ', 8}, {'ı', 8}, {'Ĳ', 24}, {'ĳ', 14}, {'Ĵ', 16}, {'ĵ', 8}, {'Ķ', 17}, {'ķ', 17}, {'Ĺ', 15}, {'ĺ', 8}, {'Ļ', 15}, {'ļ', 8}, {'Ľ', 15}, {'ľ', 8}, {'Ŀ', 15}, {'ŀ', 10}, {'Ł', 15}, {'ł', 8}, {'Ń', 21}, {'ń', 17}, {'Ņ', 21}, {'ņ', 17}, {'Ň', 21}, {'ň', 17}, {'ŉ', 17}, {'Ō', 21}, {'ō', 17}, {'Ŏ', 21}, {'ŏ', 17}, {'Ő', 21}, {'ő', 17}, {'Œ', 31}, {'œ', 28}, {'Ŕ', 21}, {'ŕ', 10}, {'Ŗ', 21}, {'ŗ', 10}, {'Ř', 21}, {'ř', 10}, {'Ś', 21}, {'ś', 17}, {'Ŝ', 21}, {'ŝ', 17}, {'Ş', 21}, {'ş', 17}, {'Š', 21}, {'š', 17}, {'Ţ', 17}, {'ţ', 9}, {'Ť', 17}, {'ť', 9}, {'Ŧ', 17}, {'ŧ', 9}, {'Ũ', 20}, {'ũ', 17}, {'Ū', 20}, {'ū', 17}, {'Ŭ', 20}, {'ŭ', 17}, {'Ů', 20}, {'ů', 17}, {'Ű', 20}, {'ű', 17}, {'Ų', 20}, {'ų', 17}, {'Ŵ', 31}, {'ŵ', 27}, {'Ŷ', 17}, {'ŷ', 17}, {'Ÿ', 17}, {'Ź', 19}, {'ź', 16}, {'Ż', 19}, {'ż', 16}, {'Ž', 19}, {'ž', 16}, {'ƒ', 19}, {'Ș', 21}, {'ș', 17}, {'Ț', 17}, {'ț', 9}, {'ˆ', 8}, {'ˇ', 8}, {'ˉ', 6}, {'˘', 8}, {'˙', 8}, {'˚', 8}, {'˛', 8}, {'˜', 8}, {'˝', 8}, {'Ё', 19}, {'Ѓ', 16}, {'Є', 18}, {'Ѕ', 21}, {'І', 8}, {'Ї', 8}, {'Ј', 16}, {'Љ', 28}, {'Њ', 21}, {'Ќ', 19}, {'Ў', 17}, {'Џ', 18}, {'А', 19}, {'Б', 19}, {'В', 19}, {'Г', 15}, {'Д', 19}, {'Е', 18}, {'Ж', 21}, {'З', 17}, {'И', 19}, {'Й', 19}, {'К', 17}, {'Л', 17}, {'М', 26}, {'Н', 18}, {'О', 20}, {'П', 19}, {'Р', 19}, {'С', 19}, {'Т', 19}, {'У', 19}, {'Ф', 20}, {'Х', 19}, {'Ц', 20}, {'Ч', 16}, {'Ш', 26}, {'Щ', 29}, {'Ъ', 20}, {'Ы', 24}, {'Ь', 19}, {'Э', 18}, {'Ю', 27}, {'Я', 20}, {'а', 16}, {'б', 17}, {'в', 16}, {'г', 15}, {'д', 17}, {'е', 17}, {'ж', 20}, {'з', 15}, {'и', 16}, {'й', 16}, {'к', 17}, {'л', 15}, {'м', 25}, {'н', 16}, {'о', 16}, {'п', 16}, {'р', 17}, {'с', 16}, {'т', 14}, {'у', 17}, {'ф', 21}, {'х', 15}, {'ц', 17}, {'ч', 15}, {'ш', 25}, {'щ', 27}, {'ъ', 16}, {'ы', 20}, {'ь', 16}, {'э', 14}, {'ю', 23}, {'я', 17}, {'ё', 17}, {'ђ', 17}, {'ѓ', 16}, {'є', 14}, {'ѕ', 16}, {'і', 8}, {'ї', 8}, {'ј', 7}, {'љ', 22}, {'њ', 25}, {'ћ', 17}, {'ќ', 16}, {'ў', 17}, {'џ', 17}, {'Ґ', 15}, {'ґ', 13}, {'–', 15}, {'—', 31}, {'‘', 6}, {'’', 6}, {'‚', 6}, {'“', 12}, {'”', 12}, {'„', 12}, {'†', 20}, {'‡', 20}, {'•', 15}, {'…', 31}, {'‰', 31}, {'‹', 8}, {'›', 8}, {'€', 19}, {'™', 30}, {'−', 18}, {'∙', 8}, {'□', 21}, {'', 40}, {'', 40}, {'', 40}, {'', 40}, {'', 41}, {'', 41}, {'', 32}, {'', 32}, {'', 40}, {'', 40}, {'', 34}, {'', 34}, {'', 40}, {'', 40}, {'', 40}, {'', 41}, {'', 32}, {'', 41}, {'', 32}, {'', 40}, {'', 40}, {'', 40}, {'', 40}, {'', 40}, {'', 40}, {'', 40}, {'', 40}
+};
 public enum PadMode { LEFT, RIGHT, BOTH };
 public enum RoundMode { FLOOR, CEIL };
 public static void SelectFont(FONT f)
@@ -237,31 +229,26 @@ public static void Reset()
 {
 selectedFont = FONT.DEFAULT;
 }
-public static int GetLetterWidth(char c)
+public static int GetCharWidth(char c)
 {
-switch (selectedFont)
+if(selectedFont == FONT.MONOSPACE)
 {
-case FONT.DEFAULT:
-switch (c)
-{
-case ' ': return 8; case '!': return 8; case '"': return 10; case '#': return 19; case '$': return 20; case '%': return 24; case '&': return 20; case '\'': return 6; case '(': return 9; case ')': return 9; case '*': return 11; case '+': return 18; case ',': return 9; case '-': return 10; case '.': return 9; case '/': return 14; case '0': return 19; case '1': return 9; case '2': return 19; case '3': return 17; case '4': return 19; case '5': return 19; case '6': return 19; case '7': return 16; case '8': return 19; case '9': return 19; case ':': return 9; case ';': return 9; case '<': return 18; case '=': return 18; case '>': return 18; case '?': return 16; case '@': return 25; case 'A': return 21; case 'B': return 21; case 'C': return 19; case 'D': return 21; case 'E': return 18; case 'F': return 17; case 'G': return 20; case 'H': return 20; case 'I': return 8; case 'J': return 16; case 'K': return 17; case 'L': return 15; case 'M': return 26; case 'N': return 21; case 'O': return 21; case 'P': return 20; case 'Q': return 21; case 'R': return 21; case 'S': return 21; case 'T': return 17; case 'U': return 20; case 'V': return 20; case 'W': return 31; case 'X': return 19; case 'Y': return 20; case 'Z': return 19; case '[': return 9; case '\\': return 12; case ']': return 9; case '^': return 18; case '_': return 15; case '`': return 8; case 'a': return 17; case 'b': return 17; case 'c': return 16; case 'd': return 17; case 'e': return 17; case 'f': return 9; case 'g': return 17; case 'h': return 17; case 'i': return 8; case 'j': return 8; case 'k': return 17; case 'l': return 8; case 'm': return 27; case 'n': return 17; case 'o': return 17; case 'p': return 17; case 'q': return 17; case 'r': return 10; case 's': return 17; case 't': return 9; case 'u': return 17; case 'v': return 15; case 'w': return 27; case 'x': return 15; case 'y': return 17; case 'z': return 16; case '{': return 9; case '|': return 6; case '}': return 9; case '~': return 18; case ' ': return 8; case '¡': return 8; case '¢': return 16; case '£': return 17; case '¤': return 19; case '¥': return 19; case '¦': return 6; case '§': return 20; case '¨': return 8; case '©': return 25; case 'ª': return 10; case '«': return 15; case '¬': return 18; case '­': return 10; case '®': return 25; case '¯': return 8; case '°': return 12; case '±': return 18; case '²': return 11; case '³': return 11; case '´': return 8; case 'µ': return 17; case '¶': return 18; case '·': return 9; case '¸': return 8; case '¹': return 11; case 'º': return 10; case '»': return 15; case '¼': return 27; case '½': return 29; case '¾': return 28; case '¿': return 16; case 'À': return 21; case 'Á': return 21; case 'Â': return 21; case 'Ã': return 21; case 'Ä': return 21; case 'Å': return 21; case 'Æ': return 31; case 'Ç': return 19; case 'È': return 18; case 'É': return 18; case 'Ê': return 18; case 'Ë': return 18; case 'Ì': return 8; case 'Í': return 8; case 'Î': return 8; case 'Ï': return 8; case 'Ð': return 21; case 'Ñ': return 21; case 'Ò': return 21; case 'Ó': return 21; case 'Ô': return 21; case 'Õ': return 21; case 'Ö': return 21; case '×': return 18; case 'Ø': return 21; case 'Ù': return 20; case 'Ú': return 20; case 'Û': return 20; case 'Ü': return 20; case 'Ý': return 17; case 'Þ': return 20; case 'ß': return 19; case 'à': return 17; case 'á': return 17; case 'â': return 17; case 'ã': return 17; case 'ä': return 17; case 'å': return 17; case 'æ': return 28; case 'ç': return 16; case 'è': return 17; case 'é': return 17; case 'ê': return 17; case 'ë': return 17; case 'ì': return 8; case 'í': return 8; case 'î': return 8; case 'ï': return 8; case 'ð': return 17; case 'ñ': return 17; case 'ò': return 17; case 'ó': return 17; case 'ô': return 17; case 'õ': return 17; case 'ö': return 17; case '÷': return 18; case 'ø': return 17; case 'ù': return 17; case 'ú': return 17; case 'û': return 17; case 'ü': return 17; case 'ý': return 17; case 'þ': return 17; case 'ÿ': return 17; case 'Ā': return 20; case 'ā': return 17; case 'Ă': return 21; case 'ă': return 17; case 'Ą': return 21; case 'ą': return 17; case 'Ć': return 19; case 'ć': return 16; case 'Ĉ': return 19; case 'ĉ': return 16; case 'Ċ': return 19; case 'ċ': return 16; case 'Č': return 19; case 'č': return 16; case 'Ď': return 21; case 'ď': return 17; case 'Đ': return 21; case 'đ': return 17; case 'Ē': return 18; case 'ē': return 17; case 'Ĕ': return 18; case 'ĕ': return 17; case 'Ė': return 18; case 'ė': return 17; case 'Ę': return 18; case 'ę': return 17; case 'Ě': return 18; case 'ě': return 17; case 'Ĝ': return 20; case 'ĝ': return 17; case 'Ğ': return 20; case 'ğ': return 17; case 'Ġ': return 20; case 'ġ': return 17; case 'Ģ': return 20; case 'ģ': return 17; case 'Ĥ': return 20; case 'ĥ': return 17; case 'Ħ': return 20; case 'ħ': return 17; case 'Ĩ': return 8; case 'ĩ': return 8; case 'Ī': return 8; case 'ī': return 8; case 'Į': return 8; case 'į': return 8; case 'İ': return 8; case 'ı': return 8; case 'Ĳ': return 24; case 'ĳ': return 14; case 'Ĵ': return 16; case 'ĵ': return 8; case 'Ķ': return 17; case 'ķ': return 17; case 'Ĺ': return 15; case 'ĺ': return 8; case 'Ļ': return 15; case 'ļ': return 8; case 'Ľ': return 15; case 'ľ': return 8; case 'Ŀ': return 15; case 'ŀ': return 10; case 'Ł': return 15; case 'ł': return 8; case 'Ń': return 21; case 'ń': return 17; case 'Ņ': return 21; case 'ņ': return 17; case 'Ň': return 21; case 'ň': return 17; case 'ŉ': return 17; case 'Ō': return 21; case 'ō': return 17; case 'Ŏ': return 21; case 'ŏ': return 17; case 'Ő': return 21; case 'ő': return 17; case 'Œ': return 31; case 'œ': return 28; case 'Ŕ': return 21; case 'ŕ': return 10; case 'Ŗ': return 21; case 'ŗ': return 10; case 'Ř': return 21; case 'ř': return 10; case 'Ś': return 21; case 'ś': return 17; case 'Ŝ': return 21; case 'ŝ': return 17; case 'Ş': return 21; case 'ş': return 17; case 'Š': return 21; case 'š': return 17; case 'Ţ': return 17; case 'ţ': return 9; case 'Ť': return 17; case 'ť': return 9; case 'Ŧ': return 17; case 'ŧ': return 9; case 'Ũ': return 20; case 'ũ': return 17; case 'Ū': return 20; case 'ū': return 17; case 'Ŭ': return 20; case 'ŭ': return 17; case 'Ů': return 20; case 'ů': return 17; case 'Ű': return 20; case 'ű': return 17; case 'Ų': return 20; case 'ų': return 17; case 'Ŵ': return 31; case 'ŵ': return 27; case 'Ŷ': return 17; case 'ŷ': return 17; case 'Ÿ': return 17; case 'Ź': return 19; case 'ź': return 16; case 'Ż': return 19; case 'ż': return 16; case 'Ž': return 19; case 'ž': return 16; case 'ƒ': return 19; case 'Ș': return 21; case 'ș': return 17; case 'Ț': return 17; case 'ț': return 9; case 'ˆ': return 8; case 'ˇ': return 8; case 'ˉ': return 6; case '˘': return 8; case '˙': return 8; case '˚': return 8; case '˛': return 8; case '˜': return 8; case '˝': return 8; case 'Ё': return 19; case 'Ѓ': return 16; case 'Є': return 18; case 'Ѕ': return 21; case 'І': return 8; case 'Ї': return 8; case 'Ј': return 16; case 'Љ': return 28; case 'Њ': return 21; case 'Ќ': return 19; case 'Ў': return 17; case 'Џ': return 18; case 'А': return 19; case 'Б': return 19; case 'В': return 19; case 'Г': return 15; case 'Д': return 19; case 'Е': return 18; case 'Ж': return 21; case 'З': return 17; case 'И': return 19; case 'Й': return 19; case 'К': return 17; case 'Л': return 17; case 'М': return 26; case 'Н': return 18; case 'О': return 20; case 'П': return 19; case 'Р': return 19; case 'С': return 19; case 'Т': return 19; case 'У': return 19; case 'Ф': return 20; case 'Х': return 19; case 'Ц': return 20; case 'Ч': return 16; case 'Ш': return 26; case 'Щ': return 29; case 'Ъ': return 20; case 'Ы': return 24; case 'Ь': return 19; case 'Э': return 18; case 'Ю': return 27; case 'Я': return 20; case 'а': return 16; case 'б': return 17; case 'в': return 16; case 'г': return 15; case 'д': return 17; case 'е': return 17; case 'ж': return 20; case 'з': return 15; case 'и': return 16; case 'й': return 16; case 'к': return 17; case 'л': return 15; case 'м': return 25; case 'н': return 16; case 'о': return 16; case 'п': return 16; case 'р': return 17; case 'с': return 16; case 'т': return 14; case 'у': return 17; case 'ф': return 21; case 'х': return 15; case 'ц': return 17; case 'ч': return 15; case 'ш': return 25; case 'щ': return 27; case 'ъ': return 16; case 'ы': return 20; case 'ь': return 16; case 'э': return 14; case 'ю': return 23; case 'я': return 17; case 'ё': return 17; case 'ђ': return 17; case 'ѓ': return 16; case 'є': return 14; case 'ѕ': return 16; case 'і': return 8; case 'ї': return 8; case 'ј': return 7; case 'љ': return 22; case 'њ': return 25; case 'ћ': return 17; case 'ќ': return 16; case 'ў': return 17; case 'џ': return 17; case 'Ґ': return 15; case 'ґ': return 13; case '–': return 15; case '—': return 31; case '‘': return 6; case '’': return 6; case '‚': return 6; case '“': return 12; case '”': return 12; case '„': return 12; case '†': return 20; case '‡': return 20; case '•': return 15; case '…': return 31; case '‰': return 31; case '‹': return 8; case '›': return 8; case '€': return 19; case '™': return 30; case '−': return 18; case '∙': return 8; case '□': return 21; case '': return 40; case '': return 40; case '': return 40; case '': return 40; case '': return 41; case '': return 41; case '': return 32; case '': return 32; case '': return 40; case '': return 40; case '': return 34; case '': return 34; case '': return 40; case '': return 40; case '': return 40; case '': return 41; case '': return 32; case '': return 41; case '': return 32; case '': return 40; case '': return 40; case '': return 40; case '': return 40; case '': return 40; case '': return 40; case '': return 40; case '': return 40;
-default:
-return 6;
-}
-case FONT.MONOSPACE:
 return 24;
-default:
-return 10;
 }
+
+int v = 0;
+if (LetterWidths.ContainsKey(c)) return LetterWidths[c];
+return 8;
 }
-public static int GetTextWidth(StringBuilder text)
+public static int GetTextWidth(string text)
 {
 return GetTextWidth(text, 0, text.Length);
 }
-public static int GetTextWidth(StringBuilder text, int start, int length)
+public static int GetTextWidth(string text, int start, int length)
 {
-Logger.debug("TextUtils.GetTextWidth()");
-Logger.IncLvl();
+using (new SimpleProfiler("TextUtils.GetTextWidth(StringBuilder, int, int)"))
+{
+string[] lines = text.Substring(start, length).Split('\n');
 if (start + length > text.Length)
 {
 throw new Exception("ERROR: stringbuilder slice exceeds the stringbuilders length!");
@@ -269,80 +256,119 @@ throw new Exception("ERROR: stringbuilder slice exceeds the stringbuilders lengt
 text = text.Replace("\r", "");
 int width = 0;
 int lineWidth = 0;
-for (int i = start; i < start + length; i++)
+int v;
+foreach(string line in lines)
 {
-if(text[i] == '\n')
+if (selectedFont == FONT.MONOSPACE)
 {
-width = Math.Max(width, lineWidth - 1);
-lineWidth = 0;
+lineWidth = (line.Length * 25) - 1;
 }
 else
 {
-lineWidth += GetLetterWidth(text[i]) + 1;
+lineWidth = line.Select(c => LetterWidths.GetValueOrDefault(c, 6)).Sum() + line.Length;
+/*foreach (char c in line)
+{
+v = 6;
+//switch (c)
+//{
+//    case' ': v=8;break;case'!': v=8;break;case'"': v=10;break;case'#': v=19;break;case'$': v=20;break;case'%': v=24;break;case'&': v=20;break;case'\'': v=6;break;case'(': v=9;break;case')': v=9;break;case'*': v=11;break;case'+': v=18;break;case',': v=9;break;case'-': v=10;break;case'.': v=9;break;case'/': v=14;break;case'0': v=19;break;case'1': v=9;break;case'2': v=19;break;case'3': v=17;break;case'4': v=19;break;case'5': v=19;break;case'6': v=19;break;case'7': v=16;break;case'8': v=19;break;case'9': v=19;break;case':': v=9;break;case';':v=9;break;case'<': v=18;break;case'=': v=18;break;case'>': v=18;break;case'?': v=16;break;case'@': v=25;break;case'A': v=21;break;case'B': v=21;break;case'C': v=19;break;case'D': v=21;break;case'E': v=18;break;case'F': v=17;break;case'G': v=20;break;case'H': v=20;break;case'I': v=8;break;case'J': v=16;break;case'K': v=17;break;case'L': v=15;break;case'M': v=26;break;case'N': v=21;break;case'O': v=21;break;case'P': v=20;break;case'Q': v=21;break;case'R': v=21;break;case'S': v=21;break;case'T': v=17;break;case'U': v=20;break;case'V': v=20;break;case'W': v=31;break;case'X': v=19;break;case'Y': v=20;break;case'Z': v=19;break;case'[': v=9;break;case'\\': v=12;break;case']': v=9;break;case'^': v=18;break;case'_': v=15;break;case'`': v=8;break;case'a': v=17;break;case'b': v=17;break;case'c': v=16;break;case'd': v=17;break;case'e': v=17;break;case'f': v=9;break;case'g': v=17;break;case'h': v=17;break;case'i': v=8;break;case'j': v=8;break;case'k': v=17;break;case'l': v=8;break;case'm': v=27;break;case'n': v=17;break;case'o': v=17;break;case'p': v=17;break;case'q': v=17;break;case'r': v=10;break;case's': v=17;break;case't': v=9;break;case'u': v=17;break;case'v': v=15;break;case'w': v=27;break;case'x': v=15;break;case'y': v=17;break;case'z': v=16;break;case'{': v=9;break;case'|': v=6;break;case'}': v=9;break;case'~': v=18;break;case' ': v=8;break;case'¡': v=8;break;case'¢': v=16;break;case'£': v=17;break;case'¤': v=19;break;case'¥': v=19;break;case'¦': v=6;break;case'§': v=20;break;case'¨': v=8;break;case'©': v=25;break;case'ª': v=10;break;case'«': v=15;break;case'¬': v=18;break;case'­': v=10;break;case'®': v=25;break;case'¯': v=8;break;case'°': v=12;break;case'±': v=18;break;case'²': v=11;break;case'³': v=11;break;case'´': v=8;break;case'µ': v=17;break;case'¶': v=18;break;case'·': v=9;break;case'¸': v=8;break;case'¹': v=11;break;case'º': v=10;break;case'»': v=15;break;case'¼': v=27;break;case'½': v=29;break;case'¾': v=28;break;case'¿': v=16;break;case'À': v=21;break;case'Á': v=21;break;case'Â': v=21;break;case'Ã': v=21;break;case'Ä': v=21;break;case'Å': v=21;break;case'Æ': v=31;break;case'Ç': v=19;break;case'È': v=18;break;case'É': v=18;break;case'Ê': v=18;break;case'Ë': v=18;break;case'Ì': v=8;break;case'Í': v=8;break;case'Î': v=8;break;case'Ï': v=8;break;case'Ð': v=21;break;case'Ñ': v=21;break;case'Ò': v=21;break;case'Ó': v=21;break;case'Ô': v=21;break;case'Õ': v=21;break;case'Ö': v=21;break;case'×': v=18;break;case'Ø': v=21;break;case'Ù': v=20;break;case'Ú': v=20;break;case'Û': v=20;break;case'Ü': v=20;break;case'Ý': v=17;break;case'Þ': v=20;break;case'ß': v=19;break;case'à': v=17;break;case'á': v=17;break;case'â': v=17;break;case'ã': v=17;break;case'ä': v=17;break;case'å': v=17;break;case'æ': v=28;break;case'ç': v=16;break;case'è': v=17;break;case'é': v=17;break;case'ê': v=17;break;case'ë': v=17;break;case'ì': v=8;break;case'í': v=8;break;case'î': v=8;break;case'ï': v=8;break;case'ð': v=17;break;case'ñ': v=17;break;case'ò': v=17;break;case'ó': v=17;break;case'ô': v=17;break;case'õ': v=17;break;case'ö': v=17;break;case'÷': v=18;break;case'ø': v=17;break;case'ù': v=17;break;case'ú': v=17;break;case'û': v=17;break;case'ü': v=17;break;case'ý': v=17;break;case'þ': v=17;break;case'ÿ': return 17;break;case'Ā': return 20;break;case'ā': v=17;break;case'Ă': v=21;break;case'ă': v=17;break;case'Ą': v=21;break;case'ą': v=17;break;case'Ć': v=19;break;case'ć': v=16;break;case'Ĉ': v=19;break;case'ĉ': v=16;break;case'Ċ': v=19;break;case'ċ': v=16;break;case'Č': v=19;break;case'č': v=16;break;case'Ď': v=21;break;case'ď': v=17;break;case'Đ': v=21;break;case'đ': v=17;break;case'Ē': v=18;break;case'ē': v=17;break;case'Ĕ': v=18;break;case'ĕ': v=17;break;case'Ė': v=18;break;case'ė': v=17;break;case'Ę': v=18;break;case'ę': v=17;break;case'Ě': v=18;break;case'ě': v=17;break;case'Ĝ': v=20;break;case'ĝ': v=17;break;case'Ğ': v=20;break;case'ğ': v=17;break;case'Ġ': v=20;break;case'ġ': v=17;break;case'Ģ': v=20;break;case'ģ': v=17;break;case'Ĥ': v=20;break;case'ĥ': v=17;break;case'Ħ': v=20;break;case'ħ': v=17;break;case'Ĩ': v=8;break;case'ĩ': v=8;break;case'Ī': v=8;break;case'ī': v=8;break;case'Į': v=8;break;case'į': v=8;break;case'İ': v=8;break;case'ı': v=8;break;case'Ĳ': v=24;break;case'ĳ': v=14;break;case'Ĵ': v=16;break;case'ĵ': v=8;break;case'Ķ': v=17;break;case'ķ': v=17;break;case'Ĺ': v=15;break;case'ĺ': v=8;break;case'Ļ': v=15;break;case'ļ': v=8;break;case'Ľ': v=15;break;case'ľ': v=8;break;case'Ŀ': v=15;break;case'ŀ': v=10;break;case'Ł': v=15;break;case'ł': v=8;break;case'Ń': v=21;break;case'ń': v=17;break;case'Ņ': v=21;break;case'ņ': v=17;break;case'Ň': v=21;break;case'ň': v=17;break;case'ŉ': v=17;break;case'Ō': v=21;break;case'ō': v=17;break;case'Ŏ': v=21;break;case'ŏ': v=17;break;case'Ő': v=21;break;case'ő': v=17;break;case'Œ': v=31;break;case'œ': v=28;break;case'Ŕ': v=21;break;case'ŕ': v=10;break;case'Ŗ': v=21;break;case'ŗ': v=10;break;case'Ř': v=21;break;case'ř': v=10;break;case'Ś': v=21;break;case'ś': v=17;break;case'Ŝ': v=21;break;case'ŝ': v=17;break;case'Ş': v=21;break;case'ş': v=17;break;case'Š': v=21;break;case'š': v=17;break;case'Ţ': v=17;break;case'ţ': v=9;break;case'Ť': v=17;break;case'ť': v=9;break;case'Ŧ': v=17;break;case'ŧ': v=9;break;case'Ũ': v=20;break;case'ũ': v=17;break;case'Ū': v=20;break;case'ū': v=17;break;case'Ŭ': v=20;break;case'ŭ': v=17;break;case'Ů': v=20;break;case'ů': v=17;break;case'Ű': v=20;break;case'ű': v=17;break;case'Ų': v=20;break;case'ų': v=17;break;case'Ŵ': v=31;break;case'ŵ': v=27;break;case'Ŷ': v=17;break;case'ŷ': v=17;break;case'Ÿ': return 17;break;case'Ź': return 19;break;case'ź': v=16;break;case'Ż': v=19;break;case'ż': v=16;break;case'Ž': v=19;break;case'ž': v=16;break;case'ƒ': v=19;break;case'Ș': v=21;break;case'ș': v=17;break;case'Ț': v=17;break;case'ț': v=9;break;case'ˆ': v=8;break;case'ˇ': v=8;break;case'ˉ': v=6;break;case'˘': v=8;break;case'˙': v=8;break;case'˚': v=8;break;case'˛': v=8;break;case'˜': v=8;break;case'˝': v=8;break;case'Ё': v=19;break;case'Ѓ': v=16;break;case'Є': v=18;break;case'Ѕ': v=21;break;case'І': v=8;break;case'Ї': v=8;break;case'Ј': v=16;break;case'Љ': v=28;break;case'Њ': v=21;break;case'Ќ': v=19;break;case'Ў': v=17;break;case'Џ': v=18;break;case'А': v=19;break;case'Б': v=19;break;case'В': v=19;break;case'Г': v=15;break;case'Д': v=19;break;case'Е': v=18;break;case'Ж': v=21;break;case'З': v=17;break;case'И': v=19;break;case'Й': v=19;break;case'К': v=17;break;case'Л': v=17;break;case'М': v=26;break;case'Н': v=18;break;case'О': v=20;break;case'П': v=19;break;case'Р': v=19;break;case'С': v=19;break;case'Т': v=19;break;case'У': v=19;break;case'Ф': v=20;break;case'Х': v=19;break;case'Ц': v=20;break;case'Ч': v=16;break;case'Ш': v=26;break;case'Щ': v=29;break;case'Ъ': v=20;break;case'Ы': v=24;break;case'Ь': v=19;break;case'Э': v=18;break;case'Ю': v=27;break;case'Я': v=20;break;case'а': v=16;break;case'б': v=17;break;case'в': v=16;break;case'г': v=15;break;case'д': v=17;break;case'е': v=17;break;case'ж': v=20;break;case'з': v=15;break;case'и': v=16;break;case'й': v=16;break;case'к': v=17;break;case'л': v=15;break;case'м': v=25;break;case'н': v=16;break;case'о': v=16;break;case'п': v=16;break;case'р': v=17;break;case'с': v=16;break;case'т': v=14;break;case'у': v=17;break;case'ф': v=21;break;case'х': v=15;break;case'ц': v=17;break;case'ч': v=15;break;case'ш': v=25;break;case'щ': v=27;break;case'ъ': v=16;break;case'ы': v=20;break;case'ь': v=16;break;case'э': v=14;break;case'ю': v=23;break;case'я': v=17;break;case'ё': v=17;break;case'ђ': v=17;break;case'ѓ': v=16;break;case'є': v=14;break;case'ѕ': v=16;break;case'і': v=8;break;case'ї': v=8;break;case'ј': v=7;break;case'љ': v=22;break;case'њ': v=25;break;case'ћ': v=17;break;case'ќ': v=16;break;case'ў': v=17;break;case'џ': v=17;break;case'Ґ': v=15;break;case'ґ': v=13;break;case'–': v=15;break;case'—': v=31;break;case'‘': v=6;break;case'’': v=6;break;case'‚': v=6;break;case'“': v=12;break;case'”': v=12;break;case'„': v=12;break;case'†': v=20;break;case'‡': v=20;break;case'•': v=15;break;case'…': v=31;break;case'‰': v=31;break;case'‹': v=8;break;case'›': v=8;break;case'€': v=19;break;case'™': v=30;break;case'−': v=18;break;case'∙': v=8;break;case'□': v=21;break;case'': v=40;break;case'': v=40;break;case'': v=40;break;case'': v=40;break;case'': v=41;break;case'': v=41;break;case'': v=32;break;case'': v=32;break;case'': v=40;break;case'': v=40;break;case'': v=34;break;case'': v=34;break;case'': v=40;break;case'': v=40;break;case'': v=40;break;case'': v=41;break;case'': v=32;break;case'': v=41;break;case'': v=32;break;case'': v=40;break;case'': v=40;break;case'': v=40;break;case'': v=40;break;case'': v=40;break;case'': v=40;break;case'': v=40;break;case'': v=40;break;
+//    default:
+//        v=6;
+//        break;
+//}
+if (LetterWidths.ContainsKey(c))
+v = LetterWidths[c];
+lineWidth += v + 1;
+}*/
 }
+width = Math.Max(lineWidth - 1, width);
+lineWidth = 0;
 }
-Logger.DecLvl();
 return Math.Max(width, lineWidth - 1);
+}
 }
 /*public static string RemoveLastTrailingNewline(string text)
 {
-Logger.debug("TextUtils.RemoveLastTrailingNewline");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug("TextUtils.RemoveLastTrailingNewline");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return (text.Length > 1 && text[text.Length - 1] == '\n') ? text.Remove(text.Length - 1) : text;
 }
 public static string RemoveFirstTrailingNewline(string text)
 {
-Logger.debug("TextUtils.RemoveFirstTrailingNewline");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug("TextUtils.RemoveFirstTrailingNewline");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return (text.Length > 1 && text[0] == '\n') ? text.Remove(0) : text;
 }*/
-public static StringBuilder CreateStringOfLength(string constituent, int length)
+public static StringBuilder CreateStringOfLength(char constituent, int length)
 {
 return CreateStringOfLength(constituent, length, RoundMode.FLOOR);
 }
-public static StringBuilder CreateStringOfLength(string constituent, int length, RoundMode mode)
+public static StringBuilder CreateStringOfLength(char constituent, int length, RoundMode mode)
 {
-Logger.debug("TextUtils.CreateStringOfLength()");
-Logger.IncLvl();
-int lengthOfConstituent = GetTextWidth(new StringBuilder(constituent));
+using (new SimpleProfiler("TextUtils.CreateStringOfLength(string, int, RoundMode)"))
+{
+int lengthOfConstituent = GetCharWidth(constituent);
 if (mode == RoundMode.CEIL)
 {
-Logger.debug("Ceil mode");
+//Logger.log("Ceil mode", Logger.Mode.DEBUG);
 length += lengthOfConstituent;
 }
 StringBuilder result = new StringBuilder();
 if (length < lengthOfConstituent)
 {
-Logger.DecLvl();
 return new StringBuilder();
 }
-int i;
-for (i = lengthOfConstituent - 1; i <= length - 1; i = i + 1 + lengthOfConstituent)
-{
-result.Append(constituent);
+int numberOfChars = (length + 1) / (lengthOfConstituent + 1);
+return new StringBuilder(new string(constituent, numberOfChars));
 }
-Logger.DecLvl();
-return result;
 }
-public static StringBuilder PadText(StringBuilder text, int totalWidth, PadMode mode)
+public static StringBuilder PadText(string text, int totalWidth, PadMode mode)
 {
-return PadText(text, totalWidth, mode, " ");
+return PadText(text, totalWidth, mode, ' ');
 }
-public static StringBuilder PadText(StringBuilder text, int totalWidth, PadMode mode, string padString)
+public static StringBuilder PadText(string text, int totalWidth, PadMode mode, char padChar)
 {
-Logger.debug("TextUtils.PadText()");
-Logger.IncLvl();
+using (new SimpleProfiler("TextUtils.PadText(StringBuilder, int, PadMode, string)"))
+{
+string[] lines = text.Split('\n');
 StringBuilder result = new StringBuilder();
 StringBuilder padding = new StringBuilder();
 int width;
 int lineStart;
 int lineEnd = -1;
-do
+foreach (string line in lines)
+{
+width = GetTextWidth(line) + 1;
+if (mode == PadMode.BOTH)
+{
+padding = CreateStringOfLength(padChar, (totalWidth - width) / 2);
+result.Append(padding);
+result.Append(line);
+result.Append(padding);
+}
+else
+{
+padding = CreateStringOfLength(padChar, totalWidth - width);
+if (mode == PadMode.LEFT)
+{
+result.Append(padding);
+result.Append(line);
+}
+else
+{
+result.Append(line);
+result.Append(padding);
+}
+}
+result.Append("\n");
+}
+/*do
 {
 lineStart = lineEnd + 1;
-lineEnd = -1;
+lineEnd = text.find;
+StringBuilder s;
 for (int i = lineStart; i < text.Length; i++)
 {
 if (text[i] == '\n')
@@ -353,16 +379,16 @@ break;
 }
 if (lineEnd == -1) lineEnd = text.Length;
 width = GetTextWidth(text, lineStart, lineEnd - lineStart) + 1;
-if(mode == PadMode.BOTH)
+if (mode == PadMode.BOTH)
 {
-padding = CreateStringOfLength(padString, (totalWidth - width) / 2);
+padding = CreateStringOfLength(padChar, (totalWidth - width) / 2);
 result.Append(padding);
 SBExtensions.AppendSubstr(result, text, lineStart, lineEnd - lineStart);
 result.Append(padding);
 }
 else
 {
-padding = CreateStringOfLength(padString, totalWidth - width);
+padding = CreateStringOfLength(padChar, totalWidth - width);
 if (mode == PadMode.LEFT)
 {
 result.Append(padding);
@@ -376,11 +402,11 @@ result.Append(padding);
 }
 result.Append("\n");
 }
-while (lineEnd < text.Length);
-if(result.Length > 0)
+while (lineEnd < text.Length);*/
+if (result.Length > 0)
 result.Remove(result.Length - 1, 1);
-Logger.DecLvl();
 return result;
+}
 }
 }
 
@@ -388,11 +414,14 @@ public static class SBExtensions
 {
 public static void AppendSubstr(StringBuilder me, StringBuilder append, int start, int count)
 {
+using (new SimpleProfiler("SBExtensions.AppendSubstr(StringBuilder, StringBuilder, int, int)"))
+{
 me.Capacity = me.Capacity + append.Length;
 int loopEnd = Math.Min(append.Length, start + count);
 for (int i = start; i < loopEnd; i++)
 {
 me.Append(append[i]);
+}
 }
 }
 }
@@ -416,37 +445,37 @@ public static Dictionary<string, Func<XML.XMLTree>> NodeRegister = new Dictionar
 };
 public static XMLTree CreateNode(string type)
 {
-Logger.debug("XML.CreateNode()");
-Logger.IncLvl();
+//Logger.debug("XML.CreateNode()");
+//Logger.IncLvl();
 type = type.ToLower();
 if (NodeRegister.ContainsKey(type))
 {
-Logger.DecLvl();
+//Logger.DecLvl();
 return NodeRegister[type]();
 }
 else
 {
-Logger.DecLvl();
+//Logger.DecLvl();
 return new Generic(type);
 }
 }
 public static XMLTree ParseXML(string xmlString)
 {
 char[] spaceChars = { ' ', '\n' };
-Logger.debug("ParseXML");
-Logger.IncLvl();
+//Logger.debug("ParseXML");
+//Logger.IncLvl();
 RootNode root = new RootNode();
 XMLTree currentNode = root;
 string type;
-//Logger.debug("Enter while loop");
+////Logger.debug("Enter while loop");
 while (xmlString.Length > 0)
 {
 if (xmlString[0] == '<')
 {
-//Logger.debug("found tag");
+////Logger.debug("found tag");
 if (xmlString[1] == '/')
 {
-//Logger.debug("tag is end tag");
+////Logger.debug("tag is end tag");
 int spacePos = xmlString.IndexOfAny(spaceChars);
 int bracketPos = xmlString.IndexOf('>');
 int typeLength = (spacePos == -1 ? bracketPos : Math.Min(spacePos, bracketPos)) - 2;
@@ -460,7 +489,7 @@ xmlString = xmlString.Substring(bracketPos + 1);
 }
 else
 {
-//Logger.debug("tag is start tag");
+////Logger.debug("tag is start tag");
 int spacePos = xmlString.IndexOfAny(spaceChars);
 int bracketPos = Parser.GetNextOutsideQuotes('>', xmlString);
 int typeLength = (spacePos == -1 ? bracketPos : Math.Min(spacePos, bracketPos)) - 1;
@@ -472,17 +501,17 @@ int closingBracketPos = xmlString.IndexOf("<");
 int textLength = closingBracketPos == -1 ? xmlString.Length : closingBracketPos;
 newNode = new XML.TextNode(xmlString.Substring(0, textLength).Trim());
 }
-//Logger.debug("add new node of type '" + newNode.Type + "=" + type + "' to current node");
+////Logger.debug("add new node of type '" + newNode.Type + "=" + type + "' to current node");
 currentNode.AddChild(newNode);
-//Logger.debug("added new node to current node");
+////Logger.debug("added new node to current node");
 if (spacePos != -1 && spacePos < bracketPos)
 {
 string attrString = xmlString.Substring(typeLength + 2, bracketPos - typeLength - 2);
 attrString = attrString.TrimEnd(new char[] { '/' });
-//Logger.debug("get xml attributes. attribute string: '" + attrString + "/" + xmlString + "'");
+////Logger.debug("get xml attributes. attribute string: '" + attrString + "/" + xmlString + "'");
 Dictionary<string, string> attributes =
 Parser.GetXMLAttributes(attrString);
-//Logger.debug("got xml attributes");
+////Logger.debug("got xml attributes");
 foreach (string key in attributes.Keys)
 {
 newNode.SetAttribute(key, attributes[key]);
@@ -507,8 +536,8 @@ currentNode.AddChild(newNode);
 xmlString = bracketPos == -1 ? "" : xmlString.Substring(bracketPos);
 }
 }
-//Logger.debug("parsing finished");
-Logger.DecLvl();
+////Logger.debug("parsing finished");
+//Logger.DecLvl();
 return root;
 }
 
@@ -629,8 +658,8 @@ return Children.Count;
 protected bool RerenderRequired;
 public virtual RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("XMLTree.GetRenderCache(int)");
-Logger.IncLvl();
+//Logger.debug("XMLTree.GetRenderCache(int)");
+//Logger.IncLvl();
 /*if(_renderCache != null)
 {
 return _renderCache;
@@ -645,13 +674,13 @@ cache.Add(childCache);
 }
 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 //_renderCache = cache;
-Logger.DecLvl();
+//Logger.DecLvl();
 return cache;
 }
 protected void UpdateRenderCacheProperties(RenderBox cache, int maxWidth, int maxHeight)
 {
-Logger.debug("XMLTree.UpdateRenderCacheProperties(NodeBox, int)");
-Logger.IncLvl();
+//Logger.debug("XMLTree.UpdateRenderCacheProperties(NodeBox, int)");
+//Logger.IncLvl();
 cache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
 switch (GetAttribute("alignself"))
 {
@@ -676,8 +705,8 @@ cache.MinWidth = forcedWidth;
 cache.MaxWidth = forcedWidth;
 }
 cache.MinHeight = Math.Max(0, ResolveSize(GetAttribute("minheight"), maxHeight));
-cache.MaxHeight = Math.Max(0, ResolveSize(GetAttribute("maxheight"), maxHeight));
-cache.DesiredHeight = Math.Max(0, ResolveSize(GetAttribute("height"), maxHeight));
+cache.MaxHeight = ResolveSize(GetAttribute("maxheight"), maxHeight);
+cache.DesiredHeight = ResolveSize(GetAttribute("height"), maxHeight);
 int forcedHeight = ResolveSize(GetAttribute("forceheight"), maxWidth);
 if (forcedHeight != -1)
 {
@@ -685,24 +714,24 @@ cache.MinHeight = forcedHeight;
 cache.MaxHeight = forcedHeight;
 }
 //cache.Height = CalculateWidth(GetAttribute("height"), -1);
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public static int ResolveSize(string widthString, int maxWidth)
 {
-Logger.debug("XMLTree.ResolvePercentage(string, int)");
-Logger.IncLvl();
+//Logger.debug("XMLTree.ResolvePercentage(string, int)");
+//Logger.IncLvl();
 float fWidth;
 if(widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
 {
 if (maxWidth == -1)
 return -1;
-Logger.DecLvl();
+//Logger.DecLvl();
 return (int)(fWidth / 100f * Math.Max(0, maxWidth));
 }
 else
 {
 int iWidth = -1;
-Logger.DecLvl();
+//Logger.DecLvl();
 if (Int32.TryParse(widthString, out iWidth))
 return iWidth;
 return -1;
@@ -710,8 +739,8 @@ return -1;
 }
 public XMLTree()
 {
-Logger.debug("XMLTree constructor");
-Logger.IncLvl();
+//Logger.debug("XMLTree constructor");
+//Logger.IncLvl();
 HasUserInputBindings = false;
 PreventDefaults = new List<string>();
 Parent = null;
@@ -730,55 +759,55 @@ SetAttribute("aligntext", "left");
 SetAttribute("selected", "false");
 SetAttribute("selectable", "false");
 SetAttribute("flow", "vertical");
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public bool IsSelectable()
 {
-Logger.debug(Type + ": IsSelectable():");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug(Type + ": IsSelectable():");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return Selectable || ChildrenAreSelectable;
 }
 public bool IsSelected()
 {
-Logger.debug(Type + ": IsSelected():");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug(Type + ": IsSelected():");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return Selected;
 }
 public XMLTree GetSelectedSibling()
 {
-Logger.debug(Type + ": GetSelectedSibling():");
-Logger.IncLvl();
+//Logger.debug(Type + ": GetSelectedSibling():");
+//Logger.IncLvl();
 if (!Selected)
 {
-Logger.DecLvl();
+//Logger.DecLvl();
 return null;
 //throw new Exception(
 //    "Node is not selected. You can only get the selected Node from one of it's parent nodes!");
 }
 if (SelectedChild == -1)
 {
-Logger.DecLvl();
+//Logger.DecLvl();
 return this;
 }
 else
 {
-Logger.DecLvl();
+//Logger.DecLvl();
 return Children[SelectedChild].GetSelectedSibling();
 }
 }
 public virtual void AddChild(XMLTree child)
 {
-Logger.debug(Type + ": AddChild():");
-Logger.IncLvl();
+//Logger.debug(Type + ": AddChild():");
+//Logger.IncLvl();
 AddChildAt(Children.Count, child);
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public virtual void AddChildAt(int position, XMLTree child)
 {
-Logger.debug(Type + ":AddChildAt()");
-Logger.IncLvl();
+//Logger.debug(Type + ":AddChildAt()");
+//Logger.IncLvl();
 if( position > Children.Count )
 {
 throw new Exception("XMLTree.AddChildAt - Exception: position must be less than number of children!");
@@ -787,31 +816,31 @@ RerenderRequired = true;
 Children.Insert(position, child);
 child.SetParent(this as XMLParentNode);
 UpdateSelectability(child);
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public void SetParent(XMLParentNode parent)
 {
-Logger.debug(Type + ": SetParent():");
-Logger.IncLvl();
+//Logger.debug(Type + ": SetParent():");
+//Logger.IncLvl();
 Parent = parent;
 if(HasUserInputBindings && Parent != null)
 {
 Parent.HasUserInputBindings = true;
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public XMLParentNode GetParent()
 {
-Logger.debug(Type + ": GetParent():");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug(Type + ": GetParent():");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return Parent;
 }
 public XMLTree GetChild(int i)
 {
-Logger.debug(Type + ": GetChild():");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug(Type + ": GetChild():");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return i < Children.Count ? Children[i] : null;
 }
 public XMLTree GetNode(Func<XMLTree, bool> filter)
@@ -857,65 +886,65 @@ child = GetChild(i);
 }
 public virtual void UpdateSelectability(XMLTree child)
 {
-Logger.debug(Type + ": UpdateSelectability():");
-Logger.IncLvl();
+//Logger.debug(Type + ": UpdateSelectability():");
+//Logger.IncLvl();
 bool ChildrenWereSelectable = ChildrenAreSelectable;
 ChildrenAreSelectable = ChildrenAreSelectable || child.IsSelectable();
 if ((Selectable || ChildrenAreSelectable) != (Selectable || ChildrenWereSelectable))
 {
 RerenderRequired = true;
-Logger.debug("update parent selectability");
+//Logger.debug("update parent selectability");
 if(Parent != null)
 Parent.UpdateSelectability(this);
-Logger.debug("parent selectability updated");
+//Logger.debug("parent selectability updated");
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public bool SelectFirst()
 {
-Logger.debug(Type + ": SelectFirst():");
-Logger.IncLvl();
+//Logger.debug(Type + ": SelectFirst():");
+//Logger.IncLvl();
 if (SelectedChild != -1)
 {
 Children[SelectedChild].Unselect();
 }
 SelectedChild = -1;
 bool success = (Selectable || ChildrenAreSelectable) ? SelectNext() : false;
-Logger.DecLvl();
+//Logger.DecLvl();
 return success;
 }
 public bool SelectLast()
 {
-Logger.debug(Type + ": SelectLast():");
-Logger.IncLvl();
+//Logger.debug(Type + ": SelectLast():");
+//Logger.IncLvl();
 if (SelectedChild != -1)
 {
 Children[SelectedChild].Unselect();
 }
 SelectedChild = -1;
-Logger.DecLvl();
+//Logger.DecLvl();
 return (Selectable || ChildrenAreSelectable) ? SelectPrevious() : false;
 }
 public void Unselect()
 {
-Logger.debug(Type + ": Unselect():");
-Logger.IncLvl();
+//Logger.debug(Type + ": Unselect():");
+//Logger.IncLvl();
 if (SelectedChild != -1)
 {
 Children[SelectedChild].Unselect();
 }
 Selected = false;
 Activated = false;
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public virtual bool SelectNext()
 {
-Logger.debug(Type + ": SelectNext():");
-Logger.IncLvl();
+//Logger.debug(Type + ": SelectNext():");
+//Logger.IncLvl();
 bool WasSelected = IsSelected();
 if (SelectedChild == -1 || !Children[SelectedChild].SelectNext())
 {
-Logger.debug(Type + ": find next child to select...");
+//Logger.debug(Type + ": find next child to select...");
 SelectedChild++;
 while ((SelectedChild < Children.Count && (!Children[SelectedChild].SelectFirst())))
 {
@@ -940,13 +969,13 @@ if (!WasSelected && IsSelected())
 OnSelect();
 RerenderRequired = true;
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 return Selected;
 }
 public virtual bool SelectPrevious()
 {
-Logger.debug(Type + ": SelectPrevious():");
-Logger.IncLvl();
+//Logger.debug(Type + ": SelectPrevious():");
+//Logger.IncLvl();
 bool WasSelected = IsSelected();
 if (SelectedChild == -1) { SelectedChild = Children.Count; }
 if (SelectedChild == Children.Count || !Children[SelectedChild].SelectPrevious())
@@ -974,30 +1003,30 @@ if (!WasSelected && IsSelected())
 OnSelect();
 RerenderRequired = true;
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 return Selected;
 }
 public virtual void OnSelect() { }
 public virtual string GetAttribute(string key)
 {
-Logger.debug(Type + ": GetAttribute(" + key + "):");
-Logger.IncLvl();
+//Logger.debug(Type + ": GetAttribute(" + key + "):");
+//Logger.IncLvl();
 if (Attributes.ContainsKey(key))
 {
-Logger.DecLvl();
+//Logger.DecLvl();
 return Attributes[key];
 }
 else if( key == "flowdirection" && Attributes.ContainsKey("flow"))
 {
 return Attributes["flow"];
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 return null;
 }
 public virtual void SetAttribute(string key, string value)
 {
-Logger.debug(Type + ": SetAttribute():");
-Logger.IncLvl();
+//Logger.debug(Type + ": SetAttribute():");
+//Logger.IncLvl();
 if (key == "selectable")
 {
 bool shouldBeSelectable = value == "true";
@@ -1060,7 +1089,7 @@ if(Int32.TryParse(value, out width))
 }
 }
 Attributes[key] = value;
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public XMLParentNode RetrieveRoot()
 {
@@ -1073,20 +1102,20 @@ return ancestor;
 }
 public void KeyPress(string keyCode)
 {
-Logger.debug(Type + ": _KeyPress():");
-Logger.IncLvl();
-Logger.debug("button: " + keyCode);
+//Logger.debug(Type + ": _KeyPress():");
+//Logger.IncLvl();
+//Logger.debug("button: " + keyCode);
 OnKeyPressed(keyCode);
 if (Parent != null && !PreventDefaults.Contains(keyCode))
 {
 Parent.KeyPress(keyCode);
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public virtual void OnKeyPressed(string keyCode)
 {
-Logger.debug(Type + ": OnKeyPressed()");
-Logger.IncLvl();
+//Logger.debug(Type + ": OnKeyPressed()");
+//Logger.IncLvl();
 switch (keyCode)
 {
 case "ACTIVATE":
@@ -1095,55 +1124,55 @@ break;
 default:
 break;
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public virtual void ToggleActivation()
 {
-Logger.debug(Type + ": ToggleActivation()");
-Logger.IncLvl();
+//Logger.debug(Type + ": ToggleActivation()");
+//Logger.IncLvl();
 Activated = !Activated;
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public void PreventDefault(string keyCode)
 {
-Logger.debug(Type + ": PreventDefault()");
-Logger.IncLvl();
+//Logger.debug(Type + ": PreventDefault()");
+//Logger.IncLvl();
 if (!PreventDefaults.Contains(keyCode))
 {
 PreventDefaults.Add(keyCode);
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public void AllowDefault(string keyCode)
 {
-Logger.debug(Type + ": AllowDefault()");
-Logger.IncLvl();
+//Logger.debug(Type + ": AllowDefault()");
+//Logger.IncLvl();
 if (PreventDefaults.Contains(keyCode))
 {
 PreventDefaults.Remove(keyCode);
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public void FollowRoute(Route route)
 {
-Logger.debug(Type + ": FollowRoute");
-Logger.IncLvl();
+//Logger.debug(Type + ": FollowRoute");
+//Logger.IncLvl();
 if (Parent != null)
 {
 Parent.FollowRoute(route);
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public virtual Dictionary<string, string> GetValues(Func<XMLTree, bool> filter)
 {
-Logger.log(Type + ": GetValues()");
-Logger.IncLvl();
+//Logger.log(Type + ": GetValues()");
+//Logger.IncLvl();
 Dictionary<string, string> dict = new Dictionary<string, string>();
 string name = GetAttribute("name");
 string value = GetAttribute("value");
 if (name != null && value != null)
 {
-Logger.log($"Added entry {{{name}: {value}}}");
+//Logger.log($"Added entry {{{name}: {value}}}");
 dict[name] = value;
 }
 Dictionary<string, string> childDict;
@@ -1158,17 +1187,17 @@ dict[key] = childDict[key];
 }
 }
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 return dict;
 }
 /*public int GetWidth(int maxWidth)
 {
-Logger.debug(Type + ".GetWidth()");
-Logger.IncLvl();
+//Logger.debug(Type + ".GetWidth()");
+//Logger.IncLvl();
 string attributeWidthValue = GetAttribute("width");
 if (attributeWidthValue == null)
 {
-Logger.DecLvl();
+//Logger.DecLvl();
 return 0;
 //return maxWidth;
 }
@@ -1176,32 +1205,32 @@ else
 {
 if (attributeWidthValue[attributeWidthValue.Length - 1] == '%')
 {
-Logger.debug("is procent value (" + Single.Parse(attributeWidthValue.Substring(0, attributeWidthValue.Length - 1)).ToString() + ")");
-Logger.DecLvl();
+//Logger.debug("is procent value (" + Single.Parse(attributeWidthValue.Substring(0, attributeWidthValue.Length - 1)).ToString() + ")");
+//Logger.DecLvl();
 return (int)(Single.Parse(attributeWidthValue.Substring(0, attributeWidthValue.Length - 1)) / 100f * maxWidth);
 }
 else if (maxWidth == 0)
 {
-Logger.DecLvl();
+//Logger.DecLvl();
 return Int32.Parse(attributeWidthValue);
 }
 else
 {
-Logger.DecLvl();
+//Logger.DecLvl();
 return Math.Min(maxWidth, Int32.Parse(attributeWidthValue));
 }
 }
 }
 public string RenderOld(int availableWidth)
 {
-Logger.debug(Type + ".Render()");
-Logger.IncLvl();
+//Logger.debug(Type + ".Render()");
+//Logger.IncLvl();
 List<string> segments = new List<string>();
 int width = GetWidth(availableWidth);
 PreRender(ref segments, width, availableWidth);
 RenderText(ref segments, width, availableWidth);
 string renderString = PostRender(segments, width, availableWidth);
-Logger.DecLvl();
+//Logger.DecLvl();
 return renderString;
 }
 public NodeBox Render(int availableWidth)
@@ -1210,21 +1239,21 @@ return Render(availableWidth, 0);
 }
 public NodeBox Render(int availableWidth, int availableHeight)
 {
-Logger.debug(Type + ".Render()");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug(Type + ".Render()");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return Cache;
 }
 protected virtual void PreRender(ref List<string> segments, int width, int availableWidth)
 {
-Logger.debug(Type + ".PreRender()");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug(Type + ".PreRender()");
+//Logger.IncLvl();
+//Logger.DecLvl();
 }
 protected virtual void RenderText(ref List<string> segments, int width, int availableWidth)
 {
-Logger.debug(Type + ".RenderText()");
-Logger.IncLvl();
+//Logger.debug(Type + ".RenderText()");
+//Logger.IncLvl();
 for (int i = 0; i < Children.Count; i++)
 {
 if (GetAttribute("flow") == "vertical")
@@ -1255,12 +1284,12 @@ segments.Add(childString);
 }
 }
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 protected virtual string PostRender(List<string> segments, int width, int availableWidth)
 {
-Logger.debug(Type + ".PostRender()");
-Logger.IncLvl();
+//Logger.debug(Type + ".PostRender()");
+//Logger.IncLvl();
 string renderString = "";
 string flowdir = GetAttribute("flow");
 string alignChildren = GetAttribute("alignchildren");
@@ -1302,24 +1331,24 @@ if (availableWidth - totalWidth > 0)
 {
 if (alignSelf == "center")
 {
-Logger.log("Center element...");
+//Logger.log("Center element...");
 renderString = TextUtils.CenterText(renderString, availableWidth);
 }
 else if (alignSelf == "right")
 {
-Logger.log("Aligning element right...");
+//Logger.log("Aligning element right...");
 renderString = TextUtils.PadText(renderString, availableWidth, TextUtils.PadMode.RIGHT);
 }
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 return renderString;
 }
 
 protected virtual string RenderChild(XMLTree child, int availableWidth)
 {
-Logger.log(Type + ".RenderChild()");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.log(Type + ".RenderChild()");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return child.Render(availableWidth);
 }*/
 public void DetachChild(XMLTree child)
@@ -1336,8 +1365,8 @@ GetParent().DetachChild(this);
 }
 /*protected virtual void BuildRenderCache()
 {
-Logger.debug(Type + ".BuildRenderCache()");
-Logger.IncLvl();
+//Logger.debug(Type + ".BuildRenderCache()");
+//Logger.IncLvl();
 //base.Clear();
 NodeBoxTree box = this;
 foreach (XMLTree child in Children)
@@ -1345,17 +1374,18 @@ foreach (XMLTree child in Children)
 box.Add(child);
 }
 RerenderRequired = false;
-Logger.DecLvl();
+//Logger.DecLvl();
 }*/
 public virtual string Render(int maxWidth, int maxHeight)
 {
-Logger.debug(Type + ".Render(int)");
-Logger.IncLvl();
-Logger.debug("RENDERING::PREPARE");
+//Logger.debug(Type + ".Render(int)");
+//Logger.IncLvl();
+//Logger.log("RENDERING::PREPARE");
 RenderBox cache = GetRenderBox(maxWidth, maxHeight);
-Logger.debug("RENDERING::START");
+cache.DEBUG = true;
+//Logger.log("RENDERING::START");
 string result = cache.Render(maxWidth, maxHeight);
-Logger.DecLvl();
+//Logger.DecLvl();
 return result;
 }
 public string Render()
@@ -1380,23 +1410,23 @@ public class TextNode : XMLTree
 public string Content;
 public TextNode(string content) : base()
 {
-Logger.debug("TextNode constructor()");
-Logger.IncLvl();
-Logger.debug("content: " + content);
+//Logger.debug("TextNode constructor()");
+//Logger.IncLvl();
+//Logger.debug("content: " + content);
 Type = "textnode";
 Content = content;
 Content.Replace("\n", "");
 Content = Content.Trim(new char[] { '\n', ' ', '\r' });
-Logger.debug("final content: " + Content);
+//Logger.debug("final content: " + Content);
 RerenderRequired = true;
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("TextNode.GetRenderCache(int)");
-Logger.IncLvl();
+//Logger.debug("TextNode.GetRenderCache(int)");
+//Logger.IncLvl();
 RenderBox cache = new RenderBoxLeaf(Content);
-Logger.DecLvl();
+//Logger.DecLvl();
 return cache;
 }
 //protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }
@@ -1406,10 +1436,10 @@ return Content;
 }*/
 /*protected override void BuildRenderCache()
 {
-Logger.debug(Type + ".BuildRenderCache()");
-Logger.IncLvl();
+//Logger.debug(Type + ".BuildRenderCache()");
+//Logger.IncLvl();
 RerenderRequired = false;
-Logger.DecLvl();
+//Logger.DecLvl();
 }*/
 }
 
@@ -1442,15 +1472,15 @@ new Dictionary<string, Action<UIController>>();
 string Definition;
 public Route(string definition)
 {
-Logger.debug("Route constructor():");
-Logger.IncLvl();
+//Logger.debug("Route constructor():");
+//Logger.IncLvl();
 Definition = definition;
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public void Follow(UIController controller)
 {
-Logger.debug("Route.Follow()");
-Logger.IncLvl();
+//Logger.debug("Route.Follow()");
+//Logger.IncLvl();
 string[] DefTypeAndValue = Definition.Split(new char[] { ':' }, 2);
 if (Route.RouteHandlers.ContainsKey(DefTypeAndValue[0].ToLower()))
 {
@@ -1458,7 +1488,7 @@ Route.RouteHandlers[DefTypeAndValue[0].ToLower()](
 DefTypeAndValue.Length >= 2 ? DefTypeAndValue[1] : null, controller
 );
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 static public void RegisterRouteFunction(string id, Action<UIController> fn)
 {
@@ -1468,7 +1498,7 @@ UIFactories[id] = fn;
 
 public class UIController : XMLParentNode
 {
-XMLTree ui;
+public XMLTree ui;
 public Stack<XMLTree> UIStack;
 public string Type;
 bool UserInputActive;
@@ -1510,8 +1540,8 @@ Dictionary<FONT, long> Fonts = new Dictionary<FONT, long> {
 };
 public UIController(XMLTree rootNode)
 {
-Logger.debug("UIController constructor()");
-Logger.IncLvl();
+//Logger.debug("UIController constructor()");
+//Logger.IncLvl();
 Type = "CTRL";
 UIStack = new Stack<XMLTree>();
 UserInputBindings = new List<XMLTree>();
@@ -1524,20 +1554,20 @@ if (GetSelectedNode() == null && ui.IsSelectable())
 ui.SelectFirst();
 }
 CollectUserInputBindings();
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public static UIController FromXML(string xml)
 {
-Logger.debug("UIController FromXMLString()");
-Logger.IncLvl();
+//Logger.debug("UIController FromXMLString()");
+//Logger.IncLvl();
 XMLTree rootNode = XML.ParseXML(xml);
-Logger.DecLvl();
+//Logger.DecLvl();
 return new UIController(rootNode);
 }
 public void ApplyScreenProperties(IMyTextPanel screen)
 {
-Logger.debug("UIController.ApplyScreenProperties()");
-Logger.IncLvl();
+//Logger.debug("UIController.ApplyScreenProperties()");
+//Logger.IncLvl();
 if (ui.GetAttribute("fontcolor") != null)
 {
 string colorString = ui.GetAttribute("fontcolor");
@@ -1580,12 +1610,12 @@ screen.SetValue<long>("Font", fontValue);
 }
 
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public void Call(List<string> parameters)
 {
-Logger.debug("UIController.Main()");
-Logger.IncLvl();
+//Logger.debug("UIController.Main()");
+//Logger.IncLvl();
 switch (parameters[0])
 {
 case "key":
@@ -1608,7 +1638,7 @@ break;
 default:
 break;
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 return;
 }
 public void LoadXML(string xmlString)
@@ -1617,8 +1647,8 @@ LoadUI(XML.ParseXML(xmlString));
 }
 public void LoadUI(XMLTree rootNode)
 {
-Logger.debug("UIController: LoadUI():");
-Logger.IncLvl();
+//Logger.debug("UIController: LoadUI():");
+//Logger.IncLvl();
 if (ui.GetAttribute("historydisabled") == null || ui.GetAttribute("historydisabled") != "true")
 {
 UIStack.Push(ui);
@@ -1634,7 +1664,7 @@ ui.SetParent(this);
 }
 UserInputBindings = new List<XMLTree>();
 CollectUserInputBindings();
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public void ClearUIStack()
 {
@@ -1642,32 +1672,32 @@ UIStack = new Stack<XMLTree>();
 }
 public void RevertUI()
 {
-Logger.log("UIController: RevertUI():");
-Logger.IncLvl();
+//Logger.log("UIController: RevertUI():");
+//Logger.IncLvl();
 if (UIStack.Count == 0)
 {
-Logger.log("Error: Can't revert: UI stack is empty.");
-Logger.DecLvl();
+//Logger.log("Error: Can't revert: UI stack is empty.");
+//Logger.DecLvl();
 return;
 }
 ui = UIStack.Pop();
 ui.SetParent(this);
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public string Render()
 {
-Logger.debug("UIController: Render():");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug("UIController: Render():");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return ui.Render(-1, -1);
 }
 public void RenderTo(IMyTextPanel panel)
 {
-Logger.debug("UIController.RenderTo()");
-Logger.IncLvl();
+//Logger.debug("UIController.RenderTo()");
+//Logger.IncLvl();
 int panelWidth = 0;
 string panelType = panel.BlockDefinition.SubtypeId;
-Logger.debug("Type: " + panelType);
+//Logger.debug("Type: " + panelType);
 if (panelType == "LargeTextPanel" || panelType == "SmallTextPanel")
 {
 panelWidth = 658;
@@ -1697,55 +1727,55 @@ else
 {
 TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
 }
-Logger.log("Font configured...");
-Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
-Logger.debug("resulting width: " + width.ToString());
+//Logger.log("Font configured...");
+//Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
+//Logger.debug("resulting width: " + width.ToString());
 string text = ui.Render(width, height);
-Logger.debug("rendering <" + text);
+//Logger.debug("rendering <" + text);
 panel.WritePublicText(text);
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public void KeyPress(string keyCode)
 {
-Logger.debug("UIController: KeyPress():");
-Logger.IncLvl();
+//Logger.debug("UIController: KeyPress():");
+//Logger.IncLvl();
 switch (keyCode)
 {
 case "LEFT/ABORT":
 RevertUI();
 break;
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public XMLTree GetSelectedNode()
 {
-Logger.debug("UIController: GetSelectedNode():");
-Logger.IncLvl();
+//Logger.debug("UIController: GetSelectedNode():");
+//Logger.IncLvl();
 XMLTree sibling = ui.GetSelectedSibling();
-Logger.DecLvl();
+//Logger.DecLvl();
 return sibling;
 }
 public XMLTree GetNode(Func<XMLTree, bool> filter)
 {
-Logger.debug("UIController: GetNode()");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug("UIController: GetNode()");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return ui.GetNode(filter);
 }
 public List<XMLTree> GetAllNodes(Func<XMLTree, bool> filter)
 {
-Logger.debug("UIController: GetAllNodes()");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug("UIController: GetAllNodes()");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return ui.GetAllNodes(filter);
 }
 public void UpdateSelectability(XMLTree child) { }
 public void FollowRoute(Route route)
 {
-Logger.debug("UIController: FollowRoute():");
-Logger.IncLvl();
+//Logger.debug("UIController: FollowRoute():");
+//Logger.IncLvl();
 route.Follow(this);
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public XMLParentNode GetParent()
 {
@@ -1753,20 +1783,20 @@ return null;
 }
 public Dictionary<string, string> GetValues()
 {
-Logger.debug("UIController.GetValues()");
-Logger.IncLvl();
+//Logger.debug("UIController.GetValues()");
+//Logger.IncLvl();
 return GetValues((node) => true);
 }
 public Dictionary<string, string> GetValues(Func<XMLTree, bool> filter)
 {
-Logger.debug("UIController.GetValues()");
-Logger.IncLvl();
+//Logger.debug("UIController.GetValues()");
+//Logger.IncLvl();
 if (ui == null)
 {
-Logger.DecLvl();
+//Logger.DecLvl();
 return null;
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 return ui.GetValues(filter);
 }
 public string GetPackedValues(Func<XMLTree, bool> filter)
@@ -1782,9 +1812,9 @@ ui = null;
 }
 public string GetPackedValues()
 {
-Logger.debug("UIController.GetPackedValues()");
-Logger.IncLvl();
-Logger.DecLvl();
+//Logger.debug("UIController.GetPackedValues()");
+//Logger.IncLvl();
+//Logger.DecLvl();
 return GetPackedValues(node => true);
 }
 public bool SelectNext()
@@ -1814,8 +1844,8 @@ UserInputBindings.Add(node);
 }
 public bool UpdateUserInput()
 {
-Logger.debug("UIController.RefreshUserInput()");
-Logger.IncLvl();
+//Logger.debug("UIController.RefreshUserInput()");
+//Logger.IncLvl();
 if(!UserInputActive || UserInputSource == null)
 {
 return false;
@@ -1836,8 +1866,8 @@ if( inputData == null || inputData == InputDataCache)
 {
 inputHasChanged = false;
 }
-Logger.debug("input has " + (inputHasChanged ? "" : "not ") + "changed");
-Logger.debug("Iterating input bindings (" + UserInputBindings.Count + " bindings registered).");
+//Logger.debug("input has " + (inputHasChanged ? "" : "not ") + "changed");
+//Logger.debug("Iterating input bindings (" + UserInputBindings.Count + " bindings registered).");
 // update ui input bindings
 string binding;
 string fieldValue;
@@ -1846,18 +1876,18 @@ foreach (XMLTree node in UserInputBindings)
 binding = node.GetAttribute("inputbinding");
 if(binding != null)
 {
-Logger.debug("binding found at " + node.Type + " node for field: " + binding);
+//Logger.debug("binding found at " + node.Type + " node for field: " + binding);
 fieldValue = node.GetAttribute(binding.ToLower());
-Logger.debug("field is " + (fieldValue ?? "EMPTY") + ".");
+//Logger.debug("field is " + (fieldValue ?? "EMPTY") + ".");
 if(!inputHasChanged && fieldValue != null && fieldValue != InputDataCache)
 {
-Logger.debug("applying field value: " + fieldValue);
+//Logger.debug("applying field value: " + fieldValue);
 inputData = fieldValue;
 inputHasChanged = true;
 }
 else if(inputHasChanged)
 {
-Logger.debug("Updating field value to input: " + inputData);
+//Logger.debug("Updating field value to input: " + inputData);
 node.SetAttribute(binding.ToLower(), inputData);
 }
 }
@@ -1883,7 +1913,7 @@ return inputHasChanged;
 }
 private void CollectUserInputBindings()
 {
-Logger.debug("UIController.CollectUserInputBindings()");
+//Logger.debug("UIController.CollectUserInputBindings()");
 XMLTree node;
 Queue<XMLParentNode> nodes = new Queue<XMLParentNode>();
 nodes.Enqueue(ui);
@@ -1892,11 +1922,11 @@ while(nodes.Count != 0)
 node = nodes.Dequeue() as XMLTree;
 if(!node.HasUserInputBindings)
 {
-Logger.debug("node has no userinputbindings");
+//Logger.debug("node has no userinputbindings");
 }
 if (node != null && node.HasUserInputBindings)
 {
-Logger.debug("Checking " + node.Type + " node...");
+//Logger.debug("Checking " + node.Type + " node...");
 for (int i = 0; i < node.NumberOfChildren; i++)
 {
 nodes.Enqueue(node.GetChild(i));
@@ -1918,14 +1948,14 @@ private List<UIController> UIs;
 public UIFactory() : this(null) { }
 public UIFactory(List<UIController> uiList)
 {
-Logger.debug("UIFactory constructor");
-Logger.IncLvl();
+//Logger.debug("UIFactory constructor");
+//Logger.IncLvl();
 if (uiList == null)
 {
 UIs = new List<UIController>();
 }
 UIs = uiList;
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public abstract XMLTree Render(UIController controller);
 protected void UpdateUIs(XMLTree renderedUI)
@@ -1960,17 +1990,16 @@ prefixSelected.MaxWidth = prefixWidth;
 }
 public override void AddChild(XMLTree child)
 {
-Logger.debug(Type + ": Add child():");
-Logger.IncLvl();
+using (new Logger("Menu.AddChile(XMLTree)"))
+{
 if (child.Type != "menuitem" && child.IsSelectable())
 {
-Logger.DecLvl();
 throw new Exception(
 "ERROR: Only children of type <menupoint> or children that are not selectable are allowed!"
 + " (type was: <" + child.Type + ">)");
 }
 base.AddChild(child);
-Logger.DecLvl();
+}
 }
 /*protected override string RenderChild(XMLTree child, int width)
 {
@@ -1985,15 +2014,15 @@ return renderString;
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("Menu.GetRenderCache(int)");
-Logger.IncLvl();
+using (new Logger("Menu.GetRenderBox(int, int)"))
+{
 RenderBoxTree cache = new RenderBoxTree();
 RenderBoxTree menuPoint;
 foreach (XMLTree child in Children)
 {
 menuPoint = new RenderBoxTree();
 menuPoint.Flow = RenderBox.FlowDirection.HORIZONTAL;
-if(child.IsSelected())
+if (child.IsSelected())
 {
 menuPoint.Add(prefixSelected);
 }
@@ -2005,8 +2034,8 @@ menuPoint.Add(child.GetRenderBox(maxWidth, maxHeight));
 cache.Add(menuPoint);
 }
 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
-Logger.DecLvl();
 return cache;
+}
 }
 }
 
@@ -2023,47 +2052,47 @@ PreventDefault("RIGHT/SUBMIT");
 }
 public override void SetAttribute(string key, string value)
 {
-Logger.debug(Type + ": SetAttribute():");
-Logger.IncLvl();
+////Logger.debug(Type + ": SetAttribute():");
+////Logger.IncLvl();
 switch (key)
 {
 case "route":
-Logger.debug("prepare to set route...");
+////Logger.debug("prepare to set route...");
 SetRoute(new Route(value));
 if (TargetRoute == null)
 {
-Logger.debug("Failure!");
+////Logger.debug("Failure!");
 }
 else
 {
-Logger.debug("Success!");
+////Logger.debug("Success!");
 }
 break;
 default:
 base.SetAttribute(key, value);
 break;
 }
-Logger.DecLvl();
+////Logger.DecLvl();
 }
 public override void OnKeyPressed(string keyCode)
 {
-Logger.debug(Type + ": OnKeyPressed():");
+//Logger.debug(Type + ": OnKeyPressed():");
 switch (keyCode)
 {
 case "RIGHT/SUBMIT":
 if (TargetRoute != null)
 {
-Logger.debug("Follow Target Route!");
+//Logger.debug("Follow Target Route!");
 FollowRoute(TargetRoute);
 }
 else
 {
-Logger.debug("No route set!");
+//Logger.debug("No route set!");
 }
 break;
 }
 base.OnKeyPressed(keyCode);
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public void SetRoute(Route route)
 {
@@ -2140,22 +2169,22 @@ SetAttribute("selectable", selectable ? "true" : "false");
 }
 public void IncreaseFillLevel()
 {
-Logger.debug(Type + ".IncreaseFillLevel()");
-Logger.IncLvl();
+//Logger.debug(Type + ".IncreaseFillLevel()");
+//Logger.IncLvl();
 FillLevel += StepSize;
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public void DecreaseFillLevel()
 {
-Logger.debug(Type + ".DecreaseFillLevel()");
-Logger.IncLvl();
+//Logger.debug(Type + ".DecreaseFillLevel()");
+//Logger.IncLvl();
 FillLevel -= StepSize;
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public override void OnKeyPressed(string keyCode)
 {
-Logger.debug(Type + ": OnKeyPressed():");
-Logger.IncLvl();
+//Logger.debug(Type + ": OnKeyPressed():");
+//Logger.IncLvl();
 switch (keyCode)
 {
 case "LEFT/ABORT":
@@ -2166,12 +2195,12 @@ IncreaseFillLevel();
 break;
 }
 base.OnKeyPressed(keyCode);
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 /*protected override void RenderText(ref List<string> segments, int width, int availableWidth)
 {
-Logger.debug(Type + ".RenderText()");
-Logger.IncLvl();
+//Logger.debug(Type + ".RenderText()");
+//Logger.IncLvl();
 string suffix = IsSelected() ? ">" : "  ";
 string prefix = IsSelected() ? "<" : "  ";
 string renderString = prefix + "[";
@@ -2183,14 +2212,14 @@ renderString += TextUtils.CreateStringOfLength(fillString, (int)(innerWidth * fi
 renderString += TextUtils.CreateStringOfLength(emptyString, (int)(innerWidth * (1 - fillLevel)));
 renderString += "]" + suffix;
 segments.Add(renderString);
-Logger.DecLvl();
+//Logger.DecLvl();
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("ProgressBar.GetRenderCache(int)");
-Logger.IncLvl();
+//Logger.debug("ProgressBar.GetRenderCache(int)");
+//Logger.IncLvl();
 RenderBoxTree cache = new RenderBoxTree();
-int outerWidth = TextUtils.GetTextWidth(IsSelected() ? new StringBuilder("<[]>") : new StringBuilder(" [] ")) + 2;
+int outerWidth = TextUtils.GetTextWidth(IsSelected() ? "<[]>" : " [] ") + 2;
 RenderBox prefix = new RenderBoxLeaf(
 (IsSelected() ? "<" : " ") + "[");
 prefix.MaxWidth = prefix.MinWidth;
@@ -2199,12 +2228,12 @@ RenderBox suffix = new RenderBoxLeaf(
 suffix.MaxWidth = suffix.MinWidth;
 cache.Add(prefix);
 filledBar = new RenderBoxLeaf();
-filledBar.PadString = GetAttribute("filledstring");
+filledBar.PadChar = GetAttribute("filledstring")[0];
 filledBar.MinHeight = 1;
 cache.Add(filledBar);
 emptyBar = new RenderBoxLeaf();
 emptyBar.MinHeight = 1;
-emptyBar.PadString = GetAttribute("emptystring");
+emptyBar.PadChar = GetAttribute("emptystring")[0];
 cache.Add(emptyBar);
 cache.Add(suffix);
 int width = ResolveSize(GetAttribute("minwidth"), maxWidth);
@@ -2236,15 +2265,15 @@ emptyBar.MinWidth = forcedWidth;
 emptyBar.MaxWidth = forcedWidth;
 }
 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
-Logger.log("filledBar: ");
-Logger.DEBUG = false;
-Logger.log("  fillLevel: " + FillLevel);
-Logger.log("  min width: " + filledBar.MinWidth);
-Logger.log("  max width: " + filledBar.MaxWidth);
-Logger.log("  desired width: " + filledBar.DesiredWidth);
-Logger.log("  minheight: " + filledBar.MinHeight);
-Logger.DEBUG = true;
-Logger.log("  actual width: " + filledBar.GetActualWidth(maxWidth));
+//Logger.log("filledBar: ");
+//Logger.debug = false;
+//Logger.log("  fillLevel: " + FillLevel);
+//Logger.log("  min width: " + filledBar.MinWidth);
+//Logger.log("  max width: " + filledBar.MaxWidth);
+//Logger.log("  desired width: " + filledBar.DesiredWidth);
+//Logger.log("  minheight: " + filledBar.MinHeight);
+//Logger.debug = true;
+//Logger.log("  actual width: " + filledBar.GetActualWidth(maxWidth));
 cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
 //GetAttribute("flow") == "horizontal" ? NodeBox.FlowDirection.HORIZONTAL : NodeBox.FlowDirection.VERTICAL;
 switch (GetAttribute("alignself"))
@@ -2259,7 +2288,7 @@ default:
 cache.Align = RenderBox.TextAlign.LEFT;
 break;
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 return cache;
 }
 }
@@ -2278,6 +2307,7 @@ public HorizontalLine() : base()
 {
 Type = "hl";
 SetAttribute("width", "100%");
+SetAttribute("minheight", "1");
 }
 /*protected override void RenderText(ref List<string> segments, int width, int availableWidth)
 {
@@ -2285,15 +2315,14 @@ segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("HorizontalLine.GetRenderCache(int)");
-Logger.IncLvl();
+using (new Logger("HorizontalLine.GetRenderBox()"))
+{
 RenderBox cache = new RenderBoxLeaf();
 //cache.Add("_");
-cache.MinHeight = 1;
-cache.PadString = "_";
+cache.PadChar = '_';
 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
-Logger.DecLvl();
 return cache;
+}
 }
 }
 
@@ -2374,8 +2403,8 @@ return renderString;
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("UIControls.GetRenderCache(int)");
-Logger.IncLvl();
+//Logger.debug("UIControls.GetRenderCache(int)");
+//Logger.IncLvl();
 RenderBoxTree cache = new RenderBoxTree();
 if (Controller == null)
 {
@@ -2385,7 +2414,7 @@ if(IsSelectable())
 {
 RenderBox childCache = new RenderBoxLeaf(IsSelected() ?
 new StringBuilder("<<") :
-TextUtils.CreateStringOfLength(" ", TextUtils.GetTextWidth(new StringBuilder("<<"))));
+TextUtils.CreateStringOfLength(' ', TextUtils.GetTextWidth("<<")));
 childCache.MaxWidth = childCache.MinWidth;
 cache.Add(childCache);
 }
@@ -2398,7 +2427,7 @@ contentCache.Add(child.GetRenderBox(maxWidth, maxHeight));
 cache.Add(contentCache);
 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
-Logger.DecLvl();
+//Logger.DecLvl();
 return cache;
 }
 }
@@ -2408,8 +2437,8 @@ public class TextInput : XMLTree
 int CursorPosition;
 public TextInput()
 {
-Logger.log("TextInput constructor()");
-Logger.IncLvl();
+//Logger.log("TextInput constructor()");
+//Logger.IncLvl();
 Type = "textinput";
 Selectable = true;
 CursorPosition = -1;
@@ -2418,7 +2447,7 @@ PreventDefault("RIGHT/SUBMIT");
 SetAttribute("maxlength", "10");
 SetAttribute("value", "");
 SetAttribute("allowedchars", " a-z0-9");
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 public override void OnKeyPressed(string keyCode)
 {
@@ -2456,8 +2485,8 @@ base.SetAttribute(key, value);
 }
 private void IncreaseLetter()
 {
-Logger.log("TextInput.IncreaseLetter()");
-Logger.IncLvl();
+//Logger.log("TextInput.IncreaseLetter()");
+//Logger.IncLvl();
 if (CursorPosition == -1)
 {
 return;
@@ -2470,22 +2499,22 @@ for (int i = 0; i < charSets.Length; i++)
 if ((charSets[i].Length == 1 && charSets[i][0] == value[CursorPosition])
 || (charSets[i].Length == 3 && charSets[i][2] == value[CursorPosition]))
 {
-Logger.log("letter outside class, setting to: " + charSets[i == 0 ? charSets.Length - 1 : i - 1][0] + ". (chars[" + ((i + 1) % charSets.Length) + "])");
+//Logger.log("letter outside class, setting to: " + charSets[i == 0 ? charSets.Length - 1 : i - 1][0] + ". (chars[" + ((i + 1) % charSets.Length) + "])");
 value[CursorPosition] = charSets[(i + 1) % charSets.Length][0];
 SetAttribute("value", new string(value));
-Logger.DecLvl();
+//Logger.DecLvl();
 return;
 }
 }
-Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) + 1));
+//Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) + 1));
 value[CursorPosition] = (char)(((int)value[CursorPosition]) + 1);
 SetAttribute("value", new string(value));
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 private void DecreaseLetter()
 {
-Logger.log("TextInput.DecreaseLetter()");
-Logger.IncLvl();
+//Logger.log("TextInput.DecreaseLetter()");
+//Logger.IncLvl();
 if (CursorPosition == -1)
 {
 return;
@@ -2498,16 +2527,16 @@ for(int i = 0; i < charSets.Length; i++)
 if(charSets[i][0] == value[CursorPosition])
 {
 int index = (i == 0 ? charSets.Length - 1 : i - 1);
-Logger.log("letter outside class, setting to: " + charSets[index][charSets[index].Length - 1] + ". (chars[" + (index) + "])");
+//Logger.log("letter outside class, setting to: " + charSets[index][charSets[index].Length - 1] + ". (chars[" + (index) + "])");
 value[CursorPosition] = charSets[index][charSets[index].Length - 1];
 SetAttribute("value", new string(value));
 return;
 }
 }
-Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) - 1));
+//Logger.log("letter inside class, setting to: " + (char)(((int)value[CursorPosition]) - 1));
 value[CursorPosition] = (char)(((int)value[CursorPosition]) - 1);
 SetAttribute("value", new string(value));
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 private string[] GetAllowedCharSets()
 {
@@ -2588,8 +2617,8 @@ segments.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " " 
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("TextInput.GetRenderCache(int)");
-Logger.IncLvl();
+//Logger.debug("TextInput.GetRenderCache(int)");
+//Logger.IncLvl();
 RenderBoxTree cache = new RenderBoxTree();
 cache.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " ");
 cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
@@ -2612,7 +2641,7 @@ for(int i = 0; i < cache.Count; i++)
 {
 cache[i].MaxWidth = cache[i].MinWidth;
 }
-Logger.DecLvl();
+//Logger.DecLvl();
 return cache;
 }
 }
@@ -2658,8 +2687,8 @@ return base.PostRender(segments, width, availableWidth);
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("SubmitButton.GetRenderCache(int)");
-Logger.IncLvl();
+//Logger.debug("SubmitButton.GetRenderCache(int)");
+//Logger.IncLvl();
 RenderBoxTree cache = new RenderBoxTree();
 RenderBoxLeaf childCache = new RenderBoxLeaf(IsSelected() ? "[[  " : "[   ");
 childCache.MaxWidth = childCache.MinWidth;
@@ -2676,7 +2705,7 @@ childCache.MaxWidth = childCache.MinWidth;
 cache.Add(childCache);
 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
-Logger.DecLvl();
+//Logger.DecLvl();
 return cache;
 }
 }
@@ -2694,12 +2723,12 @@ return "";
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("Break.GetRenderCache(int)");
-Logger.IncLvl();
+using (new Logger("Break.GetRenderBox(int, int)"))
+{
 RenderBox cache = new RenderBoxLeaf();
 cache.MaxHeight = 0;
-Logger.DecLvl();
 return cache;
+}
 }
 }
 
@@ -2707,29 +2736,29 @@ public class Space : XMLTree
 {
 public Space() : base()
 {
-Logger.debug("Space constructor()");
-Logger.IncLvl();
+//Logger.debug("Space constructor()");
+//Logger.IncLvl();
 Type = "space";
 SetAttribute("width", "0");
-Logger.DecLvl();
+//Logger.DecLvl();
 }
 /*protected override void RenderText(ref List<string> segments, int width, int availableWidth)
 {
-Logger.debug(Type + ".RenderText()");
-Logger.IncLvl();
+//Logger.debug(Type + ".RenderText()");
+//Logger.IncLvl();
 segments.Add(TextUtils.CreateStringOfLength(" ", width));
-Logger.DecLvl();
+//Logger.DecLvl();
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("GetRenderCache(int)");
-Logger.IncLvl();
+//Logger.debug("GetRenderCache(int)");
+//Logger.IncLvl();
 RenderBox cache = new RenderBoxLeaf();
 cache.MinHeight = 1;
 int width = ResolveSize(GetAttribute("width"), maxWidth);
 cache.MinWidth = width;
 cache.MaxWidth = width;
-Logger.DecLvl();
+//Logger.DecLvl();
 return cache;
 }
 }
@@ -2746,13 +2775,13 @@ return null;
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("Hidden.GetRenderCache(int)");
-Logger.IncLvl();
+using (new Logger("Hidden.GetRenderCache(int)"))
+{
 RenderBox cache = new RenderBoxTree();
 cache.MaxWidth = 0;
 cache.MaxHeight = 0;
-Logger.DecLvl();
 return cache;
+}
 }
 }
 
@@ -2768,13 +2797,13 @@ return null;
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-Logger.debug("HiddenData.GetRenderCache(int)");
-Logger.IncLvl();
+using (new Logger("hiddenData.GetRenderCache(int)"))
+{
 RenderBox cache = new RenderBoxTree();
 cache.MaxWidth = 0;
 cache.MaxHeight = 0;
-Logger.DecLvl();
 return cache;
+}
 }
 }
 
@@ -2794,6 +2823,839 @@ else
 {
 return new Dictionary<string, string>();
 }
+}
+}
+
+public abstract class RenderBox
+{
+public bool DEBUG = false;
+public char PadChar;
+public enum TextAlign { LEFT, RIGHT, CENTER }
+public enum FlowDirection { HORIZONTAL, VERTICAL }
+//public abstract int Height { get; set; }
+public abstract void Add(string box);
+public abstract void Add(StringBuilder box);
+public abstract void AddAt(int position, string box);
+public abstract void AddAt(int position, StringBuilder box);
+public abstract StringBuilder GetLine(int index);
+public abstract StringBuilder GetLine(int index, int maxWidth, int maxHeight);
+public abstract void Clear();
+private RenderBox.FlowDirection _Flow;
+private RenderBox.TextAlign _Align;
+protected int _MinWidth;
+protected int _MaxWidth;
+protected int _DesiredWidth;
+protected int _MinHeight;
+protected int _MaxHeight;
+protected int _DesiredHeight;
+public int GetActualWidth(int maxWidth)
+{
+using (new SimpleProfiler("RenderBox.GetActualWidth(int)"))
+{
+//Logger.debug("NodeBox.GetActualWidth(int)");
+//Logger.IncLvl();
+if (MaxWidth != -1)
+maxWidth = (maxWidth == -1 ? MaxWidth : Math.Min(MaxWidth, maxWidth));
+if (maxWidth == -1)
+{
+//Logger.debug("actual width equals min width");
+//Logger.DecLvl();
+return MinWidth;
+}
+else
+{
+int desired;
+if (DesiredWidth == -1)
+{
+//Logger.debug("actual width equals max width");
+desired = maxWidth;
+}
+else
+{
+//Logger.debug("actual width equals desired width, but if desired<min -> width=min and if desired>max -> width = max");
+desired = Math.Max(MinWidth, DesiredWidth);
+}
+//Logger.DecLvl();
+return (maxWidth == -1 ? desired : Math.Min(desired, maxWidth));
+}
+}
+}
+public int GetActualHeight(int maxHeight)
+{
+using (new SimpleProfiler("RenderBox.GetActualHeight(int)"))
+{
+//Logger.debug("NodeBox.GetActualHeight(int)");
+//Logger.IncLvl();
+if (MaxHeight != -1)
+maxHeight = (maxHeight == -1 ? MaxHeight : Math.Min(MaxHeight, maxHeight));
+if (maxHeight == -1)
+{
+//Logger.debug("actual width equals min height");
+//Logger.DecLvl();
+return MinHeight;
+}
+else
+{
+int desired;
+if (DesiredHeight == -1)
+{
+//Logger.debug("actual width equals max height");
+desired = maxHeight;
+}
+else
+{
+//Logger.debug("actual height equals desired height, but if desired<min -> height=min and if desired>max -> height = max");
+desired = Math.Max(MinHeight, DesiredHeight);
+}
+//Logger.DecLvl();
+return (maxHeight == -1 ? desired : Math.Min(desired, maxHeight));
+}
+}
+}
+public RenderBox.TextAlign Align
+{
+get { return _Align; }
+set { _Align = value; }
+}
+public virtual RenderBox.FlowDirection Flow
+{
+get { return _Flow; }
+set { _Flow = value; }
+}
+public virtual int MinWidth
+{
+get
+{
+using (new SimpleProfiler("RenderBox.MinWidth.get"))
+{
+//Logger.debug("NodeBox.MinWidth.get()");
+//Logger.IncLvl();
+//Logger.debug("minwidth = " + _MinWidth);
+//Logger.DecLvl();
+return _MinWidth;
+}
+}
+set
+{
+using (new SimpleProfiler("RenderBox.MinWidth.get"))
+{
+//Logger.debug("NodeBox.MinWidth.set()");
+//Logger.IncLvl();
+//Logger.debug("minwidth = " + value);
+_MinWidth = Math.Max(0, value);
+//Logger.DecLvl();
+}
+}
+}
+public int DesiredWidth
+{
+get
+{
+//Logger.debug("NodeBox.DesiredWidth.get()");
+//Logger.IncLvl();
+//Logger.debug("desiredwidth = " + _DesiredWidth);
+//Logger.DecLvl();
+return _DesiredWidth;
+}
+set
+{
+//Logger.debug("NodeBox.DesiredWidth.set()");
+//Logger.IncLvl();
+//Logger.debug("desiredwidth = " + value);
+_DesiredWidth = value;
+//Logger.DecLvl();
+}
+}
+public int MaxWidth
+{
+get
+{
+//Logger.debug("NodeBox.MaxWidth.get()");
+//Logger.IncLvl();
+//Logger.debug("maxwidth = " + _MaxWidth);
+//Logger.DecLvl();
+return _MaxWidth;
+}
+set
+{
+//Logger.debug("NodeBox.MaxWidth.set()");
+//Logger.IncLvl();
+//Logger.debug("maxwidth = " + value);
+_MaxWidth = value;
+//Logger.DecLvl();
+}
+}
+public virtual int MinHeight
+{
+get
+{
+using (new SimpleProfiler("RenderBox.MinHeight.get"))
+{
+//Logger.debug("NodeBox.MinHeight.get()");
+//Logger.IncLvl();
+//Logger.debug("minheight = " + _MinHeight);
+//Logger.DecLvl();
+return _MinHeight;
+}
+}
+set
+{
+using (new SimpleProfiler("RenderBox.MinHeight.set"))
+{
+//Logger.debug("NodeBox.MinHeight.set()");
+//Logger.IncLvl();
+//Logger.debug("minheight = " + value);
+_MinHeight = Math.Max(0, value);
+//Logger.DecLvl();
+}
+}
+}
+public int DesiredHeight
+{
+get
+{
+//Logger.debug("NodeBox.DesiredHeight.get()");
+//Logger.IncLvl();
+//Logger.debug("desiredheight = " + _DesiredHeight);
+//Logger.DecLvl();
+return _DesiredHeight;
+}
+set
+{
+//Logger.debug("NodeBox.DesiredHeight.set()");
+//Logger.IncLvl();
+//Logger.debug("desiredheight = " + value);
+_DesiredHeight = value;
+//Logger.DecLvl();
+}
+}
+public int MaxHeight
+{
+get
+{
+//Logger.debug("NodeBox.MaxHeight.get()");
+//Logger.IncLvl();
+//Logger.debug("maxheight = " + _MaxHeight);
+//Logger.DecLvl();
+return _MaxHeight;
+}
+set
+{
+//Logger.debug("NodeBox.MaxHeight.set()");
+//Logger.IncLvl();
+//Logger.debug("maxheight = " + value);
+_MaxHeight = value;
+//Logger.DecLvl();
+}
+}
+public RenderBox()
+{
+using (new SimpleProfiler("RenderBox.__construct()"))
+{
+//Logger.debug("NodeBox constructor()");
+PadChar = ' ';
+_Flow = RenderBox.FlowDirection.VERTICAL;
+_Align = RenderBox.TextAlign.LEFT;
+_MinWidth = 0;
+_MaxWidth = -1;
+_DesiredWidth = -1;
+_MinHeight = 0;
+_MaxHeight = -1;
+_DesiredHeight = -1;
+}
+}
+public IEnumerable<StringBuilder> GetLines(int maxWidth, int maxHeight)
+{
+using (new SimpleProfiler("RenderBox.GetLines(int, int)"))
+{
+//Logger.debug("NodeBox.GetRenderedLines()");
+//Logger.IncLvl();
+int height = GetActualHeight(maxHeight);
+for (int i = 0; i < height; i++)
+{
+yield return GetLine(i, maxWidth, maxHeight);
+}
+//Logger.DecLvl();
+}
+}
+public IEnumerable<StringBuilder> GetLines()
+{
+using (new SimpleProfiler("RenderBox.GetLines()"))
+{
+//Logger.debug("NodeBox.GetLines()");
+//Logger.IncLvl();
+int height = GetActualHeight(0);
+for (int i = 0; i < height; i++)
+{
+yield return GetLine(i);
+}
+//Logger.DecLvl();
+}
+}
+
+protected void AlignLine(ref StringBuilder line)
+{
+using (new SimpleProfiler("RenderBox.AlignLine(ref StringBuilder)"))
+{
+AlignLine(ref line, -1);
+}
+}
+protected void AlignLine(ref StringBuilder line, int maxWidth)
+{
+using (new SimpleProfiler("RenderBox.AlignLine(ref StringBuilder, int)"))
+{
+//Logger.debug("NodeBox.AlignLine()");
+//Logger.IncLvl();
+//Logger.debug("max width is " + maxWidth);
+int actualWidth = GetActualWidth(maxWidth);
+//Logger.debug("actual width is " + actualWidth);
+//Logger.debug("line width is " + TextUtils.GetTextWidth(line));
+//Logger.debug("line is: |" + line + "|");
+int remainingWidth = actualWidth - TextUtils.GetTextWidth(line.ToString());
+//Logger.debug("remaining width is " + remainingWidth);
+if (remainingWidth > 0) // line is not wide enough; padding necessary
+{
+////Logger.debug("line is so far: |" + line.ToString() + "|");
+//Logger.debug("padding...");
+switch (Align)
+{
+case TextAlign.CENTER:
+line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.BOTH, PadChar);
+break;
+case TextAlign.RIGHT:
+line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.LEFT, PadChar);
+break;
+default:
+line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.RIGHT, PadChar);
+break;
+}
+////Logger.debug("line is so far: |" + line.ToString() + "|");
+}
+else if (remainingWidth < 0)
+{
+//Logger.debug("clipping");
+line = new StringBuilder(line.ToString());
+while (remainingWidth < 0)
+{
+remainingWidth += TextUtils.GetTextWidth(new string(new char[]{ line[line.Length - 1] })) + 1;
+line.Remove(line.Length - 1, 1);
+}
+}
+else
+{
+//Logger.debug("neither padding nor clipping...");
+}
+//Logger.debug("aligned line is: {" + line + "}");
+//Logger.DecLvl();
+}
+}
+
+public string Render(int maxWidth, int maxHeight)
+{
+using (new SimpleProfiler("RenderBox.Render(int, int)"))
+{
+//Logger.debug("NodeBox.Render()");
+//Logger.IncLvl();
+StringBuilder result = new StringBuilder();
+foreach (StringBuilder line in GetLines(maxWidth, maxHeight))
+{
+result.Append(line);
+result.Append("\n");
+}
+if (result.Length > 0)
+result.Remove(result.Length - 1, 1);
+//Logger.DecLvl();
+return result.ToString();
+}
+}
+}
+
+public class RenderBoxLeaf : RenderBox
+{
+private bool isMinHeightCached;
+private bool isMinWidthCached;
+private int minHeightCache;
+private int minWidthCache;
+string Content;
+public override RenderBox.FlowDirection Flow
+{
+get { return RenderBox.FlowDirection.VERTICAL; }
+set { }
+}
+public override int MinHeight
+{
+get
+{
+using (new SimpleProfiler("RenderBoxLeaf.MinHeight.get"))
+{
+//Logger.debug("NodeBoxLeaf.MinHeight.get");
+//Logger.IncLvl();
+if (isMinHeightCached)
+return minHeightCache;
+if (Content.Length > 0)
+{
+minHeightCache = Math.Max(_MinHeight, 1);
+}
+else
+{
+minHeightCache = _MinHeight;
+}
+isMinHeightCached = true;
+//Logger.debug("minheight = " + minHeightCache);
+//Logger.DecLvl();
+return minHeightCache;
+}
+}
+set
+{
+using (new SimpleProfiler("RenderBoxLeaf.MinHeight.set"))
+{
+//Logger.debug("NodeBoxLeaf.MinHeight.set");
+//Logger.IncLvl();
+//Logger.debug("minheight = " + value);
+_MinHeight = value;
+//Logger.DecLvl();
+}
+}
+}
+public override int MinWidth
+{
+get
+{
+using (new SimpleProfiler("RenderBoxLeaf.MinWidth.get"))
+{
+//Logger.debug("NodeBoxLeaf.MinWidth.get");
+//Logger.IncLvl();
+if (isMinWidthCached && false)
+return minWidthCache;
+int minWidth = Math.Max(TextUtils.GetTextWidth(Content), _MinWidth);
+//Logger.debug("minwidth = " + minWidth);
+minWidthCache = minWidth;
+isMinWidthCached = true;
+//Logger.DecLvl();
+return minWidth;
+}
+}
+set
+{
+using (new SimpleProfiler("RenderBoxLeaf.MinWidth.set"))
+{
+//Logger.debug("NodeBoxLeaf.MinWidth.set()");
+//Logger.IncLvl();
+//Logger.debug("minwidth = " + value);
+_MinWidth = value;
+//Logger.DecLvl();
+}
+}
+}
+public RenderBoxLeaf()
+{
+using (new SimpleProfiler("RenderBoxLeaf.__construct()"))
+{
+//Logger.debug("NodeBoxLeaf constructor()");
+Content = "";
+isMinHeightCached = false;
+isMinWidthCached = false;
+}
+}
+public RenderBoxLeaf(StringBuilder content) : this()
+{
+using (new SimpleProfiler("RenderBoxLeaf.__construct(StringBuilder)"))
+{
+//Logger.debug("NodeBoxLeaf constructor(StringBuilder)");
+//Logger.IncLvl();
+Add(content);
+//Logger.DecLvl();
+}
+}
+public RenderBoxLeaf(string content) : this(new StringBuilder(content))
+{ }
+public override void AddAt(int position, StringBuilder box)
+{
+using (new SimpleProfiler("RenderBoxLeaf.AddAt(int, StringBuilder)"))
+{
+//Logger.debug("NodeBoxLeaf.AddAt(int, StringBuilder)");
+//Logger.IncLvl();
+if (position == 0)
+{
+Content = box.ToString() + Content;
+}
+else
+{
+Content += box;
+}
+//Logger.DecLvl();
+}
+}
+public override void Add(StringBuilder box)
+{
+using (new SimpleProfiler("RenderBoxLeaf.Add(StringBuilder)"))
+{
+//Logger.debug("NodeBoxLeaf.Add(StringBuilder)");
+//Logger.IncLvl();
+Content += box.Replace("\n", "");
+//Logger.DecLvl();
+}
+}
+public override void AddAt(int position, string box)
+{
+using (new SimpleProfiler("RenderBoxLeaf.AddAt(int, string)"))
+{
+//Logger.debug("NodeBoxLeaf.AddAt(int, string)");
+//Logger.IncLvl();
+AddAt(position, new StringBuilder(box));
+//Logger.DecLvl();
+}
+}
+public override void Add(string box)
+{
+using (new SimpleProfiler("RenderBoxLeaf.Add(string)"))
+{
+//Logger.debug("NodeBoxLeaf.Add(string)");
+//Logger.IncLvl();
+Add(new StringBuilder(box));
+//Logger.DecLvl();
+}
+}
+public override StringBuilder GetLine(int index)
+{
+return GetLine(index, -1, -1);
+}
+public override StringBuilder GetLine(int index, int maxWidth, int maxHeight)
+{
+using (new SimpleProfiler("RenderBoxLeaf.GetLine(int, int, int)"))
+{
+//Logger.debug("NodeBoxLeaf.GetLine()");
+//Logger.IncLvl();
+StringBuilder line;
+if (index == 0)
+{
+line = new StringBuilder(Content.ToString());
+}
+else
+{
+line = new StringBuilder();
+}
+AlignLine(ref line, maxWidth);
+//Logger.debug("line is {" + line + "}");
+//Logger.log("instructions: " + (P.Runtime.CurrentInstructionCount - instructions) + " -> " + P.Runtime.CurrentInstructionCount + "/" + P.Runtime.MaxInstructionCount)
+//Logger.DecLvl();
+return line;
+}
+}
+public override void Clear()
+{
+using (new SimpleProfiler("RenderBoxLeaf.Clear()"))
+{
+Content = "";
+}
+}
+}
+
+public class RenderBoxTree : RenderBox
+{
+private bool minHeightIsCached;
+private bool minWidthIsCached;
+private int minHeightCache;
+private int minWidthCache;
+List<RenderBox> Boxes;
+public RenderBox this[int i]
+{
+get
+{
+return Boxes[i];
+}
+set
+{
+Boxes[i] = value;
+}
+}
+public int Count
+{
+get
+{
+using (new SimpleProfiler("RenderBoxTree.Count.get"))
+{
+//Logger.debug("NodeBoxTree.Count.get");
+return Boxes.Count;
+}
+}
+}
+public override int MinHeight
+{
+get
+{
+using (new SimpleProfiler("RenderBoxTree.MinHeight.get"))
+{
+//Logger.debug("NodeBoxTree.MinHeight.get");
+//Logger.IncLvl();
+if (minHeightIsCached)
+return minHeightCache;
+int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
+int boxMinHeight;
+foreach (RenderBox box in Boxes)
+{
+if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+{
+minHeight = Math.Max(minHeight, box.MinHeight);
+}
+else
+{
+boxMinHeight = box.MinHeight;
+if (boxMinHeight > 0)
+{
+minHeight += boxMinHeight;
+//Logger.debug("min height + " + boxMinHeight);
+}
+}
+}
+//Logger.debug("minheight = " + minHeight.ToString());
+minHeightCache = Math.Max(0, minHeight);
+minHeightIsCached = true;
+//Logger.DecLvl();
+return minHeightCache;
+}
+}
+set
+{
+using (new SimpleProfiler("RenderBoxTree.MinHeight.set"))
+{
+//Logger.debug("NodeBoxTree.MinHeight.set");
+//Logger.IncLvl();
+//Logger.debug("minheight = " + value.ToString());
+_MinHeight = value;
+//Logger.DecLvl();
+}
+}
+}
+public override int MinWidth
+{
+get
+{
+using (new SimpleProfiler("RenderBoxTree.MinWidth.get"))
+{
+//Logger.debug("NodeBoxTree.MinWidth.get");
+//Logger.IncLvl();
+if (minWidthIsCached)
+return minWidthCache;
+int minWidth = (Flow == RenderBox.FlowDirection.HORIZONTAL ? 0 : _MinWidth);
+int boxMinWidth;
+foreach (RenderBox box in Boxes)
+{
+if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+{
+boxMinWidth = box.MinWidth;
+if (boxMinWidth > 0)
+{
+minWidth++;
+minWidth += boxMinWidth;
+//Logger.debug("min width + " + boxMinWidth);
+}
+}
+else
+{
+minWidth = Math.Max(box.MinWidth, minWidth);
+}
+}
+if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+minWidth = Math.Max(_MinWidth, minWidth - 1);
+//Logger.debug("minwidth = " + minWidth);
+minWidthCache = Math.Max(minWidth, 0);
+minWidthIsCached = true;
+//Logger.DecLvl();
+return minWidthCache;
+}
+}
+}
+public RenderBoxTree() : base()
+{
+using (new SimpleProfiler("RenderBoxTree.__construct()"))
+{
+//Logger.debug("NodeBoxTree constructor()");
+Boxes = new List<RenderBox>();
+minHeightIsCached = false;
+minWidthIsCached = false;
+}
+}
+public override void Add(string box)
+{
+using (new SimpleProfiler("RenderBoxTree.Add(string)"))
+{
+AddAt(Boxes.Count, box);
+}
+}
+public override void AddAt(int position, string box)
+{
+using (new SimpleProfiler("RenderBoxTree.AddAt(int, string)"))
+{
+//Logger.debug("NodeBoxTree.AddAt(int, string)");
+//Logger.IncLvl();
+AddAt(position, new RenderBoxLeaf(box));
+//Logger.DecLvl();
+}
+}
+public override void Add(StringBuilder box)
+{
+using (new SimpleProfiler("RenderBoxTree.Add(StringBuilder)"))
+{
+AddAt(Boxes.Count, box);
+}
+}
+public override void AddAt(int position, StringBuilder box)
+{
+using (new SimpleProfiler("RenderBoxTree.AddAt(int, StringBuilder)"))
+{
+//Logger.debug("NodeBoxTree.AddAt(int, StringBuilder)");
+//Logger.IncLvl();
+AddAt(position, new RenderBoxLeaf(box));
+//Logger.DecLvl();
+}
+}
+public void AddAt(int position, RenderBox box)
+{
+using (new SimpleProfiler("RenderBoxTree.AddAt(int, RenderBox)"))
+{
+//Logger.debug("NodeBoxTree.AddAt(int, NodeBox)");
+//Logger.IncLvl();
+Boxes.AddOrInsert<RenderBox>(box, position);
+//Logger.DecLvl();
+}
+}
+public void Add(RenderBox box)
+{
+using (new SimpleProfiler("RenderBoxTree.Add(RenderBox)"))
+{
+//Logger.debug("NodeBoxTree.Add(NodeBox)");
+//Logger.IncLvl();
+AddAt(Boxes.Count, box);
+//Logger.DecLvl();
+}
+}
+public override StringBuilder GetLine(int index)
+{
+return GetLine(index, -1, -1);
+}
+public override StringBuilder GetLine(int index, int maxWidth, int maxHeight)
+{
+using (new SimpleProfiler("RenderBoxTree.GetLine(int, int, int)"))
+{
+//Logger.debug("NodeBoxTree.GetLine(int, int)");
+//Logger.IncLvl();
+StringBuilder line = new StringBuilder();
+//bool foundLine = false;
+if (Flow == RenderBox.FlowDirection.VERTICAL)
+{
+int boxHeight;
+foreach (RenderBox box in Boxes)
+{
+boxHeight = box.GetActualHeight(maxHeight);
+if (index < boxHeight)
+{
+line = box.GetLine(index, maxWidth, maxHeight);
+//Logger.debug("child box width is " + TextUtils.GetTextWidth(line));
+//foundLine = true;
+break;
+}
+else
+{
+index -= boxHeight;
+}
+}
+}
+else
+{
+int floatingMaxWidth = maxWidth;
+if (floatingMaxWidth != -1)
+floatingMaxWidth = Math.Max(floatingMaxWidth - MinWidth, 0) - 1;
+StringBuilder nextLine;
+int boxMinWidth;
+foreach (RenderBox box in Boxes)
+{
+boxMinWidth = box.MinWidth;
+nextLine = box.GetLine(index, 1 + floatingMaxWidth + boxMinWidth, maxHeight);
+if (floatingMaxWidth != -1)
+floatingMaxWidth = Math.Max(0, floatingMaxWidth - TextUtils.GetTextWidth(nextLine.ToString()) + boxMinWidth);
+line.Append(nextLine);
+//Logger.debug("child box width is: " + TextUtils.GetTextWidth(nextLine));
+}
+//foundLine = index < Height;
+}
+AlignLine(ref line, maxWidth);
+//Logger.debug("line is: {" + line + "}");
+//Logger.DecLvl();
+return line;
+}
+}
+public override void Clear()
+{
+//Logger.debug("NodeBoxTree.Clear()");
+//Logger.IncLvl();
+Boxes.Clear();
+//Logger.DecLvl();
+}
+}
+}
+
+public class SimpleProfiler : IDisposable
+{
+private int InstructionCountBefore;
+static private Dictionary<string, MethodInfo> MethodInfos = new Dictionary<string, MethodInfo>();
+private string currentMethod;
+private static Program _Prog;
+public static Object Prog
+{
+set { _Prog = (Program)value; }
+}
+public SimpleProfiler(string methodName = "")
+{
+currentMethod = methodName;
+if(_Prog != null) InstructionCountBefore = _Prog.Runtime.CurrentInstructionCount;
+}
+public void Dispose()
+{
+if (_Prog == null) return;
+int instructionCountAfter = _Prog.Runtime.CurrentInstructionCount;
+if (!MethodInfos.ContainsKey(currentMethod))
+{
+MethodInfos[currentMethod] = new MethodInfo();
+}
+MethodInfos[currentMethod].TotalInstructionCount += instructionCountAfter - InstructionCountBefore;
+MethodInfos[currentMethod].TimesRun++;
+MethodInfos[currentMethod].Name = currentMethod;
+}
+public static string Evaluate()
+{
+SortedList<int, MethodInfo> Methods = new SortedList<int, MethodInfo>(); ;
+foreach (var entry in MethodInfos)
+{
+int instructionCount = entry.Value.TotalInstructionCount;
+while (Methods.ContainsKey(-instructionCount))
+instructionCount--;
+Methods.Add(-instructionCount, entry.Value);
+}
+StringBuilder result = new StringBuilder("Profiler Results:\n");
+string indent = "    ";
+foreach (var method in Methods.Values)
+{
+result.Append(method.Name).Append("\n");
+result.Append(indent).Append("times run: ").Append(method.TimesRun).Append("\n");
+result.Append(indent).Append("average instructions per run: ")
+.Append(method.TotalInstructionCount / method.TimesRun).Append("\n");
+result.Append(indent).Append("total instructions: ")
+.Append(method.TotalInstructionCount).Append("\n");
+}
+MethodInfos.Clear();
+return result.ToString();
+}
+class MethodInfo
+{
+public int TotalInstructionCount;
+public int TimesRun;
+public string Name;
+public MethodInfo()
+{
+TotalInstructionCount = 0;
+TimesRun = 0;
 }
 }
 }

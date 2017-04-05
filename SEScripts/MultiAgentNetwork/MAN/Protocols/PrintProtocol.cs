@@ -29,11 +29,11 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public override void ReceiveMessage(AgentMessage msg)
         {
-            Logger.log("Message received:");
-            Logger.IncLvl();
-            Logger.log("from: " + msg.Sender);
-            Logger.log("content: " + msg.Content);
-            Logger.DecLvl();
+            //Logger.log("Message received:");
+            //Logger.IncLvl();
+            //Logger.log("from: " + msg.Sender);
+            //Logger.log("content: " + msg.Content);
+            //Logger.DecLvl();
             Stop();
         }
 

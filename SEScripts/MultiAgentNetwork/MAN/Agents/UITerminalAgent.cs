@@ -29,15 +29,15 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
 
         public UITerminalAgent(MyGridProgram program, IMyTextPanel screen) : base(program)
         {
-            Logger.debug("UITerminalAgent constructor()");
-            Logger.IncLvl();
+            //Logger.debug("UITerminalAgent constructor()");
+            //Logger.IncLvl();
             Screen = screen;
-            Logger.log("Setting up UI");
+            //Logger.log("Setting up UI");
             UI = XML.UIController.FromXML(loadingPage);
 
-            Logger.log("Setup RequestRouteProtocol");
+            //Logger.log("Setup RequestRouteProtocol");
             new RequestRouteProtocol(this).Setup();
-            Logger.log("Setup UIServiceIndex");
+            //Logger.log("Setup UIServiceIndex");
             UIServiceIndexServer indexServer = new UIServiceIndexServer(this);
             indexServer.Setup();
 
@@ -45,49 +45,49 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
             //UI.FollowRoute(new XML.Route(AgentProtocol.MakeRoute(Id, indexServer.GetProtocolId(),"page='refresh'")));
             //UpdateScreen();
 
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void LoadXML(string uiString)
         {
-            Logger.debug("UITerminalAgent.LoadUI()");
-            Logger.IncLvl();
+            //Logger.debug("UITerminalAgent.LoadUI()");
+            //Logger.IncLvl();
             UI.LoadXML(uiString);
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void LoadUI(XML.XMLTree ui)
         {
-            Logger.debug("UITerminalAgent.LoadUI()");
-            Logger.IncLvl();
+            //Logger.debug("UITerminalAgent.LoadUI()");
+            //Logger.IncLvl();
             UI.LoadUI(ui);
             if(UI.HasUserInputBindings)
             {
                 ScheduleRefresh();
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void UpdateScreen()
         {
-            Logger.debug("UITerminalAgent.UpdateScreen()");
-            Logger.IncLvl();
+            //Logger.debug("UITerminalAgent.UpdateScreen()");
+            //Logger.IncLvl();
             UI.RenderTo(Screen);
             UI.ApplyScreenProperties(Screen);
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void Call(List<string> parameters)
         {
-            Logger.debug("UITerminalAgent.Call()");
-            Logger.IncLvl();
+            //Logger.debug("UITerminalAgent.Call()");
+            //Logger.IncLvl();
             UI.Call(parameters);
             UpdateScreen();
             if (UI.HasUserInputBindings)
             {
                 ScheduleRefresh();
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public override void Refresh(TimeSpan elapsedTime)

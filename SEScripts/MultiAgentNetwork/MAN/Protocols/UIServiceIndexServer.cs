@@ -62,14 +62,14 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public UIServiceIndexServer(Agent holder) : base(holder)
         {
-            Logger.log("UIServiceIndexServer constructor");
+            //Logger.log("UIServiceIndexServer constructor");
             RefreshTime = 1250;
         }
 
         public override void ReceiveMessage(AgentMessage msg)
         {
-            Logger.IncLvl();
-            Logger.debug("UIServicesIndexServer.ReceiveMessage()");
+            //Logger.IncLvl();
+            //Logger.debug("UIServicesIndexServer.ReceiveMessage()");
             if(msg.Status == AgentMessage.StatusCodes.OK)
             {
                 ReceiveServices(msg);
@@ -78,24 +78,24 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             {
                 base.ReceiveMessage(msg);
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         private void ReceiveServices(AgentMessage msg)
         {
-            Logger.debug("UIServicesIndexServer.ReceiveServices()");
-            Logger.IncLvl();
+            //Logger.debug("UIServicesIndexServer.ReceiveServices()");
+            //Logger.IncLvl();
 
             XML.XMLTree messageXML;
             try
             {
-                Logger.log("test");
+                //Logger.log("test");
                 messageXML = XML.ParseXML(msg.Content);
             }
             catch
             {
-                Logger.log("WARNING: Invalid message received!");
-                Logger.DecLvl();
+                //Logger.log("WARNING: Invalid message received!");
+                //Logger.DecLvl();
                 return;
             }
             string platformId = msg.Sender.Platform;
@@ -118,15 +118,15 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                 Holder.ReceiveMessage(fakeRequest);
             }*/
             if (HomePageActive) LoadHomeScreen();
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
         
         public override void Restart()
         { }
         public override void NotifyEvent(string eventId)
         {
-            Logger.log("UIServiceIndexServer.NotifyEvent()");
-            Logger.IncLvl();
+            //Logger.log("UIServiceIndexServer.NotifyEvent()");
+            //Logger.IncLvl();
             switch (eventId)
             {
                 case "register":
@@ -135,7 +135,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                 case "refresh":
                     int ttr = (int)Holder.GetKnowledgeEntry("TimeTillRefresh", this);
                     ttr -= Holder.ElapsedTime.Milliseconds;
-                    Logger.log("Time Till Refresh: " + ttr);
+                    //Logger.log("Time Till Refresh: " + ttr);
                     if (ttr < 0)
                     {
                         ttr = RefreshTime;
@@ -149,7 +149,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                     base.NotifyEvent(eventId);
                     break;
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public void SetUIReceiver(AgentId receiver)
@@ -159,8 +159,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         private void RetrieveServices()
         {
-            Logger.debug("UIServiceIndexServer.RetrieveServices()");
-            Logger.IncLvl();
+            //Logger.debug("UIServiceIndexServer.RetrieveServices()");
+            //Logger.IncLvl();
             AgentMessage request = new AgentMessage(
                 Holder.Id,
                 new AgentId("ALL@ALL"),
@@ -171,19 +171,19 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             request.TargetInterface = AgentMessage.Interfaces.UI;
             request.SenderChatId = ChatId;
             Holder.SendMessage(ref request);
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
         
         public string PageHome()
         {
-            Logger.debug("UIServiceIndexServer.PageHome()");
-            Logger.IncLvl();
+            //Logger.debug("UIServiceIndexServer.PageHome()");
+            //Logger.IncLvl();
             StringBuilder xml = new StringBuilder(XMLHeader).Replace("$TITLE$", "Platforms").Replace("$ATTRIBUTES$", "uiServiceIndexHome");
             xml.Append("<menu id='platformMenu'>");
             xml.Append(GetPlatformMenuitems());
             xml.Append("</menu>");
             //xml.Append("<menuItem route='" + MakeRoute(Holder.Id, GetProtocolId(), "page='refresh'") + "'>" + "Refresh</menuitem>");
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return xml.ToString();
         }
         private StringBuilder GetPlatformMenuitems()
@@ -210,8 +210,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public void LoadHomeScreen()
         {
-            Logger.log("UIServiceIndexServer.LoadHomeScreen()");
-            Logger.IncLvl();
+            //Logger.log("UIServiceIndexServer.LoadHomeScreen()");
+            //Logger.IncLvl();
             UITerminalAgent UIAgent = Holder as UITerminalAgent;
             if(UIAgent != null)
             {
@@ -219,7 +219,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                 bool isLoaded = (meta?.GetAttribute("uiserviceindexhome") != null);
                 if (HomePageActive && !isLoaded )
                 {
-                    Logger.log("Setting HomPageActive to false");
+                    //Logger.log("Setting HomPageActive to false");
                     HomePageActive = false;
                 }
                 else
@@ -228,30 +228,30 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                     if (isLoaded)
                     {
                         meta.SetAttribute("historydisabled", "true");
-                        Logger.log("Get id of selected node");
+                        //Logger.log("Get id of selected node");
                         /*XML.XMLTree selected = UIAgent.UI.GetSelectedNode();
-                        Logger.log("got selected node! (" + selected + ")");
-                        Logger.log("selected node is " + (selected == null ? "null!" : "of type " + selected.Type));
+                        //Logger.log("got selected node! (" + selected + ")");
+                        //Logger.log("selected node is " + (selected == null ? "null!" : "of type " + selected.Type));
                         string selectedId = selected.GetAttribute("id");
-                        Logger.log("got selected id!")
+                        //Logger.log("got selected id!")
 
                         //string selectedId = null;
-                        Logger.log("id is: " + selectedId ?? "null" );
+                        //Logger.log("id is: " + selectedId ?? "null" );
                         if (selectedId != null)
                         {
-                            Logger.log("Get node to select in new UI");
+                            //Logger.log("Get node to select in new UI");
                             XML.XMLTree selectedNode = ui.GetNode((node) => (node.GetAttribute("id") == selectedId));
-                            Logger.log("found it!");
+                            //Logger.log("found it!");
                             if (selectedNode != null && selectedNode.IsSelectable())
                             {
-                                Logger.log("select node...");
+                                //Logger.log("select node...");
                                 while (!selectedNode.IsSelected())
                                 {
                                     ui.SelectNext();
                                 }
                             }
                         }
-                        Logger.log("done");*/
+                        //Logger.log("done");*/
                     }
 
                     UIAgent.LoadUI(ui);
@@ -260,14 +260,14 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                     Holder.ScheduleRefresh();
                 }
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public override void Setup()
         {
-            Logger.debug("UIServiceIndexServer.Setup()");
-            Logger.IncLvl();
-            Logger.log("Create ui app");
+            //Logger.debug("UIServiceIndexServer.Setup()");
+            //Logger.IncLvl();
+            //Logger.log("Create ui app");
             /*UIServerProtocol.CreateApplication(
                 Holder,
                 GetProtocolId(),
@@ -287,7 +287,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                 }
             });
 
-            Logger.log("Create event listeners");
+            //Logger.log("Create event listeners");
             Holder.SetKnowledgeEntry("TimeTillRefresh", RefreshTime, this);
 
             AgentProtocol chat = new UIServiceIndexServer(Holder);
@@ -295,7 +295,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             Holder.OnEvent("register", chat);
             Holder.OnEvent("refresh", chat);
             Holder.SetKnowledgeEntry("HomePageActive", false, this);
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
     }
     

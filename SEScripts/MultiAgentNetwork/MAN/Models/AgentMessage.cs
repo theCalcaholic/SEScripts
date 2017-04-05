@@ -162,28 +162,28 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
 
         public AgentMessage() : base()
         {
-            Logger.debug("AgentMessage constructor()");
-            Logger.IncLvl();
+            //Logger.debug("AgentMessage constructor()");
+            //Logger.IncLvl();
             Type = "message";
             Attributes = new Dictionary<string, string>();
             Content = "";
             Status = StatusCodes.OK;
             Service = "response";
             TargetInterface = Interfaces.TEXT;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public AgentMessage(AgentId sender, AgentId receiver, string msg) : this()
         {
-            Logger.debug("AgentMessage constructor(AgentId, AgentId, string)");
-            Logger.IncLvl();
+            //Logger.debug("AgentMessage constructor(AgentId, AgentId, string)");
+            //Logger.IncLvl();
             Content = msg;
             Sender = sender;
             Receiver = receiver;
             Status = StatusCodes.OK;
             Service = "response";
             TargetInterface = Interfaces.TEXT;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public AgentMessage(
@@ -205,14 +205,14 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
             int receiverChatId
         ) : this(sender, receiver, content)
         {
-            Logger.debug("AgentMessage constructor(AgentId, AgentId, StatusCodes, string, string, int)");
-            Logger.IncLvl();
+            //Logger.debug("AgentMessage constructor(AgentId, AgentId, StatusCodes, string, string, int)");
+            //Logger.IncLvl();
             Status = status;
             Service = requestedService;
             SenderChatId = senderChatId;
             ReceiverChatId = receiverChatId;
             TargetInterface = Interfaces.TEXT;
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         public AgentMessage(
@@ -227,8 +227,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
 
         public AgentMessage MakeResponse(AgentId newSender, StatusCodes status, string msg)
         {
-            Logger.debug("AgentMessage.MakeResponse()");
-            Logger.IncLvl();
+            //Logger.debug("AgentMessage.MakeResponse()");
+            //Logger.IncLvl();
             AgentMessage aMsg = new AgentMessage(
                 newSender,
                 Sender,
@@ -238,7 +238,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
             );
             aMsg.SenderChatId = ReceiverChatId;
             aMsg.ReceiverChatId = SenderChatId;
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return aMsg;
         }
 
@@ -259,41 +259,41 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
 
         public override string ToString()
         {
-            Logger.debug("AgentMessage.ToString()");
-            Logger.IncLvl();
-            Logger.DecLvl();
+            //Logger.debug("AgentMessage.ToString()");
+            //Logger.IncLvl();
+            //Logger.DecLvl();
             return ToXML();
         }
 
         public string ToXML()
         {
-            Logger.debug("AgentMessage.ToXML()");
-            Logger.IncLvl();
+            //Logger.debug("AgentMessage.ToXML()");
+            //Logger.IncLvl();
             string xml = "<message ";
             xml += Parser.PackData(GetValues((node) => true));
             xml += "/>";
-            Logger.DecLvl();
-            Logger.log("sanitize message");
+            //Logger.DecLvl();
+            //Logger.log("sanitize message");
             return Parser.Sanitize(xml);
         }
 
         public static AgentMessage FromXML(string xml)
         {
-            Logger.debug("AgentMessage.FromXML()");
-            Logger.IncLvl();
+            //Logger.debug("AgentMessage.FromXML()");
+            //Logger.IncLvl();
             SetUp();
             xml = Parser.UnescapeQuotes(xml);
             XML.XMLTree xmlNode = XML.ParseXML(xml);
             AgentMessage msg = xmlNode.GetNode((node) => node.Type == "message") as AgentMessage;
-            Logger.DecLvl();
-            Logger.log("unescape message");
+            //Logger.DecLvl();
+            //Logger.log("unescape message");
             return msg;
         }
 
         public static void SetUp()
         {
-            Logger.debug("AgentMessage.SetUp()");
-            Logger.IncLvl();
+            //Logger.debug("AgentMessage.SetUp()");
+            //Logger.IncLvl();
             if (!XML.NodeRegister.ContainsKey("message"))
             {
                 XML.NodeRegister.Add("message", () => {
@@ -301,7 +301,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
                 }
                 );
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
     }

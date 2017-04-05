@@ -24,8 +24,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
 
         public static void SetUp()
         {
-            Logger.debug("PlatformService.SetUp()");
-            Logger.IncLvl();
+            //Logger.debug("PlatformService.SetUp()");
+            //Logger.IncLvl();
             if (!XML.NodeRegister.ContainsKey("service"))
             {
                 XML.NodeRegister.Add("service", () => {
@@ -33,7 +33,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
                 }
                 );
             }
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         /*protected override void RenderText(ref List<string> segments, int width, int availableWidth)

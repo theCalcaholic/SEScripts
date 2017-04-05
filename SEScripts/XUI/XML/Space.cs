@@ -23,31 +23,32 @@ namespace SEScripts.XUI.XML
     {
         public Space() : base()
         {
-            Logger.debug("Space constructor()");
-            Logger.IncLvl();
+            //Logger.debug("Space constructor()");
+            //Logger.IncLvl();
             Type = "space";
             SetAttribute("width", "0");
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
 
         /*protected override void RenderText(ref List<string> segments, int width, int availableWidth)
         {
-            Logger.debug(Type + ".RenderText()");
-            Logger.IncLvl();
+            //Logger.debug(Type + ".RenderText()");
+            //Logger.IncLvl();
             segments.Add(TextUtils.CreateStringOfLength(" ", width));
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }*/
 
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            Logger.debug("GetRenderCache(int)");
-            Logger.IncLvl();
+            //Logger.debug("GetRenderCache(int)");
+            //Logger.IncLvl();
             RenderBox cache = new RenderBoxLeaf();
+            cache.type = Type;
             cache.MinHeight = 1;
             int width = ResolveSize(GetAttribute("width"), maxWidth);
             cache.MinWidth = width;
             cache.MaxWidth = width;
-            Logger.DecLvl();
+            //Logger.DecLvl();
             return cache;
         }
     }

@@ -69,8 +69,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
 
         public bool SendToGrid(AgentMessage message)
         {
-            Logger.log("GridPlatformAgent.SendToGrid()");
-            Logger.IncLvl();
+            //Logger.log("GridPlatformAgent.SendToGrid()");
+            //Logger.IncLvl();
 
             if (message.Receiver.Platform == Id.Platform || message.Receiver.Platform == "local")
             {
@@ -79,31 +79,31 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
             
             if( message.Receiver.Platform == "ALL" || message.Receiver.Platform == "ANY")
             {
-                Logger.debug("Receiver platform set to local...");
+                //Logger.debug("Receiver platform set to local...");
                 message.Receiver = new AgentId(message.Receiver.Name + "@local");
-                Logger.debug("Receiver id was set to: " + message.Receiver.ToString());
+                //Logger.debug("Receiver id was set to: " + message.Receiver.ToString());
             }
 
             foreach(IMyRadioAntenna antenna in RadioAntennas)
             {
                 if(antenna.TransmitMessage("message \"" + message.ToString() + "\"", MyTransmitTarget.Everyone))
                 {
-                    Logger.log("Sending was successful.");
-                    Logger.DecLvl();
+                    //Logger.log("Sending was successful.");
+                    //Logger.DecLvl();
                     return true;
                 }
             }
-            Logger.log("Could not send message by antenna...");
+            //Logger.log("Could not send message by antenna...");
 
             ScheduleMessage(message);
-            Logger.log("Message scheduled");
+            //Logger.log("Message scheduled");
             if(ScheduledMessages.Count > 0)
             {
-                Logger.log("Schedule refresh");
+                //Logger.log("Schedule refresh");
                 ScheduleRefresh();
             }
-            Logger.log("Sent to grid (finished)");
-            Logger.DecLvl();
+            //Logger.log("Sent to grid (finished)");
+            //Logger.DecLvl();
             return true;
         }
     }

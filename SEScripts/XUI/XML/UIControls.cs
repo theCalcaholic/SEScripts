@@ -102,36 +102,39 @@ namespace SEScripts.XUI.XML
 
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            Logger.debug("UIControls.GetRenderCache(int)");
-            Logger.IncLvl();
-            RenderBoxTree cache = new RenderBoxTree();
-            if (Controller == null)
+            using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
             {
-                UpdateController();
+                //Logger.debug("UIControls.GetRenderCache(int)");
+                //Logger.IncLvl();
+                RenderBoxTree cache = new RenderBoxTree();
+                cache.type = Type;
+                if (Controller == null)
+                {
+                    UpdateController();
+                }
+
+                if (IsSelectable())
+                {
+                    RenderBox childCache = new RenderBoxLeaf(IsSelected() ?
+                        new StringBuilder("<<") :
+                        TextUtils.CreateStringOfLength(' ', TextUtils.GetTextWidth("<<")));
+                    childCache.MaxWidth = childCache.MinWidth;
+                    cache.Add(childCache);
+                }
+                RenderBoxTree contentCache = new RenderBoxTree();
+                contentCache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
+
+                foreach (XMLTree child in Children)
+                {
+                    contentCache.Add(child.GetRenderBox(maxWidth, maxHeight));
+                }
+                cache.Add(contentCache);
+
+                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+                cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+                
+                return cache;
             }
-
-            if(IsSelectable())
-            {
-                RenderBox childCache = new RenderBoxLeaf(IsSelected() ? 
-                    new StringBuilder("<<") : 
-                    TextUtils.CreateStringOfLength(" ", TextUtils.GetTextWidth(new StringBuilder("<<"))));
-                childCache.MaxWidth = childCache.MinWidth;
-                cache.Add(childCache);
-            }
-            RenderBoxTree contentCache = new RenderBoxTree();
-            contentCache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
-
-            foreach (XMLTree child in Children)
-            {
-                contentCache.Add(child.GetRenderBox(maxWidth, maxHeight));
-            }
-            cache.Add(contentCache);
-
-            UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
-            cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
-
-            Logger.DecLvl();
-            return cache;
         }
     }
 

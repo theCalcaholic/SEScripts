@@ -35,8 +35,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
 
         public void RegisterWith(string platformName)
         {
-            Logger.log("RegisteredAgent.RegisterWith()");
-            Logger.IncLvl();
+            //Logger.log("RegisteredAgent.RegisterWith()");
+            //Logger.IncLvl();
             AgentId platform = new AgentId(platformName + "@local");
             ServiceRegistrationProtocol chat = new ServiceRegistrationProtocol(this);
             Chats[chat.ChatId] = chat;
@@ -59,10 +59,10 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
                 new ServiceRegistrationProtocol.Platform(this).GetProtocolId(),
                 chat.ChatId
             );
-            Logger.log("Registering:");
-            Logger.log("msg: " + message.ToXML());
+            //Logger.log("Registering:");
+            //Logger.log("msg: " + message.ToXML());
             SendMessage(ref message);
-            Logger.DecLvl();
+            //Logger.DecLvl();
         }
     }
 

@@ -14,23 +14,14 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-//using SEScripts.Lib;
-
-namespace SEScripts
+namespace SEScripts.XUI.BoxRenderer
 {
-    public sealed class Program : MyGridProgram
+    class Program : MyGridProgram
     {
         public Program()
         {
-        }
 
-        public void Main()
-        {
-            IMyBlockGroup blockGroup = GridTerminalSystem.GetBlockGroupWithName("test");
-            var blocks = new List<IMyTerminalBlock>();
-            blockGroup.GetBlocks(blocks);
-            IMyTextPanel panel;
         }
-
+        
     }
 }

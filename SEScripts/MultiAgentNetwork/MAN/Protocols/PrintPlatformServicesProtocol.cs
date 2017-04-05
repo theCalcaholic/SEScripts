@@ -29,20 +29,20 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public PrintPlatformServicesProtocol(Agent agent) : base(agent)
         {
-            Logger.log("Create new PrintPlatformServicesProtocol");
+            //Logger.log("Create new PrintPlatformServicesProtocol");
             State = 0;
         }
 
         public override void ReceiveMessage(AgentMessage msg)
         {
-            Logger.log("PrintPlatformServicesProtocol.ReceiveMessage(message)");
+            //Logger.log("PrintPlatformServicesProtocol.ReceiveMessage(message)");
             switch (State)
             {
                 case 0:
-                    Logger.log("Handling state 0");
+                    //Logger.log("Handling state 0");
                     if (Holder.Id.Platform == "local")
                     {
-                        Logger.log("WARNING: PrintPlatformServicesProtocol started, but agent is not registered at any platform!");
+                        //Logger.log("WARNING: PrintPlatformServicesProtocol started, but agent is not registered at any platform!");
                         Stop();
                         return;
                     }
@@ -62,20 +62,20 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                     }
                     break;
                 case 1:
-                    Logger.log("Handling state 1");
+                    //Logger.log("Handling state 1");
                     if (msg.Status == AgentMessage.StatusCodes.OK)
                     {
                         List<XML.XMLTree> services = XML.ParseXML(msg.Content).GetAllNodes((node) => node.Type == "service");
-                        Logger.log("Available Platform Services:");
+                        //Logger.log("Available Platform Services:");
                         foreach (XML.XMLTree service in services)
                         {
-                            Logger.log("  " + service.GetAttribute("id"));
+                            //Logger.log("  " + service.GetAttribute("id"));
                         }
                     }
                     else
                     {
                         base.ReceiveMessage(msg);
-                        Logger.log("An error occured in protocol PrintPlatformServicesProtocol: " + msg.Status.ToString());
+                        //Logger.log("An error occured in protocol PrintPlatformServicesProtocol: " + msg.Status.ToString());
                     }
                     Stop();
                     break;
