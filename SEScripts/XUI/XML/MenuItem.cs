@@ -62,24 +62,28 @@ namespace SEScripts.XUI.XML
         public override void OnKeyPressed(string keyCode)
         {
             //Logger.debug(Type + ": OnKeyPressed():");
-            switch (keyCode)
+            using (Logger logger = new Logger("MenuItem.OnKeyPressed(string)", Logger.Mode.LOG))
             {
-                case "RIGHT/SUBMIT":
-                    if (TargetRoute != null)
-                    {
-                        //Logger.debug("Follow Target Route!");
-                        FollowRoute(TargetRoute);
-                    }
-                    else
-                    {
-                        //Logger.debug("No route set!");
-                    }
+                switch (keyCode)
+                {
+                    case "RIGHT/SUBMIT":
+                        if (TargetRoute != null)
+                        {
+                            //Logger.debug("Follow Target Route!");
+                            FollowRoute(TargetRoute);
+                        }
+                        else
+                        {
+                            logger.log("target route is null!", Logger.Mode.WARNING);
+                            //Logger.debug("No route set!");
+                        }
 
-                    break;
+                        break;
+                }
+
+                base.OnKeyPressed(keyCode);
+                //Logger.DecLvl();
             }
-
-            base.OnKeyPressed(keyCode);
-            //Logger.DecLvl();
         }
 
         public void SetRoute(Route route)

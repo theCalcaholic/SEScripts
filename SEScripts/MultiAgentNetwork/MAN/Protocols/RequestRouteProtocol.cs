@@ -92,42 +92,46 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
         {
             //Logger.log("RequestRouteProtocol.RequestRoute()");
             //Logger.IncLvl();
-            string mafRoutePattern = @"(?<provider>[\w{}\s_\-#]+@[\w{}\s_\-#]+)::(?<service>[\w\-]+)(\((?<argument>[^)]*)\)){0,1}";
-            System.Text.RegularExpressions.Regex mafRouteRegex = new System.Text.RegularExpressions.Regex(mafRoutePattern);
-            System.Text.RegularExpressions.Match mafRouteMatch = mafRouteRegex.Match(routeString);
-            if(!mafRouteMatch.Success)
+            using (Logger logger = new Logger("RequestRouteProtocol.RequestRoute()", Logger.Mode.LOG))
             {
-                throw new Exception("WARNING: Route not understood: <<" + routeString + ">>");
-                //Logger.log("WARNING: Route not understood: <<" + routeString + ">>");
+                string mafRoutePattern = @"(?<provider>[\w{}\s_\-#]+@[\w{}\s_\-#]+)::(?<service>[\w\-]+)(\((?<argument>[^)]*)\)){0,1}";
+                System.Text.RegularExpressions.Regex mafRouteRegex = new System.Text.RegularExpressions.Regex(mafRoutePattern);
+                System.Text.RegularExpressions.Match mafRouteMatch = mafRouteRegex.Match(routeString);
+                if (!mafRouteMatch.Success)
+                {
+                    throw new Exception("WARNING: Route not understood: <<" + routeString + ">>");
+                    //Logger.log("WARNING: Route not understood: <<" + routeString + ">>");
+                    //Logger.DecLvl();
+                    Stop();
+                    return false;
+                }
+                ListenForUIUpdate(false);
+
+                AgentId id = new AgentId(mafRouteMatch.Groups["provider"].Value);
+                string service = mafRouteMatch.Groups["service"].Value;
+                string content = Parser.UnescapeQuotes(mafRouteMatch.Groups["argument"].Value);
+
+                UITerminalAgent UIAgent = Holder as UITerminalAgent;
+                content += " " + (UIAgent?.UI.GetPackedValues() ?? "");
+                UIAgent?.LoadXML(LoadingPage);
+                UIAgent?.UpdateScreen();
+
+                RouteDefinition = routeString;
+                AgentMessage request = new AgentMessage(
+                    Holder.Id,
+                    id,
+                    AgentMessage.StatusCodes.OK,
+                    content,
+                    service,
+                    ChatId
+                    );
+                request.TargetInterface = AgentMessage.Interfaces.UI;
+                request.SenderChatId = ChatId;
+                Holder.ScheduleMessage(request);
                 //Logger.DecLvl();
-                Stop();
-                return false;
+                logger.log("requesting route: " + request.ToXML(), Logger.Mode.LOG);
+                return true;
             }
-            ListenForUIUpdate(false);
-            
-            AgentId id = new AgentId(mafRouteMatch.Groups["provider"].Value);
-            string service = mafRouteMatch.Groups["service"].Value;
-            string content = Parser.UnescapeQuotes(mafRouteMatch.Groups["argument"].Value);
-
-            UITerminalAgent UIAgent = Holder as UITerminalAgent;
-            content += " " + (UIAgent?.UI.GetPackedValues() ?? "");
-            UIAgent?.LoadXML(LoadingPage);
-            UIAgent?.UpdateScreen();
-
-            RouteDefinition = routeString;
-            AgentMessage request = new AgentMessage(
-                Holder.Id,
-                id,
-                AgentMessage.StatusCodes.OK,
-                content,
-                service,
-                ChatId
-                );
-            request.TargetInterface = AgentMessage.Interfaces.UI;
-            request.SenderChatId = ChatId;
-            Holder.ScheduleMessage(request);
-            //Logger.DecLvl();
-            return true;
         }
 
         public void ListenForUIUpdate(bool on)
@@ -152,10 +156,13 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                     return new RequestRouteProtocol(agent);
                 });*/
             XML.Route.RouteHandlers.Add("man", (def, controller) => {
-                RequestRouteProtocol request = new RequestRouteProtocol(Holder);
-                Holder.AddChat(request);
-                request.UI = controller;
-                request.RequestRoute(def);
+                using (Logger logger = new Logger("Handle man route", Logger.Mode.LOG))
+                {
+                    RequestRouteProtocol request = new RequestRouteProtocol(Holder);
+                    Holder.AddChat(request);
+                    request.UI = controller;
+                    request.RequestRoute(def);
+                }
             });
             //Logger.DecLvl();
         }

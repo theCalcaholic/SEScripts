@@ -32,6 +32,7 @@ namespace SEScripts.XUI.XML
             Content = content;
             Content.Replace("\n", "");
             Content = Content.Trim(new char[] { '\n', ' ', '\r' });
+            SetAttribute("width", "100%");
             //Logger.debug("final content: " + Content);
             RerenderRequired = true;
             //Logger.DecLvl();
@@ -39,15 +40,16 @@ namespace SEScripts.XUI.XML
 
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
-            {
+            //using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
+            //{
                 //Logger.debug("TextNode.GetRenderCache(int)");
                 //Logger.IncLvl();
                 RenderBox cache = new RenderBoxLeaf(Content);
                 cache.type = Type;
+                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
                 //Logger.DecLvl();
                 return cache;
-            }
+            //}
         }
 
         //protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }

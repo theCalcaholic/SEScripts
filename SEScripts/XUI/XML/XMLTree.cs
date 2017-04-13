@@ -58,8 +58,8 @@ namespace SEScripts.XUI.XML
 
         public virtual RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            using (Logger logger = new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)", Logger.Mode.LOG))
-            {
+            //using (Logger logger = new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)", Logger.Mode.LOG))
+            //{
                 //Logger.debug("XMLTree.GetRenderCache(int)");
                 //Logger.IncLvl();
                 /*if(_renderCache != null)
@@ -70,28 +70,29 @@ namespace SEScripts.XUI.XML
 
                 RenderBoxTree cache = new RenderBoxTree();
                 cache.type = Type;
-                logger.log("1", Logger.Mode.LOG);
+                //Console.WriteLine(Type);
+                //logger.log("1", Logger.Mode.LOG);
                 RenderBox childCache;
                 foreach (XMLTree child in Children)
                 {
                     //TODO: Problems with relative height/width values
                     childCache = child.GetRenderBox(maxWidth, maxHeight);
-                    logger.log("-", Logger.Mode.LOG);
+                    //logger.log("-", Logger.Mode.LOG);
                     cache.Add(childCache);
                 }
 
-                logger.log("2", Logger.Mode.LOG);
+                //logger.log("2", Logger.Mode.LOG);
                 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 
                 //_renderCache = cache;
                 return cache;
-            }
+            //}
         }
 
         protected void UpdateRenderCacheProperties(RenderBox cache, int maxWidth, int maxHeight)
         {
-            using (Logger logger = new Logger("XMLTree<" + Type + ">.UpdateRenderCacheProperties(NodeBox, int)", Logger.Mode.LOG))
-            {
+            //using (Logger logger = new Logger("XMLTree<" + Type + ">.UpdateRenderCacheProperties(NodeBox, int)", Logger.Mode.LOG))
+            //{
                 //Logger.IncLvl();
                 cache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
 
@@ -122,19 +123,20 @@ namespace SEScripts.XUI.XML
                 int forcedHeight = ResolveSize(GetAttribute("forceheight"), maxWidth);
                 if (forcedHeight != -1)
                 {
-                    logger.log("Apply forced height (" + forcedHeight + ")", Logger.Mode.LOG);
+                    //logger.log("Apply forced height (" + forcedHeight + ")", Logger.Mode.LOG);
                     cache.MinHeight = forcedHeight;
                     cache.MaxHeight = forcedHeight;
                 }
                 //cache.Height = CalculateWidth(GetAttribute("height"), -1);
-            }
+            //}
         }
 
         public static int ResolveSize(string widthString, int maxWidth)
         {
-            using (Logger logger = new Logger("XMLTree.ResolvePercentage(string, int)", Logger.Mode.LOG))
-            {
-                widthString = widthString?.Trim();
+            //using (Logger logger = new Logger("XMLTree.ResolvePercentage(string, int)", Logger.Mode.LOG))
+            //{
+                if(widthString != null)
+                    widthString = widthString?.Trim();
                 float fWidth;
                 if (widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
                 {
@@ -149,13 +151,13 @@ namespace SEScripts.XUI.XML
                         return iWidth;
                     return -1;
                 }
-            }
+            //}
         }
 
         public XMLTree()
         {
-            using (Logger logger = new Logger("XMLTree constructor", Logger.Mode.LOG))
-            {
+            //using (Logger logger = new Logger("XMLTree constructor", Logger.Mode.LOG))
+            //{
                 HasUserInputBindings = false;
                 PreventDefaults = new List<string>();
                 Parent = null;
@@ -175,7 +177,7 @@ namespace SEScripts.XUI.XML
                 SetAttribute("selected", "false");
                 SetAttribute("selectable", "false");
                 SetAttribute("flow", "vertical");
-            }
+            //}
         }
 
         public bool IsSelectable()
@@ -864,18 +866,18 @@ namespace SEScripts.XUI.XML
 
         public virtual string Render(int maxWidth, int maxHeight)
         {
-            using (Logger logger = new Logger("XMLTree<" + Type + ">.Render(int, int)", Logger.Mode.LOG))
-            {
+            //using (Logger logger = new Logger("XMLTree<" + Type + ">.Render(int, int)", Logger.Mode.LOG))
+            //{
                 //Logger.debug(Type + ".Render(int)");
                 //Logger.IncLvl();
                 //Logger.log("RENDERING::PREPARE");
                 RenderBox cache = GetRenderBox(maxWidth, maxHeight);
-                logger.log("Rendering::START", Logger.Mode.LOG);
+                //logger.log("Rendering::START", Logger.Mode.LOG);
                 //Logger.log("RENDERING::START");
                 string result = cache.Render(maxWidth, maxHeight);
                 //Logger.DecLvl();
                 return result;
-            }
+            //}
         }
 
         public string Render()

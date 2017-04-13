@@ -142,7 +142,8 @@ namespace SEScripts.XUI.Tests
 
             // minwidth < maxwidth, no desired width
             maxwidth = root.MinWidth + (TextUtils.GetCharWidth(' ') * 20) + 20;
-            Assert.AreEqual(maxwidth, root.GetActualWidth(maxwidth));
+            minwidth = root.MinWidth;
+            Assert.AreEqual(minwidth, root.GetActualWidth(maxwidth));
 
             // minwidth > maxwidth, no desired width
             maxwidth = root.MinWidth - TextUtils.GetCharWidth(content3[content3.Length - 1]) + 1;

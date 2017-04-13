@@ -77,6 +77,10 @@ namespace SEScripts.XUI.XML
             InputDataCache = "";
             ui = rootNode;
             ui.SetParent(this);
+            if (GetSelectedFont() == Fonts[FONT.MONO])
+                TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
+            else
+                TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
             if (GetSelectedNode() == null && ui.IsSelectable())
             {
                 ui.SelectFirst();
@@ -129,23 +133,8 @@ namespace SEScripts.XUI.XML
                 uint.Parse(colorString, System.Globalization.NumberStyles.AllowHexSpecifier));
                 screen.SetValue<Color>("BackgroundColor", fontColor);
             }
-
-            if(ui.GetAttribute("fontfamily") != null)
-            {
-                string font = ui.GetAttribute("font");
-                FONT fontName;
-                long fontValue;
-                if(Enum.TryParse<FONT>(font, out fontName))
-                {
-                    screen.SetValue<long>("Font", Fonts[fontName]);
-                }
-                else if(long.TryParse(font, out fontValue))
-                {
-                    screen.SetValue<long>("Font", fontValue);
-                }
-                
-            }
-
+            
+            screen.SetValue<long>("Font", GetSelectedFont());
             //Logger.DecLvl();
         }
 
@@ -170,6 +159,7 @@ namespace SEScripts.XUI.XML
                     {
                         FollowRoute(new Route(refresh));
                     }
+                    UpdateUserInput();
                     break;
                 case "revert":
                     RevertUI();
@@ -234,9 +224,10 @@ namespace SEScripts.XUI.XML
 
         public string Render()
         {
-            //Logger.debug("UIController: Render():");
-            //Logger.IncLvl();
-            //Logger.DecLvl();
+            if (GetSelectedFont() == Fonts[FONT.MONO])
+                TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
+            else
+                TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
             return ui.Render(-1, -1);
         }
 
@@ -244,7 +235,7 @@ namespace SEScripts.XUI.XML
         {
             //Logger.debug("UIController.RenderTo()");
             //Logger.IncLvl();
-            int panelWidth = 0;
+            int panelWidth = -1;
             string panelType = panel.BlockDefinition.SubtypeId;
             //Logger.debug("Type: " + panelType);
 
@@ -267,25 +258,36 @@ namespace SEScripts.XUI.XML
                 || panelType == "SmallBlockCorner_LCD_Flat_1" || panelType == "SmallBlockCorner_LCD_Flat_2")
             { }
 
-            int width = (int)(((float)panelWidth) / panel.GetValue<Single>("FontSize"));
+            int width = panelWidth == -1 ? -1 : (int)(((float)panelWidth) / panel.GetValue<Single>("FontSize"));
             //TODO: Get height of screen
             int height = 20;
-            if (panel.GetValue<long>("Font") == Fonts[FONT.MONO])
-            {
-                TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
-            }
-            else
-            {
-                TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
-            }
-            //Logger.log("Font configured...");
+            ApplyScreenProperties(panel);
 
-            //Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
-            //Logger.debug("resulting width: " + width.ToString());
-            string text = ui.Render(width, height);
-            //Logger.debug("rendering <" + text);
-            panel.WritePublicText(text);
-            //Logger.DecLvl();
+            using (new Logger("RENDERING...", Logger.Mode.LOG))
+            {
+                string text = ui.Render(width, height);
+                panel.WritePublicText(text);
+            }
+        }
+
+        public long GetSelectedFont()
+        {
+            string font = ui.GetAttribute("fontfamily");
+            if (font != null)
+            {
+                FONT fontName;
+                long fontValue;
+                if (long.TryParse(font, out fontValue))
+                {
+                    return fontValue;
+                }
+                else if (Enum.TryParse<FONT>(font, out fontName))
+                {
+                    return Fonts.GetValueOrDefault(fontName, -1);
+                }
+            }
+
+            return -1;
         }
 
         public void KeyPress(string keyCode)
@@ -416,103 +418,107 @@ namespace SEScripts.XUI.XML
 
         public bool UpdateUserInput()
         {
-            //Logger.debug("UIController.RefreshUserInput()");
-            //Logger.IncLvl();
-            if(!UserInputActive || UserInputSource == null)
+            using (new Logger("UIController.RefreshUserInput()", Logger.Mode.LOG))
             {
-                return false;
-            }
-
-            // get input data
-            string inputData = null;
-            switch(UserInputMode)
-            {
-                case TextInputMode.CUSTOM_DATA:
-                    inputData = UserInputSource?.CustomData;
-                    break;
-                case TextInputMode.PUBLIC_TEXT:
-                    inputData = (UserInputSource as IMyTextPanel)?.GetPublicText();
-                    break;
-            }
-            bool inputHasChanged = true;
-            if( inputData == null || inputData == InputDataCache)
-            {
-                inputHasChanged = false;
-            }
-
-            //Logger.debug("input has " + (inputHasChanged ? "" : "not ") + "changed");
-            //Logger.debug("Iterating input bindings (" + UserInputBindings.Count + " bindings registered).");
-
-            // update ui input bindings
-            string binding;
-            string fieldValue;
-            foreach (XMLTree node in UserInputBindings)
-            {
-                binding = node.GetAttribute("inputbinding");
-                if(binding != null)
+                //Logger.IncLvl();
+                if (!UserInputActive || UserInputSource == null)
                 {
-                    //Logger.debug("binding found at " + node.Type + " node for field: " + binding);
-                    fieldValue = node.GetAttribute(binding.ToLower());
-                    //Logger.debug("field is " + (fieldValue ?? "EMPTY") + ".");
-                    if(!inputHasChanged && fieldValue != null && fieldValue != InputDataCache)
+                    return false;
+                }
+
+                // get input data
+                string inputData = null;
+                switch (UserInputMode)
+                {
+                    case TextInputMode.CUSTOM_DATA:
+                        inputData = UserInputSource?.CustomData;
+                        break;
+                    case TextInputMode.PUBLIC_TEXT:
+                        inputData = (UserInputSource as IMyTextPanel)?.GetPublicText();
+                        break;
+                }
+                bool inputHasChanged = true;
+                if (inputData == null || inputData == InputDataCache)
+                {
+                    inputHasChanged = false;
+                }
+
+                //Logger.debug("input has " + (inputHasChanged ? "" : "not ") + "changed");
+                //Logger.debug("Iterating input bindings (" + UserInputBindings.Count + " bindings registered).");
+
+                // update ui input bindings
+                string binding;
+                string fieldValue;
+                foreach (XMLTree node in UserInputBindings)
+                {
+                    binding = node.GetAttribute("inputbinding");
+                    if (binding != null)
                     {
-                        //Logger.debug("applying field value: " + fieldValue);
-                        inputData = fieldValue;
-                        inputHasChanged = true;
-                    }
-                    else if(inputHasChanged)
-                    {
-                        //Logger.debug("Updating field value to input: " + inputData);
-                        node.SetAttribute(binding.ToLower(), inputData);
+                        //Logger.debug("binding found at " + node.Type + " node for field: " + binding);
+                        fieldValue = node.GetAttribute(binding.ToLower());
+                        //Logger.debug("field is " + (fieldValue ?? "EMPTY") + ".");
+                        if (!inputHasChanged && fieldValue != null && fieldValue != InputDataCache)
+                        {
+                            //Logger.debug("applying field value: " + fieldValue);
+                            inputData = fieldValue;
+                            inputHasChanged = true;
+                        }
+                        else if (inputHasChanged)
+                        {
+                            //Logger.debug("Updating field value to input: " + inputData);
+                            node.SetAttribute(binding.ToLower(), inputData);
+                        }
                     }
                 }
-            }
-            if(inputHasChanged)
-            {
-                InputDataCache = inputData;
-            }
+                if (inputHasChanged)
+                {
+                    InputDataCache = inputData;
+                }
 
-            // update user input device
-            switch (UserInputMode)
-            {
-                case TextInputMode.CUSTOM_DATA:
-                    if(UserInputSource != null)
-                    {
-                        UserInputSource.CustomData = InputDataCache;
-                    }
-                    break;
-                case TextInputMode.PUBLIC_TEXT:
-                    (UserInputSource as IMyTextPanel)?.WritePublicText(InputDataCache);
-                    break;
-            }
+                // update user input device
+                switch (UserInputMode)
+                {
+                    case TextInputMode.CUSTOM_DATA:
+                        if (UserInputSource != null)
+                        {
+                            UserInputSource.CustomData = InputDataCache;
+                        }
+                        break;
+                    case TextInputMode.PUBLIC_TEXT:
+                        (UserInputSource as IMyTextPanel)?.WritePublicText(InputDataCache);
+                        break;
+                }
 
-            return inputHasChanged;
+                return inputHasChanged;
+            }
         }
 
         private void CollectUserInputBindings()
         {
-            //Logger.debug("UIController.CollectUserInputBindings()");
-            XMLTree node;
-            Queue<XMLParentNode> nodes = new Queue<XMLParentNode>();
-            nodes.Enqueue(ui);
-            while(nodes.Count != 0)
+            using (Logger logger = new Logger("UIController.CollectUserInputBindings()", Logger.Mode.LOG))
             {
-                node = nodes.Dequeue() as XMLTree;
-                if(!node.HasUserInputBindings)
+                XMLTree node;
+                Queue<XMLParentNode> nodes = new Queue<XMLParentNode>();
+                nodes.Enqueue(ui);
+                while (nodes.Count != 0)
                 {
-                    //Logger.debug("node has no userinputbindings");
-                }
-                if (node != null && node.HasUserInputBindings)
-                {
-                    //Logger.debug("Checking " + node.Type + " node...");
-                    for (int i = 0; i < node.NumberOfChildren; i++)
+                    node = nodes.Dequeue() as XMLTree;
+                    if (!node.HasUserInputBindings)
                     {
-                        nodes.Enqueue(node.GetChild(i));
+                        logger.log("node has no userinputbindings", Logger.Mode.LOG);
                     }
-                    if (node.GetAttribute("inputbinding") != null)
+                    if (node != null && node.HasUserInputBindings)
                     {
-                        RegisterInputBinding(node);
+                        logger.log("Checking " + node.Type + " node...", Logger.Mode.LOG);
+                        for (int i = 0; i < node.NumberOfChildren; i++)
+                        {
+                            nodes.Enqueue(node.GetChild(i));
+                        }
+                        if (node.GetAttribute("inputbinding") != null)
+                        {
+                            RegisterInputBinding(node);
 
+                        }
                     }
                 }
             }

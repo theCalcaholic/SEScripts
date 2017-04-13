@@ -36,5 +36,18 @@ namespace SEScripts.XUI.XML
                 return new Dictionary<string, string>();
             }
         }
+
+        public override void SetAttribute(string key, string value)
+        {
+            long fontValue;
+            if (key.ToLower() == "fontfamily" && long.TryParse(value, out fontValue))
+            {
+                if (fontValue == 1147350002)
+                    TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
+                else
+                    TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
+            }
+            base.SetAttribute(key, value);
+        }
     }
 }

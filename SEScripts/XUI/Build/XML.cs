@@ -9,16 +9,16 @@ static public bool DEBUG = false;
 protected static StringBuilder Prefix = new StringBuilder();
 protected Program Prog;
 protected Mode logMode;
+private bool disposed;
 public static string Output
 {
 get { return Log.ToString(); }
 }
 public Logger(string message) : this(message, Mode.DEBUG) {}
-public Logger(string message, Mode mode)
-{
-}
+public Logger(string message, Mode mode) : this(message, mode, null) {}
 public Logger(string message, Mode mode, Program program)
 {
+disposed = false;
 if (!DEBUG && mode == Mode.DEBUG)
 return;
 Prog = program;
@@ -39,22 +39,27 @@ msg.Append(message);
 Log.Append(msg).Append("\n");
 if (logMode == Mode.CONSOLE)
 {
+if(Prog != null)
 Prog?.Echo(msg.ToString());
 }
-//MERGESCRIPT TEST
 }
-public void IncLvl()
+private void IncLvl()
 {
 Prefix.Append("  ");
 }
-public void DecLvl()
+private void DecLvl()
 {
 if( Prefix.Length >= 2)
 Prefix.Remove(Prefix.Length - 2, 2);
 }
+
 public virtual void Dispose()
 {
+if (!disposed)
+{
 DecLvl();
+}
+disposed = true;
 }
 }
 
@@ -71,10 +76,10 @@ return dataString.ToString();
 }
 public static string Sanitize(string xmlDefinition)
 {
-using (new Logger("Parser.Sanitize"))
-{
+//using (new Logger("Parser.Sanitize"))
+//{
 return xmlDefinition.Replace("\"", "\\\"").Replace("'", "\\'");
-}
+//}
 }
 public static string UnescapeQuotes(string xmlDefinition)
 {
@@ -119,8 +124,8 @@ string haystack,
 bool ignoreEscapedQuotes
 )
 {
-using (Logger logger = new Logger("GetNextOutsideQuotes():"))
-{
+//using (Logger logger = new Logger("GetNextOutsideQuotes():"))
+//{
 char[] quoteChars = new char[] { '\'', '"' };
 int needlePos = -1;
 int quoteEnd = -1;
@@ -166,12 +171,12 @@ quoteEnd = haystack.IndexOf(haystack[quoteStart], quoteStart + 1);
 }
 }
 return needlePos;
-}
+//}
 }
 public static List<String> ParamString2List(string arg)
 {
-using (new Logger("Parser.ParamString2List(string)"))
-{
+//using (new Logger("Parser.ParamString2List(string)"))
+//{
 arg = arg.Trim() + " ";
 List<string> argList = new List<string>();
 char[] quoteChars = new char[] { '\'', '"' };
@@ -183,12 +188,12 @@ spacePos = Parser.GetNextOutsideQuotes(new char[] { ' ', '\n' }, arg);
 argList.Add(arg.Substring(0, spacePos).Trim(quoteChars));
 }
 return argList;
-}
+//}
 }
 public static Dictionary<string, string> GetXMLAttributes(string attributeString)
 {
-using (new Logger("Parser.GetXMLAttributes(string)"))
-{
+//using (new Logger("Parser.GetXMLAttributes(string)"))
+//{
 Dictionary<string, string> attributes = new Dictionary<string, string>();
 char[] quoteChars = new char[] { '\'', '"' };
 List<string> attributeList = ParamString2List(attributeString);
@@ -207,7 +212,7 @@ attribute.Substring(equalChar + 1).Trim(quoteChars);
 }
 }
 return attributes;
-}
+//}
 }
 }
 
@@ -246,8 +251,8 @@ return GetTextWidth(text, 0, text.Length);
 }
 public static int GetTextWidth(string text, int start, int length)
 {
-using (new SimpleProfiler("TextUtils.GetTextWidth(StringBuilder, int, int)"))
-{
+//using (new SimpleProfiler("TextUtils.GetTextWidth(StringBuilder, int, int)"))
+//{
 string[] lines = text.Substring(start, length).Split('\n');
 if (start + length > text.Length)
 {
@@ -256,12 +261,11 @@ throw new Exception("ERROR: stringbuilder slice exceeds the stringbuilders lengt
 text = text.Replace("\r", "");
 int width = 0;
 int lineWidth = 0;
-int v;
 foreach(string line in lines)
 {
 if (selectedFont == FONT.MONOSPACE)
 {
-lineWidth = (line.Length * 25) - 1;
+lineWidth = (line.Length * 25);
 }
 else
 {
@@ -285,7 +289,7 @@ width = Math.Max(lineWidth - 1, width);
 lineWidth = 0;
 }
 return Math.Max(width, lineWidth - 1);
-}
+//}
 }
 /*public static string RemoveLastTrailingNewline(string text)
 {
@@ -307,8 +311,8 @@ return CreateStringOfLength(constituent, length, RoundMode.FLOOR);
 }
 public static StringBuilder CreateStringOfLength(char constituent, int length, RoundMode mode)
 {
-using (new SimpleProfiler("TextUtils.CreateStringOfLength(string, int, RoundMode)"))
-{
+//using (new SimpleProfiler("TextUtils.CreateStringOfLength(string, int, RoundMode)"))
+//{
 int lengthOfConstituent = GetCharWidth(constituent);
 if (mode == RoundMode.CEIL)
 {
@@ -322,7 +326,7 @@ return new StringBuilder();
 }
 int numberOfChars = (length + 1) / (lengthOfConstituent + 1);
 return new StringBuilder(new string(constituent, numberOfChars));
-}
+//}
 }
 public static StringBuilder PadText(string text, int totalWidth, PadMode mode)
 {
@@ -330,8 +334,8 @@ return PadText(text, totalWidth, mode, ' ');
 }
 public static StringBuilder PadText(string text, int totalWidth, PadMode mode, char padChar)
 {
-using (new SimpleProfiler("TextUtils.PadText(StringBuilder, int, PadMode, string)"))
-{
+//using (new SimpleProfiler("TextUtils.PadText(StringBuilder, int, PadMode, string)"))
+//{
 string[] lines = text.Split('\n');
 StringBuilder result = new StringBuilder();
 StringBuilder padding = new StringBuilder();
@@ -364,76 +368,37 @@ result.Append(padding);
 }
 result.Append("\n");
 }
-/*do
-{
-lineStart = lineEnd + 1;
-lineEnd = text.find;
-StringBuilder s;
-for (int i = lineStart; i < text.Length; i++)
-{
-if (text[i] == '\n')
-{
-lineEnd = i;
-break;
-}
-}
-if (lineEnd == -1) lineEnd = text.Length;
-width = GetTextWidth(text, lineStart, lineEnd - lineStart) + 1;
-if (mode == PadMode.BOTH)
-{
-padding = CreateStringOfLength(padChar, (totalWidth - width) / 2);
-result.Append(padding);
-SBExtensions.AppendSubstr(result, text, lineStart, lineEnd - lineStart);
-result.Append(padding);
-}
-else
-{
-padding = CreateStringOfLength(padChar, totalWidth - width);
-if (mode == PadMode.LEFT)
-{
-result.Append(padding);
-SBExtensions.AppendSubstr(result, text, lineStart, lineEnd - lineStart);
-}
-else
-{
-SBExtensions.AppendSubstr(result, text, lineStart, lineEnd - lineStart);
-result.Append(padding);
-}
-}
-result.Append("\n");
-}
-while (lineEnd < text.Length);*/
 if (result.Length > 0)
 result.Remove(result.Length - 1, 1);
 return result;
 }
-}
+//}
 }
 
 public static class SBExtensions
 {
 public static void AppendSubstr(StringBuilder me, StringBuilder append, int start, int count)
 {
-using (new SimpleProfiler("SBExtensions.AppendSubstr(StringBuilder, StringBuilder, int, int)"))
-{
+//using (new SimpleProfiler("SBExtensions.AppendSubstr(StringBuilder, StringBuilder, int, int)"))
+//{
 me.Capacity = me.Capacity + append.Length;
 int loopEnd = Math.Min(append.Length, start + count);
 for (int i = start; i < loopEnd; i++)
 {
 me.Append(append[i]);
 }
-}
+//}
 }
 }
 public static class XML
 {
-public static Dictionary<string, Func<XML.XMLTree>> NodeRegister = new Dictionary<string, Func<XML.XMLTree>> {
-{"root", () => { return new XML.RootNode(); } },
-{"menu", () => { return new XML.Menu(); } },
-{"menuitem", () => { return new XML.MenuItem(); } },
-{"progressbar", () => { return new XML.ProgressBar(); } },
-{"container", () => { return new XML.Container(); } },
-{"hl", () => { return new XML.HorizontalLine(); } },
+public static Dictionary<string, Func<XMLTree>> NodeRegister = new Dictionary<string, Func<XMLTree>> {
+{"root", () => { return new RootNode(); } },
+{"menu", () => { return new Menu(); } },
+{"menuitem", () => { return new MenuItem(); } },
+{"progressbar", () => { return new ProgressBar(); } },
+{"hl", () => { return new HorizontalLine(); } },
+{"vl", () => { return new VerticalLine(); } },
 {"uicontrols", () => { return new UIControls(); } },
 {"textinput", () => { return new TextInput(); } },
 {"submitbutton", () => { return new SubmitButton(); } },
@@ -536,8 +501,7 @@ currentNode.AddChild(newNode);
 xmlString = bracketPos == -1 ? "" : xmlString.Substring(bracketPos);
 }
 }
-////Logger.debug("parsing finished");
-//Logger.DecLvl();
+
 return root;
 }
 
@@ -658,6 +622,8 @@ return Children.Count;
 protected bool RerenderRequired;
 public virtual RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
+//using (Logger logger = new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)", Logger.Mode.LOG))
+//{
 //Logger.debug("XMLTree.GetRenderCache(int)");
 //Logger.IncLvl();
 /*if(_renderCache != null)
@@ -665,21 +631,27 @@ public virtual RenderBox GetRenderBox(int maxWidth, int maxHeight)
 return _renderCache;
 }*/
 RenderBoxTree cache = new RenderBoxTree();
+cache.type = Type;
+//Console.WriteLine(Type);
+//logger.log("1", Logger.Mode.LOG);
 RenderBox childCache;
 foreach (XMLTree child in Children)
 {
 //TODO: Problems with relative height/width values
 childCache = child.GetRenderBox(maxWidth, maxHeight);
+//logger.log("-", Logger.Mode.LOG);
 cache.Add(childCache);
 }
+//logger.log("2", Logger.Mode.LOG);
 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 //_renderCache = cache;
-//Logger.DecLvl();
 return cache;
+//}
 }
 protected void UpdateRenderCacheProperties(RenderBox cache, int maxWidth, int maxHeight)
 {
-//Logger.debug("XMLTree.UpdateRenderCacheProperties(NodeBox, int)");
+//using (Logger logger = new Logger("XMLTree<" + Type + ">.UpdateRenderCacheProperties(NodeBox, int)", Logger.Mode.LOG))
+//{
 //Logger.IncLvl();
 cache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
 switch (GetAttribute("alignself"))
@@ -694,12 +666,11 @@ default:
 cache.Align = RenderBox.TextAlign.LEFT;
 break;
 }
-int result;
 cache.MinWidth = Math.Max(0, ResolveSize(GetAttribute("minwidth"), maxWidth));
 cache.MaxWidth = ResolveSize(GetAttribute("maxwidth"), maxWidth);
 cache.DesiredWidth = ResolveSize(GetAttribute("width"), maxWidth);
 int forcedWidth = ResolveSize(GetAttribute("forcewidth"), maxWidth);
-if(forcedWidth != -1)
+if (forcedWidth != -1)
 {
 cache.MinWidth = forcedWidth;
 cache.MaxWidth = forcedWidth;
@@ -710,37 +681,39 @@ cache.DesiredHeight = ResolveSize(GetAttribute("height"), maxHeight);
 int forcedHeight = ResolveSize(GetAttribute("forceheight"), maxWidth);
 if (forcedHeight != -1)
 {
+//logger.log("Apply forced height (" + forcedHeight + ")", Logger.Mode.LOG);
 cache.MinHeight = forcedHeight;
 cache.MaxHeight = forcedHeight;
 }
 //cache.Height = CalculateWidth(GetAttribute("height"), -1);
-//Logger.DecLvl();
+//}
 }
 public static int ResolveSize(string widthString, int maxWidth)
 {
-//Logger.debug("XMLTree.ResolvePercentage(string, int)");
-//Logger.IncLvl();
+//using (Logger logger = new Logger("XMLTree.ResolvePercentage(string, int)", Logger.Mode.LOG))
+//{
+if(widthString != null)
+widthString = widthString?.Trim();
 float fWidth;
-if(widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
+if (widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
 {
 if (maxWidth == -1)
 return -1;
-//Logger.DecLvl();
 return (int)(fWidth / 100f * Math.Max(0, maxWidth));
 }
 else
 {
 int iWidth = -1;
-//Logger.DecLvl();
 if (Int32.TryParse(widthString, out iWidth))
 return iWidth;
 return -1;
 }
+//}
 }
 public XMLTree()
 {
-//Logger.debug("XMLTree constructor");
-//Logger.IncLvl();
+//using (Logger logger = new Logger("XMLTree constructor", Logger.Mode.LOG))
+//{
 HasUserInputBindings = false;
 PreventDefaults = new List<string>();
 Parent = null;
@@ -759,7 +732,7 @@ SetAttribute("aligntext", "left");
 SetAttribute("selected", "false");
 SetAttribute("selectable", "false");
 SetAttribute("flow", "vertical");
-//Logger.DecLvl();
+//}
 }
 public bool IsSelectable()
 {
@@ -1378,15 +1351,18 @@ RerenderRequired = false;
 }*/
 public virtual string Render(int maxWidth, int maxHeight)
 {
+//using (Logger logger = new Logger("XMLTree<" + Type + ">.Render(int, int)", Logger.Mode.LOG))
+//{
 //Logger.debug(Type + ".Render(int)");
 //Logger.IncLvl();
 //Logger.log("RENDERING::PREPARE");
 RenderBox cache = GetRenderBox(maxWidth, maxHeight);
-cache.DEBUG = true;
+//logger.log("Rendering::START", Logger.Mode.LOG);
 //Logger.log("RENDERING::START");
 string result = cache.Render(maxWidth, maxHeight);
 //Logger.DecLvl();
 return result;
+//}
 }
 public string Render()
 {
@@ -1423,11 +1399,15 @@ RerenderRequired = true;
 }
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
+//using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
+//{
 //Logger.debug("TextNode.GetRenderCache(int)");
 //Logger.IncLvl();
 RenderBox cache = new RenderBoxLeaf(Content);
+cache.type = Type;
 //Logger.DecLvl();
 return cache;
+//}
 }
 //protected override void RenderText(ref List<string> segments, int width, int availableWidth) { }
 /*protected override string PostRender(List<string> segments, int width, int availableWidth)
@@ -1549,6 +1529,10 @@ UserInputActive = false;
 InputDataCache = "";
 ui = rootNode;
 ui.SetParent(this);
+if (GetSelectedFont() == Fonts[FONT.MONO])
+TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
+else
+TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
 if (GetSelectedNode() == null && ui.IsSelectable())
 {
 ui.SelectFirst();
@@ -1595,21 +1579,8 @@ Color fontColor = new Color(
 uint.Parse(colorString, System.Globalization.NumberStyles.AllowHexSpecifier));
 screen.SetValue<Color>("BackgroundColor", fontColor);
 }
-if(ui.GetAttribute("fontfamily") != null)
-{
-string font = ui.GetAttribute("font");
-FONT fontName;
-long fontValue;
-if(Enum.TryParse<FONT>(font, out fontName))
-{
-screen.SetValue<long>("Font", Fonts[fontName]);
-}
-else if(long.TryParse(font, out fontValue))
-{
-screen.SetValue<long>("Font", fontValue);
-}
 
-}
+screen.SetValue<long>("Font", GetSelectedFont());
 //Logger.DecLvl();
 }
 public void Call(List<string> parameters)
@@ -1631,6 +1602,7 @@ if (refresh != null)
 {
 FollowRoute(new Route(refresh));
 }
+UpdateUserInput();
 break;
 case "revert":
 RevertUI();
@@ -1686,9 +1658,10 @@ ui.SetParent(this);
 }
 public string Render()
 {
-//Logger.debug("UIController: Render():");
-//Logger.IncLvl();
-//Logger.DecLvl();
+if (GetSelectedFont() == Fonts[FONT.MONO])
+TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
+else
+TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
 return ui.Render(-1, -1);
 }
 public void RenderTo(IMyTextPanel panel)
@@ -1719,21 +1692,30 @@ else if(panelType == "LargeBlockCorner_LCD_Flat_1" || panelType == "LargeBlockCo
 int width = (int)(((float)panelWidth) / panel.GetValue<Single>("FontSize"));
 //TODO: Get height of screen
 int height = 20;
-if (panel.GetValue<long>("Font") == Fonts[FONT.MONO])
+ApplyScreenProperties(panel);
+using (new Logger("RENDERING...", Logger.Mode.LOG))
 {
-TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
-}
-else
-{
-TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
-}
-//Logger.log("Font configured...");
-//Logger.debug("font size: " + panel.GetValue<Single>("FontSize").ToString());
-//Logger.debug("resulting width: " + width.ToString());
 string text = ui.Render(width, height);
-//Logger.debug("rendering <" + text);
 panel.WritePublicText(text);
-//Logger.DecLvl();
+}
+}
+public long GetSelectedFont()
+{
+string font = ui.GetAttribute("fontfamily");
+if (font != null)
+{
+FONT fontName;
+long fontValue;
+if (long.TryParse(font, out fontValue))
+{
+return fontValue;
+}
+else if (Enum.TryParse<FONT>(font, out fontName))
+{
+return Fonts.GetValueOrDefault(fontName, -1);
+}
+}
+return -1;
 }
 public void KeyPress(string keyCode)
 {
@@ -1844,15 +1826,16 @@ UserInputBindings.Add(node);
 }
 public bool UpdateUserInput()
 {
-//Logger.debug("UIController.RefreshUserInput()");
+using (new Logger("UIController.RefreshUserInput()", Logger.Mode.LOG))
+{
 //Logger.IncLvl();
-if(!UserInputActive || UserInputSource == null)
+if (!UserInputActive || UserInputSource == null)
 {
 return false;
 }
 // get input data
 string inputData = null;
-switch(UserInputMode)
+switch (UserInputMode)
 {
 case TextInputMode.CUSTOM_DATA:
 inputData = UserInputSource?.CustomData;
@@ -1862,7 +1845,7 @@ inputData = (UserInputSource as IMyTextPanel)?.GetPublicText();
 break;
 }
 bool inputHasChanged = true;
-if( inputData == null || inputData == InputDataCache)
+if (inputData == null || inputData == InputDataCache)
 {
 inputHasChanged = false;
 }
@@ -1874,25 +1857,25 @@ string fieldValue;
 foreach (XMLTree node in UserInputBindings)
 {
 binding = node.GetAttribute("inputbinding");
-if(binding != null)
+if (binding != null)
 {
 //Logger.debug("binding found at " + node.Type + " node for field: " + binding);
 fieldValue = node.GetAttribute(binding.ToLower());
 //Logger.debug("field is " + (fieldValue ?? "EMPTY") + ".");
-if(!inputHasChanged && fieldValue != null && fieldValue != InputDataCache)
+if (!inputHasChanged && fieldValue != null && fieldValue != InputDataCache)
 {
 //Logger.debug("applying field value: " + fieldValue);
 inputData = fieldValue;
 inputHasChanged = true;
 }
-else if(inputHasChanged)
+else if (inputHasChanged)
 {
 //Logger.debug("Updating field value to input: " + inputData);
 node.SetAttribute(binding.ToLower(), inputData);
 }
 }
 }
-if(inputHasChanged)
+if (inputHasChanged)
 {
 InputDataCache = inputData;
 }
@@ -1900,7 +1883,7 @@ InputDataCache = inputData;
 switch (UserInputMode)
 {
 case TextInputMode.CUSTOM_DATA:
-if(UserInputSource != null)
+if (UserInputSource != null)
 {
 UserInputSource.CustomData = InputDataCache;
 }
@@ -1911,22 +1894,24 @@ break;
 }
 return inputHasChanged;
 }
+}
 private void CollectUserInputBindings()
 {
-//Logger.debug("UIController.CollectUserInputBindings()");
+using (Logger logger = new Logger("UIController.CollectUserInputBindings()", Logger.Mode.LOG))
+{
 XMLTree node;
 Queue<XMLParentNode> nodes = new Queue<XMLParentNode>();
 nodes.Enqueue(ui);
-while(nodes.Count != 0)
+while (nodes.Count != 0)
 {
 node = nodes.Dequeue() as XMLTree;
-if(!node.HasUserInputBindings)
+if (!node.HasUserInputBindings)
 {
-//Logger.debug("node has no userinputbindings");
+logger.log("node has no userinputbindings", Logger.Mode.LOG);
 }
 if (node != null && node.HasUserInputBindings)
 {
-//Logger.debug("Checking " + node.Type + " node...");
+logger.log("Checking " + node.Type + " node...", Logger.Mode.LOG);
 for (int i = 0; i < node.NumberOfChildren; i++)
 {
 nodes.Enqueue(node.GetChild(i));
@@ -1934,6 +1919,7 @@ nodes.Enqueue(node.GetChild(i));
 if (node.GetAttribute("inputbinding") != null)
 {
 RegisterInputBinding(node);
+}
 }
 }
 }
@@ -1977,21 +1963,14 @@ Type = type.ToLower();
 
 public class Menu : XMLTree
 {
-RenderBox prefix;
-RenderBox prefixSelected;
 public Menu() : base()
 {
 Type = "menu";
-prefix = new RenderBoxLeaf("     ");
-prefixSelected = new RenderBoxLeaf(">> ");
-int prefixWidth = Math.Max(prefix.MinWidth, prefixSelected.MinWidth);
-prefix.MaxWidth = prefixWidth;
-prefixSelected.MaxWidth = prefixWidth;
 }
 public override void AddChild(XMLTree child)
 {
-using (new Logger("Menu.AddChile(XMLTree)"))
-{
+//using (new Logger("Menu.AddChile(XMLTree)"))
+//{
 if (child.Type != "menuitem" && child.IsSelectable())
 {
 throw new Exception(
@@ -1999,7 +1978,7 @@ throw new Exception(
 + " (type was: <" + child.Type + ">)");
 }
 base.AddChild(child);
-}
+//}
 }
 /*protected override string RenderChild(XMLTree child, int width)
 {
@@ -2016,11 +1995,23 @@ public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 using (new Logger("Menu.GetRenderBox(int, int)"))
 {
+RenderBoxLeaf prefix = new RenderBoxLeaf();
+prefix.MinHeight = 1;
+prefix.type = Type + "_prefix";
+RenderBoxLeaf prefixSelected = new RenderBoxLeaf(">> ");
+prefixSelected.type = Type + "_prefixSelected";
+int prefixWidth = prefixSelected.MinWidth;
+prefix.MaxWidth = prefixWidth;
+prefix.MinWidth = prefixWidth;
+prefixSelected.MaxWidth = prefixWidth;
 RenderBoxTree cache = new RenderBoxTree();
+UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+cache.type = Type;
 RenderBoxTree menuPoint;
 foreach (XMLTree child in Children)
 {
 menuPoint = new RenderBoxTree();
+menuPoint.type = Type + "_menupoint";
 menuPoint.Flow = RenderBox.FlowDirection.HORIZONTAL;
 if (child.IsSelected())
 {
@@ -2030,10 +2021,10 @@ else
 {
 menuPoint.Add(prefix);
 }
-menuPoint.Add(child.GetRenderBox(maxWidth, maxHeight));
+RenderBox childBox = child.GetRenderBox(maxWidth, maxHeight);
+menuPoint.Add(childBox);
 cache.Add(menuPoint);
 }
-UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 return cache;
 }
 }
@@ -2219,6 +2210,7 @@ public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 //Logger.debug("ProgressBar.GetRenderCache(int)");
 //Logger.IncLvl();
 RenderBoxTree cache = new RenderBoxTree();
+cache.type = Type;
 int outerWidth = TextUtils.GetTextWidth(IsSelected() ? "<[]>" : " [] ") + 2;
 RenderBox prefix = new RenderBoxLeaf(
 (IsSelected() ? "<" : " ") + "[");
@@ -2292,14 +2284,7 @@ break;
 return cache;
 }
 }
-
-public class Container : XMLTree
-{
-public Container() : base()
-{
-Type = "container";
-}
-}
+//!EMBED SEScripts.XUI.XML.Container
 
 public class HorizontalLine : XMLTree
 {
@@ -2308,6 +2293,7 @@ public HorizontalLine() : base()
 Type = "hl";
 SetAttribute("width", "100%");
 SetAttribute("minheight", "1");
+SetAttribute("maxheight", "1");
 }
 /*protected override void RenderText(ref List<string> segments, int width, int availableWidth)
 {
@@ -2315,14 +2301,42 @@ segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-using (new Logger("HorizontalLine.GetRenderBox()"))
-{
+//using (new Logger("HorizontalLine.GetRenderBox()"))
+//{
 RenderBox cache = new RenderBoxLeaf();
+cache.type = Type;
 //cache.Add("_");
 cache.PadChar = '_';
 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 return cache;
+//}
 }
+}
+
+public class VerticalLine : XMLTree
+{
+public VerticalLine() : base()
+{
+Type = "vl";
+SetAttribute("height", "100%");
+//SetAttribute("minwidth", "4");
+}
+/*protected override void RenderText(ref List<string> segments, int width, int availableWidth)
+{
+segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL));
+}*/
+public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+{
+//using (new Logger("VerticalLine.GetRenderBox()"))
+//{
+RenderBox cache = new RenderBoxLeaf();
+cache.PadChar = '|';
+cache.type = Type;
+//cache.Add("_");
+UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+cache.MinWidth = TextUtils.GetCharWidth('|');
+return cache;
+//}
 }
 }
 
@@ -2403,14 +2417,17 @@ return renderString;
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
+//using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
+//{
 //Logger.debug("UIControls.GetRenderCache(int)");
 //Logger.IncLvl();
 RenderBoxTree cache = new RenderBoxTree();
+cache.type = Type;
 if (Controller == null)
 {
 UpdateController();
 }
-if(IsSelectable())
+if (IsSelectable())
 {
 RenderBox childCache = new RenderBoxLeaf(IsSelected() ?
 new StringBuilder("<<") :
@@ -2427,9 +2444,10 @@ contentCache.Add(child.GetRenderBox(maxWidth, maxHeight));
 cache.Add(contentCache);
 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
-//Logger.DecLvl();
+
 return cache;
 }
+//}
 }
 
 public class TextInput : XMLTree
@@ -2481,6 +2499,8 @@ throw new Exception("Invalid format of allowed characters!");
 }
 
 }
+if (key == "value")
+using (new Logger("set value: " + value)) { }
 base.SetAttribute(key, value);
 }
 private void IncreaseLetter()
@@ -2617,32 +2637,40 @@ segments.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " " 
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-//Logger.debug("TextInput.GetRenderCache(int)");
-//Logger.IncLvl();
-RenderBoxTree cache = new RenderBoxTree();
-cache.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " ");
-cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
-string value = GetAttribute("value");
-if(CursorPosition != -1)
+using (Logger logger = new Logger("TextInput.GetRenderCache(int)", Logger.Mode.LOG))
 {
-cache.Add(value.Substring(0, CursorPosition));
-cache.Add("|");
-cache.Add(value.Substring(CursorPosition, 1));
-cache.Add("|");
-cache.Add(value.Substring(CursorPosition + 1));
+RenderBoxTree cache = new RenderBoxTree();
+UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+RenderBoxLeaf content = new RenderBoxLeaf();
+cache.type = Type;
+cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+cache.Add(content);
+content.Add((IsSelected() ? new string(new char[] { (char)187 }) : " ") + " ");
+content.MinWidth = TextUtils.GetTextWidth(new string(new char[] { (char)187, ' ' }));
+string value = GetAttribute("value");
+logger.log("value: " + value, Logger.Mode.LOG);
+if (CursorPosition != -1)
+{
+content.Add(value.Substring(0, CursorPosition));
+content.Add("|");
+content.Add(value.Substring(CursorPosition, 1));
+content.Add("|");
+content.Add(value.Substring(CursorPosition + 1));
 }
 else
 {
 if (value.Length == 0)
-cache.Add("_");
-cache.Add(value);
+content.Add("_");
+content.Add(value);
 }
+/*
 for(int i = 0; i < cache.Count; i++)
 {
 cache[i].MaxWidth = cache[i].MinWidth;
-}
-//Logger.DecLvl();
+}*/
+logger.log("height: " + cache.GetActualHeight(maxHeight), Logger.Mode.LOG);
 return cache;
+}
 }
 }
 
@@ -2690,6 +2718,7 @@ public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 //Logger.debug("SubmitButton.GetRenderCache(int)");
 //Logger.IncLvl();
 RenderBoxTree cache = new RenderBoxTree();
+cache.type = Type;
 RenderBoxLeaf childCache = new RenderBoxLeaf(IsSelected() ? "[[  " : "[   ");
 childCache.MaxWidth = childCache.MinWidth;
 cache.Add(childCache);
@@ -2723,12 +2752,14 @@ return "";
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-using (new Logger("Break.GetRenderBox(int, int)"))
-{
-RenderBox cache = new RenderBoxLeaf();
-cache.MaxHeight = 0;
+//using (new Logger("Break.GetRenderBox(int, int)"))
+//{
+RenderBox cache = new RenderBoxLeaf("\n");
+cache.type = Type;
+cache.MaxHeight = (GetParent() as XMLTree)?.GetAttribute("flow") == "horizontal" ? 1 : 0;
+cache.MaxWidth = 0;
 return cache;
-}
+//}
 }
 }
 
@@ -2754,6 +2785,7 @@ public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 //Logger.debug("GetRenderCache(int)");
 //Logger.IncLvl();
 RenderBox cache = new RenderBoxLeaf();
+cache.type = Type;
 cache.MinHeight = 1;
 int width = ResolveSize(GetAttribute("width"), maxWidth);
 cache.MinWidth = width;
@@ -2775,13 +2807,14 @@ return null;
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-using (new Logger("Hidden.GetRenderCache(int)"))
-{
+//using (new Logger("Hidden.GetRenderCache(int)", Logger.Mode.LOG))
+//{
 RenderBox cache = new RenderBoxTree();
+cache.type = Type;
 cache.MaxWidth = 0;
 cache.MaxHeight = 0;
 return cache;
-}
+//}
 }
 }
 
@@ -2797,13 +2830,14 @@ return null;
 }*/
 public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
-using (new Logger("hiddenData.GetRenderCache(int)"))
-{
+//using (new Logger("hiddenData.GetRenderCache(int)"))
+//{
 RenderBox cache = new RenderBoxTree();
+cache.type = Type;
 cache.MaxWidth = 0;
 cache.MaxHeight = 0;
 return cache;
-}
+//}
 }
 }
 
@@ -2824,10 +2858,26 @@ else
 return new Dictionary<string, string>();
 }
 }
+public override void SetAttribute(string key, string value)
+{
+long fontValue;
+if (key.ToLower() == "fontfamily" && long.TryParse(value, out fontValue))
+{
+if (fontValue == 1147350002)
+TextUtils.SelectFont(TextUtils.FONT.MONOSPACE);
+else
+TextUtils.SelectFont(TextUtils.FONT.DEFAULT);
+}
+base.SetAttribute(key, value);
+}
 }
 
 public abstract class RenderBox
 {
+protected bool minHeightIsCached;
+protected bool minWidthIsCached;
+protected int minHeightCache;
+protected int minWidthCache;
 public bool DEBUG = false;
 public char PadChar;
 public enum TextAlign { LEFT, RIGHT, CENTER }
@@ -2848,19 +2898,26 @@ protected int _DesiredWidth;
 protected int _MinHeight;
 protected int _MaxHeight;
 protected int _DesiredHeight;
+public RenderBox Parent;
+public string type;
 public int GetActualWidth(int maxWidth)
 {
-using (new SimpleProfiler("RenderBox.GetActualWidth(int)"))
+using (Logger logger = new Logger("RenderBox.GetActualWidth(int)", Logger.Mode.LOG))
 {
-//Logger.debug("NodeBox.GetActualWidth(int)");
-//Logger.IncLvl();
+logger.log("Type: " + type, Logger.Mode.LOG);
+if (this as RenderBoxLeaf != null)
+logger.log("content: |" + (this as RenderBoxLeaf).Content + "|", Logger.Mode.LOG);
+logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
+logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
+logger.log("min width: " + MinWidth, Logger.Mode.LOG);
+logger.log("desired width: " + DesiredWidth, Logger.Mode.LOG);
 if (MaxWidth != -1)
 maxWidth = (maxWidth == -1 ? MaxWidth : Math.Min(MaxWidth, maxWidth));
 if (maxWidth == -1)
 {
 //Logger.debug("actual width equals min width");
 //Logger.DecLvl();
-return MinWidth;
+return Math.Max(MinWidth, DesiredWidth);
 }
 else
 {
@@ -2876,75 +2933,77 @@ else
 desired = Math.Max(MinWidth, DesiredWidth);
 }
 //Logger.DecLvl();
-return (maxWidth == -1 ? desired : Math.Min(desired, maxWidth));
+logger.log("actual width: " + Math.Min(desired, maxWidth), Logger.Mode.LOG);
+return Math.Min(desired, maxWidth);
 }
 }
 }
 public int GetActualHeight(int maxHeight)
 {
-using (new SimpleProfiler("RenderBox.GetActualHeight(int)"))
+using (Logger logger = new Logger("RenderBox.GetActualHeight(int)", Logger.Mode.LOG))
 {
+logger.log("Type: " + type, Logger.Mode.LOG);
+//logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
+//logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
 //Logger.debug("NodeBox.GetActualHeight(int)");
 //Logger.IncLvl();
 if (MaxHeight != -1)
 maxHeight = (maxHeight == -1 ? MaxHeight : Math.Min(MaxHeight, maxHeight));
 if (maxHeight == -1)
 {
-//Logger.debug("actual width equals min height");
+//logger.log("actual height equals min height", Logger.Mode.LOG);
 //Logger.DecLvl();
-return MinHeight;
+return DesiredHeight == -1 ? MinHeight : Math.Min(MinHeight, DesiredHeight);
 }
 else
 {
-int desired;
-if (DesiredHeight == -1)
-{
-//Logger.debug("actual width equals max height");
-desired = maxHeight;
-}
-else
-{
-//Logger.debug("actual height equals desired height, but if desired<min -> height=min and if desired>max -> height = max");
-desired = Math.Max(MinHeight, DesiredHeight);
-}
+int desired = DesiredHeight == -1 ? MinHeight : Math.Max(MinHeight, DesiredHeight);
 //Logger.DecLvl();
-return (maxHeight == -1 ? desired : Math.Min(desired, maxHeight));
+logger.log("actual height: " + Math.Min(desired, maxHeight) + " (min( " + desired + ", " + maxHeight + ")", Logger.Mode.LOG);
+return Math.Min(desired, maxHeight);
 }
 }
 }
 public RenderBox.TextAlign Align
 {
 get { return _Align; }
-set { _Align = value; }
+set
+{
+_Align = value;
+}
 }
 public virtual RenderBox.FlowDirection Flow
 {
 get { return _Flow; }
-set { _Flow = value; }
+set {
+_Flow = value;
+ClearCache();
+}
 }
 public virtual int MinWidth
 {
 get
 {
-using (new SimpleProfiler("RenderBox.MinWidth.get"))
-{
+/*using (new SimpleProfiler("RenderBox.MinWidth.get"))
+//{
 //Logger.debug("NodeBox.MinWidth.get()");
 //Logger.IncLvl();
 //Logger.debug("minwidth = " + _MinWidth);
-//Logger.DecLvl();
+//Logger.DecLvl();*/
 return _MinWidth;
-}
+//}
 }
 set
 {
-using (new SimpleProfiler("RenderBox.MinWidth.get"))
-{
+//using (new SimpleProfiler("RenderBox.MinWidth.get"))
+//{
 //Logger.debug("NodeBox.MinWidth.set()");
 //Logger.IncLvl();
 //Logger.debug("minwidth = " + value);
 _MinWidth = Math.Max(0, value);
+ClearCache();
 //Logger.DecLvl();
-}
+//}
 }
 }
 public int DesiredWidth
@@ -2989,25 +3048,26 @@ public virtual int MinHeight
 {
 get
 {
-using (new SimpleProfiler("RenderBox.MinHeight.get"))
-{
+//using (new SimpleProfiler("RenderBox.MinHeight.get"))
+//{
 //Logger.debug("NodeBox.MinHeight.get()");
 //Logger.IncLvl();
 //Logger.debug("minheight = " + _MinHeight);
 //Logger.DecLvl();
 return _MinHeight;
-}
+//}
 }
 set
 {
-using (new SimpleProfiler("RenderBox.MinHeight.set"))
-{
+//using (new SimpleProfiler("RenderBox.MinHeight.set"))
+//{
 //Logger.debug("NodeBox.MinHeight.set()");
 //Logger.IncLvl();
 //Logger.debug("minheight = " + value);
 _MinHeight = Math.Max(0, value);
+ClearCache();
 //Logger.DecLvl();
-}
+//}
 }
 }
 public int DesiredHeight
@@ -3044,14 +3104,19 @@ set
 //Logger.debug("NodeBox.MaxHeight.set()");
 //Logger.IncLvl();
 //Logger.debug("maxheight = " + value);
+//using (Logger logger = new Logger("RenderBox.MaxHeight.set", Logger.Mode.LOG))
+//{
+//logger.log("value: " + value, Logger.Mode.LOG);
 _MaxHeight = value;
+ClearCache();
+//}
 //Logger.DecLvl();
 }
 }
 public RenderBox()
 {
-using (new SimpleProfiler("RenderBox.__construct()"))
-{
+//using (new Logger("RenderBox.__construct()", Logger.Mode.LOG))
+//{
 //Logger.debug("NodeBox constructor()");
 PadChar = ' ';
 _Flow = RenderBox.FlowDirection.VERTICAL;
@@ -3062,12 +3127,14 @@ _DesiredWidth = -1;
 _MinHeight = 0;
 _MaxHeight = -1;
 _DesiredHeight = -1;
-}
+minHeightIsCached = false;
+minWidthIsCached = false;
+//}
 }
 public IEnumerable<StringBuilder> GetLines(int maxWidth, int maxHeight)
 {
-using (new SimpleProfiler("RenderBox.GetLines(int, int)"))
-{
+//using (new SimpleProfiler("RenderBox.GetLines(int, int)"))
+//{
 //Logger.debug("NodeBox.GetRenderedLines()");
 //Logger.IncLvl();
 int height = GetActualHeight(maxHeight);
@@ -3076,38 +3143,38 @@ for (int i = 0; i < height; i++)
 yield return GetLine(i, maxWidth, maxHeight);
 }
 //Logger.DecLvl();
-}
+//}
 }
 public IEnumerable<StringBuilder> GetLines()
 {
-using (new SimpleProfiler("RenderBox.GetLines()"))
-{
-//Logger.debug("NodeBox.GetLines()");
+//using (new SimpleProfiler("RenderBox.GetLines()"))
+//{
+//Logger.debug("NodeBox.GetRenderedLines()");
 //Logger.IncLvl();
-int height = GetActualHeight(0);
+int height = GetActualHeight(-1);
 for (int i = 0; i < height; i++)
 {
-yield return GetLine(i);
+yield return GetLine(i, -1, -1);
 }
 //Logger.DecLvl();
+//}
 }
-}
-
 protected void AlignLine(ref StringBuilder line)
 {
-using (new SimpleProfiler("RenderBox.AlignLine(ref StringBuilder)"))
-{
+//using (new SimpleProfiler("RenderBox.AlignLine(ref StringBuilder)"))
+//{
 AlignLine(ref line, -1);
-}
+//}
 }
 protected void AlignLine(ref StringBuilder line, int maxWidth)
 {
-using (new SimpleProfiler("RenderBox.AlignLine(ref StringBuilder, int)"))
-{
+//using (Logger logger = new Logger("RenderBox.AlignLine(ref StringBuilder, int)", Logger.Mode.LOG))
+//{
 //Logger.debug("NodeBox.AlignLine()");
 //Logger.IncLvl();
 //Logger.debug("max width is " + maxWidth);
 int actualWidth = GetActualWidth(maxWidth);
+//logger.log("actualWidth: " + actualWidth, Logger.Mode.LOG);
 //Logger.debug("actual width is " + actualWidth);
 //Logger.debug("line width is " + TextUtils.GetTextWidth(line));
 //Logger.debug("line is: |" + line + "|");
@@ -3137,7 +3204,7 @@ else if (remainingWidth < 0)
 line = new StringBuilder(line.ToString());
 while (remainingWidth < 0)
 {
-remainingWidth += TextUtils.GetTextWidth(new string(new char[]{ line[line.Length - 1] })) + 1;
+remainingWidth += TextUtils.GetTextWidth(new string(new char[] { line[line.Length - 1] })) + 1;
 line.Remove(line.Length - 1, 1);
 }
 }
@@ -3147,36 +3214,37 @@ else
 }
 //Logger.debug("aligned line is: {" + line + "}");
 //Logger.DecLvl();
+//}
 }
-}
-
 public string Render(int maxWidth, int maxHeight)
 {
-using (new SimpleProfiler("RenderBox.Render(int, int)"))
-{
-//Logger.debug("NodeBox.Render()");
-//Logger.IncLvl();
+//using (Logger logger = new Logger("RenderBox.Render(" + maxWidth + ", " + maxHeight + ")", Logger.Mode.LOG))
+//{
 StringBuilder result = new StringBuilder();
+int i = 0;
 foreach (StringBuilder line in GetLines(maxWidth, maxHeight))
 {
+//logger.log("rendering line " + (i++), Logger.Mode.LOG);
 result.Append(line);
 result.Append("\n");
 }
 if (result.Length > 0)
 result.Remove(result.Length - 1, 1);
-//Logger.DecLvl();
 return result.ToString();
+//}
 }
+public void ClearCache()
+{
+minHeightIsCached = false;
+minWidthIsCached = false;
+if(Parent != null)
+Parent?.ClearCache();
 }
 }
 
 public class RenderBoxLeaf : RenderBox
 {
-private bool isMinHeightCached;
-private bool isMinWidthCached;
-private int minHeightCache;
-private int minWidthCache;
-string Content;
+public string Content;
 public override RenderBox.FlowDirection Flow
 {
 get { return RenderBox.FlowDirection.VERTICAL; }
@@ -3186,11 +3254,11 @@ public override int MinHeight
 {
 get
 {
-using (new SimpleProfiler("RenderBoxLeaf.MinHeight.get"))
-{
+//using (new SimpleProfiler("RenderBoxLeaf.MinHeight.get"))
+//{
 //Logger.debug("NodeBoxLeaf.MinHeight.get");
 //Logger.IncLvl();
-if (isMinHeightCached)
+if (minHeightIsCached && false)
 return minHeightCache;
 if (Content.Length > 0)
 {
@@ -3200,82 +3268,88 @@ else
 {
 minHeightCache = _MinHeight;
 }
-isMinHeightCached = true;
+if(MaxHeight != -1)
+{
+minHeightCache = Math.Min(minHeightCache, MaxHeight);
+}
+minHeightIsCached = true;
 //Logger.debug("minheight = " + minHeightCache);
 //Logger.DecLvl();
 return minHeightCache;
-}
+//}
 }
 set
 {
-using (new SimpleProfiler("RenderBoxLeaf.MinHeight.set"))
-{
+//using (new SimpleProfiler("RenderBoxLeaf.MinHeight.set"))
+//{
 //Logger.debug("NodeBoxLeaf.MinHeight.set");
 //Logger.IncLvl();
 //Logger.debug("minheight = " + value);
 _MinHeight = value;
+ClearCache();
 //Logger.DecLvl();
-}
+//}
 }
 }
 public override int MinWidth
 {
 get
 {
-using (new SimpleProfiler("RenderBoxLeaf.MinWidth.get"))
-{
+//using (new SimpleProfiler("RenderBoxLeaf.MinWidth.get"))
+//{
 //Logger.debug("NodeBoxLeaf.MinWidth.get");
 //Logger.IncLvl();
-if (isMinWidthCached && false)
+if (minWidthIsCached && false)
 return minWidthCache;
-int minWidth = Math.Max(TextUtils.GetTextWidth(Content), _MinWidth);
+minWidthCache = MinHeight == 0 ? 0 : Math.Max(TextUtils.GetTextWidth(Content), _MinWidth);
 //Logger.debug("minwidth = " + minWidth);
-minWidthCache = minWidth;
-isMinWidthCached = true;
+minWidthIsCached = true;
 //Logger.DecLvl();
-return minWidth;
-}
+return minWidthCache;
+//}
 }
 set
 {
-using (new SimpleProfiler("RenderBoxLeaf.MinWidth.set"))
-{
+//using (new SimpleProfiler("RenderBoxLeaf.MinWidth.set"))
+//{
 //Logger.debug("NodeBoxLeaf.MinWidth.set()");
 //Logger.IncLvl();
 //Logger.debug("minwidth = " + value);
 _MinWidth = value;
+ClearCache();
 //Logger.DecLvl();
-}
+//}
 }
 }
 public RenderBoxLeaf()
 {
-using (new SimpleProfiler("RenderBoxLeaf.__construct()"))
-{
+//using (new Logger("RenderBoxLeaf.__construct()", Logger.Mode.LOG))
+//{
 //Logger.debug("NodeBoxLeaf constructor()");
 Content = "";
-isMinHeightCached = false;
-isMinWidthCached = false;
-}
+ClearCache();
+//}
 }
 public RenderBoxLeaf(StringBuilder content) : this()
 {
-using (new SimpleProfiler("RenderBoxLeaf.__construct(StringBuilder)"))
-{
+//using (new Logger("RenderBoxLeaf.__construct(StringBuilder)", Logger.Mode.LOG))
+//{
 //Logger.debug("NodeBoxLeaf constructor(StringBuilder)");
 //Logger.IncLvl();
 Add(content);
 //Logger.DecLvl();
-}
+//}
 }
 public RenderBoxLeaf(string content) : this(new StringBuilder(content))
 { }
 public override void AddAt(int position, StringBuilder box)
 {
-using (new SimpleProfiler("RenderBoxLeaf.AddAt(int, StringBuilder)"))
-{
+//using (new SimpleProfiler("RenderBoxLeaf.AddAt(int, StringBuilder)"))
+//{
 //Logger.debug("NodeBoxLeaf.AddAt(int, StringBuilder)");
 //Logger.IncLvl();
+/*box.Replace("\n", "");
+box.Replace("\r", "");*/
 if (position == 0)
 {
 Content = box.ToString() + Content;
@@ -3284,38 +3358,39 @@ else
 {
 Content += box;
 }
+ClearCache();
 //Logger.DecLvl();
-}
+//}
 }
 public override void Add(StringBuilder box)
 {
-using (new SimpleProfiler("RenderBoxLeaf.Add(StringBuilder)"))
-{
+//using (new SimpleProfiler("RenderBoxLeaf.Add(StringBuilder)"))
+//{
 //Logger.debug("NodeBoxLeaf.Add(StringBuilder)");
 //Logger.IncLvl();
-Content += box.Replace("\n", "");
+AddAt(1, box);
 //Logger.DecLvl();
-}
+//}
 }
 public override void AddAt(int position, string box)
 {
-using (new SimpleProfiler("RenderBoxLeaf.AddAt(int, string)"))
-{
+//using (new SimpleProfiler("RenderBoxLeaf.AddAt(int, string)"))
+//{
 //Logger.debug("NodeBoxLeaf.AddAt(int, string)");
 //Logger.IncLvl();
 AddAt(position, new StringBuilder(box));
 //Logger.DecLvl();
-}
+//}
 }
 public override void Add(string box)
 {
-using (new SimpleProfiler("RenderBoxLeaf.Add(string)"))
-{
+//using (new SimpleProfiler("RenderBoxLeaf.Add(string)"))
+//{
 //Logger.debug("NodeBoxLeaf.Add(string)");
 //Logger.IncLvl();
 Add(new StringBuilder(box));
 //Logger.DecLvl();
-}
+//}
 }
 public override StringBuilder GetLine(int index)
 {
@@ -3323,10 +3398,11 @@ return GetLine(index, -1, -1);
 }
 public override StringBuilder GetLine(int index, int maxWidth, int maxHeight)
 {
-using (new SimpleProfiler("RenderBoxLeaf.GetLine(int, int, int)"))
-{
-//Logger.debug("NodeBoxLeaf.GetLine()");
-//Logger.IncLvl();
+//using (Logger logger = new Logger("RenderBoxLeaf.GetLine(int, int, int)", Logger.Mode.LOG))
+//{
+//logger.log("type: " + type, Logger.Mode.LOG);
+//logger.log("index: " + index, Logger.Mode.LOG);
+//logger.log("maxwidth: " + maxWidth, Logger.Mode.LOG);
 StringBuilder line;
 if (index == 0)
 {
@@ -3341,23 +3417,20 @@ AlignLine(ref line, maxWidth);
 //Logger.log("instructions: " + (P.Runtime.CurrentInstructionCount - instructions) + " -> " + P.Runtime.CurrentInstructionCount + "/" + P.Runtime.MaxInstructionCount)
 //Logger.DecLvl();
 return line;
-}
+//}
 }
 public override void Clear()
 {
-using (new SimpleProfiler("RenderBoxLeaf.Clear()"))
-{
+//using (new SimpleProfiler("RenderBoxLeaf.Clear()"))
+//{
 Content = "";
-}
+ClearCache();
+//}
 }
 }
 
 public class RenderBoxTree : RenderBox
 {
-private bool minHeightIsCached;
-private bool minWidthIsCached;
-private int minHeightCache;
-private int minWidthCache;
 List<RenderBox> Boxes;
 public RenderBox this[int i]
 {
@@ -3374,24 +3447,25 @@ public int Count
 {
 get
 {
-using (new SimpleProfiler("RenderBoxTree.Count.get"))
-{
+//using (new SimpleProfiler("RenderBoxTree.Count.get"))
+//{
 //Logger.debug("NodeBoxTree.Count.get");
 return Boxes.Count;
-}
+//}
 }
 }
 public override int MinHeight
 {
 get
 {
-using (new SimpleProfiler("RenderBoxTree.MinHeight.get"))
-{
+//using (new SimpleProfiler("RenderBoxTree.MinHeight.get"))
+//{
 //Logger.debug("NodeBoxTree.MinHeight.get");
 //Logger.IncLvl();
 if (minHeightIsCached)
 return minHeightCache;
-int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
+//int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
+int minHeight = 0;
 int boxMinHeight;
 foreach (RenderBox box in Boxes)
 {
@@ -3410,30 +3484,19 @@ minHeight += boxMinHeight;
 }
 }
 //Logger.debug("minheight = " + minHeight.ToString());
-minHeightCache = Math.Max(0, minHeight);
+minHeightCache = Math.Max(0, Math.Max(_MinHeight, minHeight));
 minHeightIsCached = true;
 //Logger.DecLvl();
 return minHeightCache;
-}
-}
-set
-{
-using (new SimpleProfiler("RenderBoxTree.MinHeight.set"))
-{
-//Logger.debug("NodeBoxTree.MinHeight.set");
-//Logger.IncLvl();
-//Logger.debug("minheight = " + value.ToString());
-_MinHeight = value;
-//Logger.DecLvl();
-}
+//}
 }
 }
 public override int MinWidth
 {
 get
 {
-using (new SimpleProfiler("RenderBoxTree.MinWidth.get"))
-{
+//using (new SimpleProfiler("RenderBoxTree.MinWidth.get"))
+//{
 //Logger.debug("NodeBoxTree.MinWidth.get");
 //Logger.IncLvl();
 if (minWidthIsCached)
@@ -3464,72 +3527,72 @@ minWidthCache = Math.Max(minWidth, 0);
 minWidthIsCached = true;
 //Logger.DecLvl();
 return minWidthCache;
-}
+//}
 }
 }
 public RenderBoxTree() : base()
 {
-using (new SimpleProfiler("RenderBoxTree.__construct()"))
-{
+//using (new Logger("RenderBoxTree.__construct()", Logger.Mode.LOG))
+//{
 //Logger.debug("NodeBoxTree constructor()");
 Boxes = new List<RenderBox>();
-minHeightIsCached = false;
-minWidthIsCached = false;
-}
+//}
 }
 public override void Add(string box)
 {
-using (new SimpleProfiler("RenderBoxTree.Add(string)"))
-{
+//using (new SimpleProfiler("RenderBoxTree.Add(string)"))
+//{
 AddAt(Boxes.Count, box);
-}
+//}
 }
 public override void AddAt(int position, string box)
 {
-using (new SimpleProfiler("RenderBoxTree.AddAt(int, string)"))
-{
+//using (new SimpleProfiler("RenderBoxTree.AddAt(int, string)"))
+//{
 //Logger.debug("NodeBoxTree.AddAt(int, string)");
 //Logger.IncLvl();
 AddAt(position, new RenderBoxLeaf(box));
 //Logger.DecLvl();
-}
+//}
 }
 public override void Add(StringBuilder box)
 {
-using (new SimpleProfiler("RenderBoxTree.Add(StringBuilder)"))
-{
+//using (new SimpleProfiler("RenderBoxTree.Add(StringBuilder)"))
+//{
 AddAt(Boxes.Count, box);
-}
+//}
 }
 public override void AddAt(int position, StringBuilder box)
 {
-using (new SimpleProfiler("RenderBoxTree.AddAt(int, StringBuilder)"))
-{
+//using (new SimpleProfiler("RenderBoxTree.AddAt(int, StringBuilder)"))
+//{
 //Logger.debug("NodeBoxTree.AddAt(int, StringBuilder)");
 //Logger.IncLvl();
 AddAt(position, new RenderBoxLeaf(box));
 //Logger.DecLvl();
-}
+//}
 }
 public void AddAt(int position, RenderBox box)
 {
-using (new SimpleProfiler("RenderBoxTree.AddAt(int, RenderBox)"))
-{
+//using (new SimpleProfiler("RenderBoxTree.AddAt(int, RenderBox)"))
+//{
 //Logger.debug("NodeBoxTree.AddAt(int, NodeBox)");
 //Logger.IncLvl();
 Boxes.AddOrInsert<RenderBox>(box, position);
+box.Parent = this;
+ClearCache();
 //Logger.DecLvl();
-}
+//}
 }
 public void Add(RenderBox box)
 {
-using (new SimpleProfiler("RenderBoxTree.Add(RenderBox)"))
-{
+//using (new SimpleProfiler("RenderBoxTree.Add(RenderBox)"))
+//{
 //Logger.debug("NodeBoxTree.Add(NodeBox)");
 //Logger.IncLvl();
 AddAt(Boxes.Count, box);
 //Logger.DecLvl();
-}
+//}
 }
 public override StringBuilder GetLine(int index)
 {
@@ -3537,34 +3600,48 @@ return GetLine(index, -1, -1);
 }
 public override StringBuilder GetLine(int index, int maxWidth, int maxHeight)
 {
-using (new SimpleProfiler("RenderBoxTree.GetLine(int, int, int)"))
-{
+//using (Logger logger = new Logger("RenderBoxTree.GetLine(int, int, int)", Logger.Mode.LOG))
+//{
 //Logger.debug("NodeBoxTree.GetLine(int, int)");
 //Logger.IncLvl();
 StringBuilder line = new StringBuilder();
+int floatingMaxHeight = Math.Min(maxHeight, MaxHeight);
+if (floatingMaxHeight != -1)
+floatingMaxHeight = Math.Max(floatingMaxHeight - MinHeight, 0) - 1;
+int boxMinHeight;
+int boxHeight;
+int boxMaxHeight;
 //bool foundLine = false;
 if (Flow == RenderBox.FlowDirection.VERTICAL)
 {
-int boxHeight;
 foreach (RenderBox box in Boxes)
 {
-boxHeight = box.GetActualHeight(maxHeight);
+boxMinHeight = box.MinHeight;
+boxMaxHeight = floatingMaxHeight + boxMinHeight + 1;
+boxHeight = box.GetActualHeight(boxMaxHeight);
 if (index < boxHeight)
 {
-line = box.GetLine(index, maxWidth, maxHeight);
+line = box.GetLine(index, maxWidth, boxMaxHeight);
 //Logger.debug("child box width is " + TextUtils.GetTextWidth(line));
 //foundLine = true;
 break;
 }
 else
 {
+//logger.log("Decreasing index by " + boxHeight, Logger.Mode.LOG);
 index -= boxHeight;
+if(floatingMaxHeight != -1)
+floatingMaxHeight = Math.Max(0, floatingMaxHeight - boxHeight + boxMinHeight);
 }
 }
 }
 else
 {
-int floatingMaxWidth = maxWidth;
+int floatingMaxWidth;
+if (maxWidth != -1)
+floatingMaxWidth = (MaxWidth == -1) ? maxWidth : Math.Min(maxWidth, MaxWidth);
+else
+floatingMaxWidth = MaxWidth;
 if (floatingMaxWidth != -1)
 floatingMaxWidth = Math.Max(floatingMaxWidth - MinWidth, 0) - 1;
 StringBuilder nextLine;
@@ -3584,80 +3661,18 @@ AlignLine(ref line, maxWidth);
 //Logger.debug("line is: {" + line + "}");
 //Logger.DecLvl();
 return line;
-}
+//}
 }
 public override void Clear()
 {
 //Logger.debug("NodeBoxTree.Clear()");
 //Logger.IncLvl();
 Boxes.Clear();
+ClearCache();
 //Logger.DecLvl();
 }
 }
 }
-
-public class SimpleProfiler : IDisposable
-{
-private int InstructionCountBefore;
-static private Dictionary<string, MethodInfo> MethodInfos = new Dictionary<string, MethodInfo>();
-private string currentMethod;
-private static Program _Prog;
-public static Object Prog
-{
-set { _Prog = (Program)value; }
-}
-public SimpleProfiler(string methodName = "")
-{
-currentMethod = methodName;
-if(_Prog != null) InstructionCountBefore = _Prog.Runtime.CurrentInstructionCount;
-}
-public void Dispose()
-{
-if (_Prog == null) return;
-int instructionCountAfter = _Prog.Runtime.CurrentInstructionCount;
-if (!MethodInfos.ContainsKey(currentMethod))
-{
-MethodInfos[currentMethod] = new MethodInfo();
-}
-MethodInfos[currentMethod].TotalInstructionCount += instructionCountAfter - InstructionCountBefore;
-MethodInfos[currentMethod].TimesRun++;
-MethodInfos[currentMethod].Name = currentMethod;
-}
-public static string Evaluate()
-{
-SortedList<int, MethodInfo> Methods = new SortedList<int, MethodInfo>(); ;
-foreach (var entry in MethodInfos)
-{
-int instructionCount = entry.Value.TotalInstructionCount;
-while (Methods.ContainsKey(-instructionCount))
-instructionCount--;
-Methods.Add(-instructionCount, entry.Value);
-}
-StringBuilder result = new StringBuilder("Profiler Results:\n");
-string indent = "    ";
-foreach (var method in Methods.Values)
-{
-result.Append(method.Name).Append("\n");
-result.Append(indent).Append("times run: ").Append(method.TimesRun).Append("\n");
-result.Append(indent).Append("average instructions per run: ")
-.Append(method.TotalInstructionCount / method.TimesRun).Append("\n");
-result.Append(indent).Append("total instructions: ")
-.Append(method.TotalInstructionCount).Append("\n");
-}
-MethodInfos.Clear();
-return result.ToString();
-}
-class MethodInfo
-{
-public int TotalInstructionCount;
-public int TimesRun;
-public string Name;
-public MethodInfo()
-{
-TotalInstructionCount = 0;
-TimesRun = 0;
-}
-}
-}
+//!EMBED SEScripts.Lib.SimpleProfiler
 
 }

@@ -109,6 +109,9 @@
     <Compile Include="MultiAgentNetwork\MAN\Protocols\ProvideServiceInformationProtocol.cs" />
     <Compile Include="MultiAgentNetwork\MAN\Protocols\ServiceRegistrationProtocol.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Programs\DockingManager.cs" />
+    <Compile Include="Programs\DockingManagerApplication.cs" />
+    <Compile Include="Programs\ArgillaGridMaster.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SirHamsteralotsNN\MLP.cs" />
     <Compile Include="XUI\NodeRenderCache.cs" />
@@ -124,6 +127,7 @@
     <Compile Include="XUI\XML\Generic.cs" />
     <Compile Include="XUI\XML\Hidden.cs" />
     <Compile Include="XUI\XML\HiddenData.cs" />
+    <Compile Include="XUI\XML\VerticalLine.cs" />
     <Compile Include="XUI\XML\HorizontalLine.cs" />
     <Compile Include="XUI\XML\Menu.cs" />
     <Compile Include="XUI\XML\MenuItem.cs" />

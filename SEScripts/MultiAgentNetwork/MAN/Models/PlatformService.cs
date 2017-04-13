@@ -32,9 +32,9 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
 
         private AgentId PermissionMask;
 
-        public PlatformService(string id, string description, AgentId provider) : this(id, description, new AgentId("ANY@ANY"), provider, false) { }
-        public PlatformService(string id, string description, AgentId permissionMask, AgentId provider) : this(id, description, permissionMask, provider, false) { }
-        public PlatformService(string id, string description, AgentId permissionMask, AgentId provider, bool providesUI)
+        public PlatformService(string id, string description, AgentId provider) : this(id, description, provider, new AgentId("ANY@ANY"), false) { }
+        public PlatformService(string id, string description, AgentId provider, AgentId permissionMask) : this(id, description, provider, permissionMask, false) { }
+        public PlatformService(string id, string description, AgentId provider, AgentId permissionMask, bool providesUI)
         {
             Id = id;
             Description = description;
@@ -77,8 +77,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
             return new PlatformService(
                 node.GetAttribute("id"),
                 node.GetAttribute("description") ?? "",
-                new AgentId(node.GetAttribute("permissions") ?? "ANY@ANY"),
                 new AgentId(node.GetAttribute("provider")),
+                new AgentId(node.GetAttribute("permissions") ?? "ANY@ANY"),
                 node.GetAttribute("providesui") != null && node.GetAttribute("providesui") != "false"
                 );
         }

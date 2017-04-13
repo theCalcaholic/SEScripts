@@ -83,7 +83,7 @@ namespace SEScripts.XUI.XML
             Type = "progressbar";
             PreventDefault("LEFT/ABORT");
             PreventDefault("RIGHT/SUBMIT");
-            SetAttribute("width", "500");
+            SetAttribute("minwidth", "500");
             SetAttribute("filledstring", "|");
             SetAttribute("emptystring", "'");
             SetAttribute("value", fillLevel.ToString());
@@ -150,20 +150,28 @@ namespace SEScripts.XUI.XML
             RenderBoxTree cache = new RenderBoxTree();
             cache.type = Type;
             int outerWidth = TextUtils.GetTextWidth(IsSelected() ? "<[]>" : " [] ") + 2;
-            RenderBox prefix = new RenderBoxLeaf(
-                (IsSelected() ? "<" : " ") + "[");
+            string prefixString = (IsSelected() ? "<" : " ") + "[";
+            RenderBox prefix = new RenderBoxLeaf(prefixString);
+            prefix.type = "progressbarPrefix";
+            prefix.MinWidth = TextUtils.GetTextWidth(prefixString);
             prefix.MaxWidth = prefix.MinWidth;
-            RenderBox suffix = new RenderBoxLeaf(
-                "]" + (IsSelected() ? ">" : " "));
+            prefix.MinHeight = 1;
+            string suffixString = "]" + (IsSelected() ? ">" : " ");
+            RenderBox suffix = new RenderBoxLeaf(suffixString);
+            suffix.type = "progressbarSuffix";
+            suffix.MinWidth = TextUtils.GetTextWidth(suffixString);
             suffix.MaxWidth = suffix.MinWidth;
+            suffix.MinHeight = 1;
             cache.Add(prefix);
 
             filledBar = new RenderBoxLeaf();
+            filledBar.type = "filledBar";
             filledBar.PadChar = GetAttribute("filledstring")[0];
             filledBar.MinHeight = 1;
             cache.Add(filledBar);
 
             emptyBar = new RenderBoxLeaf();
+            emptyBar.type = "emptybar";
             emptyBar.MinHeight = 1;
             emptyBar.PadChar = GetAttribute("emptystring")[0];
             cache.Add(emptyBar);
@@ -198,7 +206,7 @@ namespace SEScripts.XUI.XML
                 emptyBar.MinWidth = forcedWidth;
                 emptyBar.MaxWidth = forcedWidth;
             }
-            UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+            //UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 
             //Logger.log("filledBar: ");
             //Logger.debug = false;

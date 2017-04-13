@@ -33,7 +33,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
 
         public Service(string id, string description, AgentId provider, AgentId permissions, Func<Agent, AgentProtocol> create) :
             this(id, description, provider, permissions, false, create) { }
-        public Service(string id, string description, AgentId provider, AgentId permissions, bool providesUI, Func<Agent, AgentProtocol> create) : base(id, description, provider, permissions, providesUI)
+        public Service(string id, string description, AgentId provider, AgentId permissions, bool providesUI, Func<Agent, AgentProtocol> create) 
+            : base(id, description, provider, permissions, providesUI)
         {
             Create = create;
         }

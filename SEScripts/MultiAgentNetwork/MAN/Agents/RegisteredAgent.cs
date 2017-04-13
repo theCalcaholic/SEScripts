@@ -44,7 +44,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
             foreach (KeyValuePair<string, Service> service in Services)
             {
 
-                if(service.Value.HasPermissions(new AgentId("**@local")))
+                if(service.Value.ProvidesUI || service.Value.HasPermissions(new AgentId("**@local")))
                 {
                     content += service.Value.ToXML();
 

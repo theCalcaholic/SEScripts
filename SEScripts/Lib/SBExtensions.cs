@@ -13,15 +13,15 @@ namespace SEScripts.Lib
     {
         public static void AppendSubstr(StringBuilder me, StringBuilder append, int start, int count)
         {
-            using (new SimpleProfiler("SBExtensions.AppendSubstr(StringBuilder, StringBuilder, int, int)"))
-            {
+            //using (new SimpleProfiler("SBExtensions.AppendSubstr(StringBuilder, StringBuilder, int, int)"))
+            //{
                 me.Capacity = me.Capacity + append.Length;
                 int loopEnd = Math.Min(append.Length, start + count);
                 for (int i = start; i < loopEnd; i++)
                 {
                     me.Append(append[i]);
                 }
-            }
+            //}
         }
     }
 }

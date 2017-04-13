@@ -33,10 +33,10 @@ namespace SEScripts.Lib
 
         public static string Sanitize(string xmlDefinition)
         {
-            using (new Logger("Parser.Sanitize"))
-            {
+            //using (new Logger("Parser.Sanitize"))
+            //{
                 return xmlDefinition.Replace("\"", "\\\"").Replace("'", "\\'");
-            }
+            //}
         }
 
         public static string UnescapeQuotes(string xmlDefinition)
@@ -89,8 +89,8 @@ namespace SEScripts.Lib
             bool ignoreEscapedQuotes
         )
         {
-            using (Logger logger = new Logger("GetNextOutsideQuotes():"))
-            {
+            //using (Logger logger = new Logger("GetNextOutsideQuotes():"))
+            //{
 
                 char[] quoteChars = new char[] { '\'', '"' };
                 int needlePos = -1;
@@ -137,13 +137,13 @@ namespace SEScripts.Lib
                     }
                 }
                 return needlePos;
-            }
+            //}
         }
 
         public static List<String> ParamString2List(string arg)
         {
-            using (new Logger("Parser.ParamString2List(string)"))
-            {
+            //using (new Logger("Parser.ParamString2List(string)"))
+            //{
                 arg = arg.Trim() + " ";
                 List<string> argList = new List<string>();
                 char[] quoteChars = new char[] { '\'', '"' };
@@ -155,13 +155,13 @@ namespace SEScripts.Lib
                     argList.Add(arg.Substring(0, spacePos).Trim(quoteChars));
                 }
                 return argList;
-            }
+            //}
         }
 
         public static Dictionary<string, string> GetXMLAttributes(string attributeString)
         {
-            using (new Logger("Parser.GetXMLAttributes(string)"))
-            {
+            //using (new Logger("Parser.GetXMLAttributes(string)"))
+            //{
                 Dictionary<string, string> attributes = new Dictionary<string, string>();
                 char[] quoteChars = new char[] { '\'', '"' };
                 List<string> attributeList = ParamString2List(attributeString);
@@ -180,7 +180,7 @@ namespace SEScripts.Lib
                     }
                 }
                 return attributes;
-            }
+            //}
         }
 
     }

@@ -58,14 +58,22 @@ namespace SEScripts.XUI.XML
 
         public void Follow(UIController controller)
         {
-            //Logger.debug("Route.Follow()");
-            //Logger.IncLvl();
-            string[] DefTypeAndValue = Definition.Split(new char[] { ':' }, 2);
-            if (Route.RouteHandlers.ContainsKey(DefTypeAndValue[0].ToLower()))
+            using (Logger logger = new Logger("Route.Follow(UIController)", Logger.Mode.LOG))
             {
-                Route.RouteHandlers[DefTypeAndValue[0].ToLower()](
-                    DefTypeAndValue.Length >= 2 ? DefTypeAndValue[1] : null, controller
-                );
+                logger.log("route def: " + Definition, Logger.Mode.LOG);
+                //Logger.debug("Route.Follow()");
+                //Logger.IncLvl();
+                string[] DefTypeAndValue = Definition.Split(new char[] { ':' }, 2);
+                if (Route.RouteHandlers.ContainsKey(DefTypeAndValue[0].ToLower()))
+                {
+                    Route.RouteHandlers[DefTypeAndValue[0].ToLower()](
+                        DefTypeAndValue.Length >= 2 ? DefTypeAndValue[1] : null, controller
+                    );
+                }
+                else
+                {
+                    logger.log("route not understood.", Logger.Mode.WARNING);
+                }
             }
 
             //Logger.DecLvl();

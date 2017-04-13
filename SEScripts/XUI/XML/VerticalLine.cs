@@ -20,30 +20,34 @@ using SEScripts.XUI.BoxRenderer;
 
 namespace SEScripts.XUI.XML
 {
-    public class Hidden : XMLTree
+    public class VerticalLine : XMLTree
     {
-        public Hidden() : base()
+        public VerticalLine() : base()
         {
-            Type = "hidden";
+            Type = "vl";
+            SetAttribute("height", "100%");
+            //SetAttribute("minwidth", "4");
         }
-        /*protected override string PostRender(List<string> segments, int width, int availableWidth)
+
+        /*protected override void RenderText(ref List<string> segments, int width, int availableWidth)
         {
-            return null;
+            segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL));
         }*/
 
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            //using (new Logger("Hidden.GetRenderCache(int)", Logger.Mode.LOG))
+            //using (new Logger("VerticalLine.GetRenderBox()"))
             //{
-                RenderBox cache = new RenderBoxTree();
+                RenderBox cache = new RenderBoxLeaf();
+                cache.PadChar = '|';
                 cache.type = Type;
-                cache.MaxWidth = 0;
-                cache.MaxHeight = 0;
+                //cache.Add("_");
+                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+                cache.MinWidth = TextUtils.GetCharWidth('|');
                 return cache;
             //}
         }
     }
 
-
-    //EMBED SEScripts.XUI.XML.DataStore
+    //EMBED SEScripts.XUI.XML.XMLTree
 }

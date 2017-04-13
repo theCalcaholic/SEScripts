@@ -16,28 +16,22 @@ using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib.LoggerNS;
 using SEScripts.XUI.BoxRenderer;
+using SEScripts.Lib;
 
 namespace SEScripts.XUI.XML
 {
     public class Menu : XMLTree
     {
-        RenderBox prefix;
-        RenderBox prefixSelected;
 
         public Menu() : base()
         {
             Type = "menu";
-            prefix = new RenderBoxLeaf("     ");
-            prefixSelected = new RenderBoxLeaf(">> ");
-            int prefixWidth = Math.Max(prefix.MinWidth, prefixSelected.MinWidth);
-            prefix.MaxWidth = prefixWidth;
-            prefixSelected.MaxWidth = prefixWidth;
         }
 
         public override void AddChild(XMLTree child)
         {
-            using (new Logger("Menu.AddChile(XMLTree)"))
-            {
+            //using (new Logger("Menu.AddChile(XMLTree)"))
+            //{
                 if (child.Type != "menuitem" && child.IsSelectable())
                 {
                     throw new Exception(
@@ -45,7 +39,7 @@ namespace SEScripts.XUI.XML
                         + " (type was: <" + child.Type + ">)");
                 }
                 base.AddChild(child);
-            }
+            //}
         }
 
         /*protected override string RenderChild(XMLTree child, int width)
@@ -60,16 +54,42 @@ namespace SEScripts.XUI.XML
             return renderString;
         }*/
 
+        public override Dictionary<string, string> GetValues(Func<XMLTree, bool> filter)
+        {
+            Dictionary<string, string> values = base.GetValues(filter);
+            string name = GetAttribute("name");
+            string value = GetChild(SelectedChild).GetAttribute("value");
+            if (filter(this) && IsSelected() && name != null && value != null)
+            {
+                values[name] = value;
+            }
+            return values;
+        }
+
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             using (new Logger("Menu.GetRenderBox(int, int)"))
             {
+                RenderBoxLeaf prefix = new RenderBoxLeaf();
+                prefix.MinHeight = 1;
+                prefix.MaxHeight = 1;
+                prefix.type = Type + "_prefix";
+                RenderBoxLeaf prefixSelected = new RenderBoxLeaf(">>");
+                prefixSelected.type = Type + "_prefixSelected";
+                int prefixWidth = TextUtils.GetTextWidth(">> ");
+                prefix.MaxWidth = prefixWidth;
+                prefix.MinWidth = prefixWidth;
+                prefixSelected.MaxWidth = prefixWidth;
+                prefixSelected.MinWidth = prefixWidth - 1;
+                prefixSelected.MaxHeight = 1;
                 RenderBoxTree cache = new RenderBoxTree();
+                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
                 cache.type = Type;
                 RenderBoxTree menuPoint;
                 foreach (XMLTree child in Children)
                 {
                     menuPoint = new RenderBoxTree();
+                    menuPoint.type = Type + "_menupoint";
                     menuPoint.Flow = RenderBox.FlowDirection.HORIZONTAL;
                     if (child.IsSelected())
                     {
@@ -79,10 +99,10 @@ namespace SEScripts.XUI.XML
                     {
                         menuPoint.Add(prefix);
                     }
-                    menuPoint.Add(child.GetRenderBox(maxWidth, maxHeight));
+                    RenderBox childBox = child.GetRenderBox(maxWidth, maxHeight);
+                    menuPoint.Add(childBox);
                     cache.Add(menuPoint);
                 }
-                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
                 return cache;
             }
         }

@@ -303,58 +303,63 @@ namespace SEScripts.MultiAgentNetwork.MAN.Agents
 
         public virtual bool SendMessage(ref AgentMessage msg)
         {
-            //Logger.debug("Agent.SendMessage");
-            //Logger.IncLvl();
-            //Logger.log("Sending message of '" + msg.Sender.ToString() + "' to '" + msg.Receiver.ToString() + "'...");
-            //Logger.log("Requested service: " + msg.Service);
-            //Logger.log("Message content: " + msg.Content);
-            //Logger.log("Message status: " + msg.Status.ToString());
-            IMyProgrammableBlock targetBlock = null;
-            //Logger.log("comparing receiver platform '" + msg.Receiver.Platform + "' and own platform '" + Id.Platform + "'...");
-            if (msg.Receiver == Id)
+            using (Logger logger = new Logger("Agent.SendMessage(ref AgentMessage)", Logger.Mode.LOG))
             {
-                ReceiveMessage(msg);
-            }
-            else if (msg.Receiver.Name != Id.Name && (msg.Receiver.Platform == "local" || msg.Receiver.Platform == Id.Platform))
-            {
-                targetBlock = GTS.GetBlockWithName(msg.Receiver.Name) as IMyProgrammableBlock;
-                if (targetBlock == null)
+                //Logger.debug("Agent.SendMessage");
+                //Logger.IncLvl();
+                //Logger.log("Sending message of '" + msg.Sender.ToString() + "' to '" + msg.Receiver.ToString() + "'...");
+                //Logger.log("Requested service: " + msg.Service);
+                //Logger.log("Message content: " + msg.Content);
+                //Logger.log("Message status: " + msg.Status.ToString());
+                IMyProgrammableBlock targetBlock = null;
+                //Logger.log("comparing receiver platform '" + msg.Receiver.Platform + "' and own platform '" + Id.Platform + "'...");
+                if (msg.Receiver == Id)
                 {
-                    //Logger.log("WARNING: Receiver with id '" + msg.Receiver.ToString() + "' not found locally!");
+                    ReceiveMessage(msg);
                 }
-            }
-            else
-            {
-                //Logger.log("Receiver not local. Trying to find corresponding platform agent.");
-                targetBlock = GTS.GetBlockWithName(msg.Receiver.Platform) as IMyProgrammableBlock;
-                if (targetBlock == null)
+                else if (msg.Receiver.Name != Id.Name && (msg.Receiver.Platform == "local" || msg.Receiver.Platform == Id.Platform))
                 {
-                    if (Id.Platform != Id.Name)
-                    {
-                        targetBlock = GTS.GetBlockWithName(Id.Platform) as IMyProgrammableBlock;
-                    }
+                    targetBlock = GTS.GetBlockWithName(msg.Receiver.Name) as IMyProgrammableBlock;
                     if (targetBlock == null)
                     {
-                        //Logger.log("WARNING: Not registered at any platform! Only local communication possible!");
+                        //Logger.log("WARNING: Receiver with id '" + msg.Receiver.ToString() + "' not found locally!");
                     }
                 }
-            }
-            if (targetBlock == null)
-            {
-                //Logger.DecLvl();
-                return false;
-            }
-            if (msg.Receiver.Platform == "local" && msg.Sender.Platform == Id.Platform)
-            {
-                msg.Sender.Platform = "local";
-            }
+                else
+                {
+                    //Logger.log("Receiver not local. Trying to find corresponding platform agent.");
+                    targetBlock = GTS.GetBlockWithName(msg.Receiver.Platform) as IMyProgrammableBlock;
+                    if (targetBlock == null)
+                    {
+                        if (Id.Platform != Id.Name)
+                        {
+                            targetBlock = GTS.GetBlockWithName(Id.Platform) as IMyProgrammableBlock;
+                        }
+                        if (targetBlock == null)
+                        {
+                            //Logger.log("WARNING: Not registered at any platform! Only local communication possible!");
+                        }
+                    }
+                }
+                if (targetBlock == null)
+                {
+                    //Logger.DecLvl();
+                    return false;
+                }
+                if (msg.Receiver.Platform == "local" && msg.Sender.Platform == Id.Platform)
+                {
+                    msg.Sender.Platform = "local";
+                }
 
-            if (!targetBlock.TryRun("message \"" + msg.ToString() + "\""))
-            {
-                ScheduleMessage(msg);
+                logger.log("Message: " + msg.ToXML(), Logger.Mode.LOG);
+
+                if (!targetBlock.TryRun("message \"" + msg.ToString() + "\""))
+                {
+                    ScheduleMessage(msg);
+                }
+                //Logger.DecLvl();
+                return true;
             }
-            //Logger.DecLvl();
-            return true;
         }
 
         public void ScheduleMessage(AgentMessage msg)

@@ -102,8 +102,8 @@ namespace SEScripts.XUI.XML
 
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
-            {
+            //using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
+            //{
                 //Logger.debug("UIControls.GetRenderCache(int)");
                 //Logger.IncLvl();
                 RenderBoxTree cache = new RenderBoxTree();
@@ -135,7 +135,7 @@ namespace SEScripts.XUI.XML
                 
                 return cache;
             }
-        }
+        //}
     }
 
 

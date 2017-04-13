@@ -19,7 +19,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             return "get-ui-services-index";
         }
         private int RefreshTime;
-        private XML.XMLTree UIRoot;
+        private int ResetTime;
         
         public Dictionary<string, List<PlatformService>> Services
         {
@@ -64,6 +64,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
         {
             //Logger.log("UIServiceIndexServer constructor");
             RefreshTime = 1250;
+            ResetTime = 10000;
         }
 
         public override void ReceiveMessage(AgentMessage msg)
@@ -117,6 +118,7 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                 AgentMessage fakeRequest = new AgentMessage(UIReceiver, Holder.Id, AgentMessage.StatusCodes.OK, "", GetProtocolId());
                 Holder.ReceiveMessage(fakeRequest);
             }*/
+
             if (HomePageActive) LoadHomeScreen();
             //Logger.DecLvl();
         }
@@ -133,16 +135,29 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
                     RetrieveServices();
                     break;
                 case "refresh":
-                    int ttr = (int)Holder.GetKnowledgeEntry("TimeTillRefresh", this);
-                    ttr -= Holder.ElapsedTime.Milliseconds;
+                    int tuRefresh = (int)Holder.GetKnowledgeEntry("TimeUntilRefresh", this);
+                    tuRefresh -= Holder.ElapsedTime.Milliseconds;
                     //Logger.log("Time Till Refresh: " + ttr);
-                    if (ttr < 0)
+                    if (tuRefresh < 0)
                     {
-                        ttr = RefreshTime;
+                        tuRefresh = RefreshTime;
                         RetrieveServices();
                     }
+                    int tuReset = (int)Holder.GetKnowledgeEntry("TimeUntilReset", this);
+                    tuReset -= Holder.ElapsedTime.Milliseconds;
+                    if(tuReset < 0)
+                    {
+                        tuReset = ResetTime;
+                        if (!HomePageActive)
+                        {
+                            (Holder as UITerminalAgent)?.UI.ClearUIStack();
+                            LoadHomeScreen();
+                        }
+                            
+                    }
                     Holder.ScheduleRefresh();
-                    Holder.SetKnowledgeEntry("TimeTillRefresh", ttr, this);
+                    Holder.SetKnowledgeEntry("TimeTillRefresh", tuRefresh, this);
+                    Holder.SetKnowledgeEntry("TimeTillReset", tuReset, this);
 
                     break;
                 default:
@@ -191,7 +206,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             StringBuilder xml = new StringBuilder();
             foreach (string key in Platforms.Keys)
             {
-                xml.Append("<menuItem id='" + key + "' route='fn:show-platform-services' platform='" + key + "'>" + Platforms[key] + "</menuitem>");
+                if(Services[key].Count > 0)
+                    xml.Append("<menuItem id='" + key + "' route='fn:show-platform-services' platform='" + key + "'>" + Platforms[key] + "</menuitem>");
             }
             return xml;
         }
@@ -265,19 +281,6 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
 
         public override void Setup()
         {
-            //Logger.debug("UIServiceIndexServer.Setup()");
-            //Logger.IncLvl();
-            //Logger.log("Create ui app");
-            /*UIServerProtocol.CreateApplication(
-                Holder,
-                GetProtocolId(),
-                "Show Services",
-                new Dictionary<string, Func<UIServerProtocol, AgentMessage, Dictionary<string, string>, string>>
-                {
-                    {"", this.PageHomeServer },
-                    {"platform", this.PagePlatformServicesServer },
-                    {"refresh", this.PageRefreshServer }
-                });*/
             XML.Route.RegisterRouteFunction("show-platform-services", (controller) =>
             {
                 string platformId = controller.GetSelectedNode().GetAttribute("platform");
@@ -288,7 +291,8 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             });
 
             //Logger.log("Create event listeners");
-            Holder.SetKnowledgeEntry("TimeTillRefresh", RefreshTime, this);
+            Holder.SetKnowledgeEntry("TimeUntilRefresh", RefreshTime, this);
+            Holder.SetKnowledgeEntry("TimeUntilReset", ResetTime, this);
 
             AgentProtocol chat = new UIServiceIndexServer(Holder);
             Holder.AddChat(chat);

@@ -16,6 +16,7 @@ using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib.LoggerNS;
 using SEScripts.XUI.BoxRenderer;
+using SEScripts.Lib;
 
 namespace SEScripts.XUI.XML
 {
@@ -71,6 +72,8 @@ namespace SEScripts.XUI.XML
                 }
                 
             }
+            if (key == "value")
+                using (new Logger("set value: " + value)) { }
             base.SetAttribute(key, value);
         }
 
@@ -217,35 +220,41 @@ namespace SEScripts.XUI.XML
 
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            //Logger.debug("TextInput.GetRenderCache(int)");
-            //Logger.IncLvl();
-            RenderBoxTree cache = new RenderBoxTree();
-            cache.type = Type;
-            cache.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " ");
-            cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            using (Logger logger = new Logger("TextInput.GetRenderCache(int)", Logger.Mode.LOG))
+            {
+                RenderBoxTree cache = new RenderBoxTree();
+                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+                RenderBoxLeaf content = new RenderBoxLeaf();
+                cache.type = Type;
+                cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+                cache.Add(content);
+                content.Add((IsSelected() ? new string(new char[] { (char)187 }) : " ") + " ");
+                content.MinWidth = TextUtils.GetTextWidth(new string(new char[] { (char)187, ' ' }));
 
-            string value = GetAttribute("value");
-            if(CursorPosition != -1)
-            {
-                cache.Add(value.Substring(0, CursorPosition));
-                cache.Add("|");
-                cache.Add(value.Substring(CursorPosition, 1));
-                cache.Add("|");
-                cache.Add(value.Substring(CursorPosition + 1));
+                string value = GetAttribute("value");
+                logger.log("value: " + value, Logger.Mode.LOG);
+                if (CursorPosition != -1)
+                {
+                    content.Add(value.Substring(0, CursorPosition));
+                    content.Add("|");
+                    content.Add(value.Substring(CursorPosition, 1));
+                    content.Add("|");
+                    content.Add(value.Substring(CursorPosition + 1));
+                }
+                else
+                {
+                    if (value.Length == 0)
+                        content.Add("_");
+                    content.Add(value);
+                }
+                /*
+                for(int i = 0; i < cache.Count; i++)
+                {
+                    cache[i].MaxWidth = cache[i].MinWidth;
+                }*/
+                logger.log("height: " + cache.GetActualHeight(maxHeight), Logger.Mode.LOG);
+                return cache;
             }
-            else
-            {
-                if (value.Length == 0)
-                    cache.Add("_");
-                cache.Add(value);
-            }
-            for(int i = 0; i < cache.Count; i++)
-            {
-                cache[i].MaxWidth = cache[i].MinWidth;
-            }
-
-            //Logger.DecLvl();
-            return cache;
         }
     }
 

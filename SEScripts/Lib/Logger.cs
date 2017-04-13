@@ -30,14 +30,11 @@ namespace SEScripts.Lib.LoggerNS
             get { return Log.ToString(); }
         }
 
-        public Logger(string message, 
-            [System.Runtime.CompilerServices.CallerMemberName] string methodName = "") : this(message, Mode.DEBUG, methodName) {}
+        public Logger(string message) : this(message, Mode.DEBUG) {}
 
-        public Logger(string message, Mode mode,
-            [System.Runtime.CompilerServices.CallerMemberName] string methodName = "") : this(message, mode, null, methodName) {}
+        public Logger(string message, Mode mode) : this(message, mode, null) {}
 
-        public Logger(string message, Mode mode, Program program,
-            [System.Runtime.CompilerServices.CallerMemberName] string methodName = "")
+        public Logger(string message, Mode mode, Program program)
         {
             disposed = false;
             if (!DEBUG && mode == Mode.DEBUG)
@@ -52,21 +49,30 @@ namespace SEScripts.Lib.LoggerNS
         {
             log(new StringBuilder(message), mode);
         }
+
+        public void log(string message)
+        {
+            log(new StringBuilder(message));
+        }
+        public void log(StringBuilder message)
+        {
+                log(message, logMode);
+        }
         public void log(StringBuilder message, Mode mode)
         {
 
             StringBuilder msg = new StringBuilder().Append(Prefix);
-            if (logMode != Mode.LOG && logMode != Mode.CONSOLE)
-                msg.Append(logMode.ToString()).Append(": ");
+            if (mode != Mode.LOG && mode != Mode.CONSOLE)
+                msg.Append(mode.ToString()).Append(": ");
             msg.Append(message);
             Log.Append(msg).Append("\n");
 
-            if (logMode == Mode.CONSOLE)
+            if (mode == Mode.CONSOLE)
             {
                 Console.WriteLine(msg); //REMOVE
-                Prog?.Echo(msg.ToString());
+                if(Prog != null)
+                    Prog?.Echo(msg.ToString());
             }
-            //MERGESCRIPT TEST
         }
 
         private void IncLvl()
@@ -87,6 +93,11 @@ namespace SEScripts.Lib.LoggerNS
                 DecLvl();
             }
             disposed = true;
+        }
+
+        public static void Clear()
+        {
+            Log = new StringBuilder();
         }
     }
 

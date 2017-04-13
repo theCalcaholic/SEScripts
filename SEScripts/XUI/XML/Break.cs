@@ -36,13 +36,14 @@ namespace SEScripts.XUI.XML
 
         public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
-            using (new Logger("Break.GetRenderBox(int, int)"))
-            {
+            //using (new Logger("Break.GetRenderBox(int, int)"))
+            //{
                 RenderBox cache = new RenderBoxLeaf("\n");
+                cache.type = Type;
                 cache.MaxHeight = (GetParent() as XMLTree)?.GetAttribute("flow") == "horizontal" ? 1 : 0;
                 cache.MaxWidth = 0;
                 return cache;
-            }
+            //}
         }
     }
 

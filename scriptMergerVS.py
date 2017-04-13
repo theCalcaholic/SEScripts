@@ -62,6 +62,7 @@ class ScriptProvider:
         if not os.path.exists(embed_path) and not os.path.exists(embed_path + ".cs"):
             # console.write("WARNING: No file or directory found for " + namespace + "\n")
             print("WARNING: No file or directory found for " + namespace + "\n")
+            print("path: " + embed_path)
         elif os.path.isdir(embed_path) and not no_dirs:
             # console.write("embed is dir\n")
             embed_text = ""

@@ -26,13 +26,13 @@ namespace SEScripts.XUI
 
     public static class XMLWRAPPER
     {
-        public static Dictionary<string, Func<XML.XMLTree>> NodeRegister = new Dictionary<string, Func<XML.XMLTree>> {
-        {"root", () => { return new XML.RootNode(); } },
-        {"menu", () => { return new XML.Menu(); } },
-        {"menuitem", () => { return new XML.MenuItem(); } },
-        {"progressbar", () => { return new XML.ProgressBar(); } },
-        {"container", () => { return new XML.Container(); } },
-        {"hl", () => { return new XML.HorizontalLine(); } },
+        public static Dictionary<string, Func<XMLTree>> NodeRegister = new Dictionary<string, Func<XMLTree>> {
+        {"root", () => { return new RootNode(); } },
+        {"menu", () => { return new Menu(); } },
+        {"menuitem", () => { return new MenuItem(); } },
+        {"progressbar", () => { return new ProgressBar(); } },
+        {"hl", () => { return new HorizontalLine(); } },
+        {"vl", () => { return new VerticalLine(); } },
         {"uicontrols", () => { return new UIControls(); } },
         {"textinput", () => { return new TextInput(); } },
         {"submitbutton", () => { return new SubmitButton(); } },
@@ -143,9 +143,7 @@ namespace SEScripts.XUI
                     xmlString = bracketPos == -1 ? "" : xmlString.Substring(bracketPos);
                 }
             }
-
-            ////Logger.debug("parsing finished");
-            //Logger.DecLvl();
+            
             return root;
         }
 
@@ -158,8 +156,9 @@ namespace SEScripts.XUI
         //EMBED SEScripts.XUI.XML.Menu
         //EMBED SEScripts.XUI.XML.MenuItem
         //EMBED SEScripts.XUI.XML.ProgressBar
-        //EMBED SEScripts.XUI.XML.Container
+        //!EMBED SEScripts.XUI.XML.Container
         //EMBED SEScripts.XUI.XML.HorizontalLine
+        //EMBED SEScripts.XUI.XML.VerticalLine
         //EMBED SEScripts.XUI.XML.UIControls
         //EMBED SEScripts.XUI.XML.TextInput
         //EMBED SEScripts.XUI.XML.SubmitButton
@@ -174,5 +173,5 @@ namespace SEScripts.XUI
         //EMBED SEScripts.XUI.BoxRenderer.RenderBoxLeaf
         //EMBED SEScripts.XUI.BoxRenderer.RenderBoxTree
     }
-    //EMBED SEScripts.Lib.SimpleProfiler
+    //!EMBED SEScripts.Lib.SimpleProfiler
 }
