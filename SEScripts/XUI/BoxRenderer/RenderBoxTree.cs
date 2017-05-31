@@ -416,5 +416,10 @@ namespace SEScripts.XUI.BoxRenderer
             }
         }
 
+        public override void Initialize(int maxWidth, int maxHeight)
+        {
+            CalculateDynamicHeight(maxWidth, maxHeight);
+        }
+
     }
 }

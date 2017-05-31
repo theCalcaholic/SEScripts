@@ -29,8 +29,8 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                if (minHeightIsCached && false)
-                    return minHeightCache;
+                if (!InitState.Initialized)
+                    Initialize(Int32.MaxValue, Int32.MaxValue);
 
                 if (Content.Length > 0)
                 {
@@ -44,7 +44,6 @@ namespace SEScripts.XUI.BoxRenderer
                 {
                     minHeightCache = Math.Min(minHeightCache, MaxHeight);
                 }*/
-                minHeightIsCached = true;
                 return minHeightCache;
             }
             set
@@ -283,13 +282,15 @@ namespace SEScripts.XUI.BoxRenderer
         {
             using (Logger logger = new Logger("RenderBoxLeaf.CalculateDynamicHeight(int, int)", Logger.Mode.LOG))
             {
+
+                InitState.Initialized = true;
                 logger.log("Type: " + type, Logger.Mode.LOG);
                 logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
                 logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
                 logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
                 logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
                 logger.log("min width: " + MinWidth);
-                logger.log("min height: " + MinHeight);
+                if(InitState.Initialized) logger.log("min height: " + MinHeight);
                 /*logger.log("Type: " + type, Logger.Mode.LOG);
                 logger.log("max width: " + maxWidth, Logger.Mode.LOG);
                 logger.log("max height: " + MaxHeight, Logger.Mode.LOG);
@@ -346,9 +347,17 @@ namespace SEScripts.XUI.BoxRenderer
                     MinWidthOverride = Math.Max(TextUtils.GetTextWidth(currLine.ToString()), MinWidthOverride);
 
                 }
+
+                InitState.MaxWidth = maxWidth;
+                InitState.MaxHeight = maxHeight;
                 
             }
 
+        }
+
+        public override void Initialize(int maxWidth, int maxHeight)
+        {
+            CalculateDynamicHeight(maxWidth, maxHeight);
         }
 
     }

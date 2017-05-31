@@ -114,10 +114,10 @@
     <Compile Include="Programs\ArgillaGridMaster.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SirHamsteralotsNN\MLP.cs" />
+    <Compile Include="XUI\BoxRenderer\InitializationState.cs" />
     <Compile Include="XUI\NodeRenderCache.cs" />
     <Compile Include="XUI\BoxRenderer\RenderBox.cs" />
     <Compile Include="XUI\BoxRenderer\RenderBoxLeaf.cs" />
-    <Compile Include="XUI\BoxRenderer\RenderBoxProfiler.cs" />
     <Compile Include="XUI\BoxRenderer\RenderBoxTree.cs" />
     <Compile Include="XUI\XMLExtensions\XMLMessage.cs" />
     <Compile Include="XUI\XMLWRAPPER.cs" />

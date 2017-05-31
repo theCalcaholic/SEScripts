@@ -22,6 +22,7 @@ namespace SEScripts.XUI.BoxRenderer
         protected int desiredWidthCache;
         public bool DEBUG = false;
         public char PadChar;
+        public InitializationState InitState;
         public enum TextAlign { LEFT, RIGHT, CENTER }
         public enum FlowDirection { HORIZONTAL, VERTICAL }
         //public abstract int Height { get; set; }
@@ -34,6 +35,7 @@ namespace SEScripts.XUI.BoxRenderer
         public abstract StringBuilder GetLine(int index, int maxWidth, int maxHeight);
         public abstract void Clear();
         public abstract void CalculateDynamicHeight(int maxWidth, int maxHeight);
+        public abstract void Initialize(int maxWidth, int maxHeight);
         private RenderBox.FlowDirection _Flow;
         private RenderBox.TextAlign _Align;
         protected int _MinWidth;
@@ -280,6 +282,7 @@ namespace SEScripts.XUI.BoxRenderer
             minWidthIsCached = false;
             desiredHeightIsCached = false;
             desiredWidthIsCached = false;
+            InitState = new InitializationState();
             //}
         }
 
@@ -374,9 +377,8 @@ namespace SEScripts.XUI.BoxRenderer
         {
             //using (Logger logger = new Logger("RenderBox.Render(" + maxWidth + ", " + maxHeight + ")", Logger.Mode.LOG))
             //{
-            CalculateDynamicHeight(maxWidth, maxHeight);
+            Initialize(maxWidth, maxHeight);
             StringBuilder result = new StringBuilder();
-            int i = 0;
             foreach (StringBuilder line in GetLines(maxWidth, maxHeight))
             {
                 //logger.log("rendering line " + (i++), Logger.Mode.LOG);
