@@ -25,6 +25,8 @@ namespace SEScripts.XUI.BoxRenderer
         public InitializationState InitState;
         public enum TextAlign { LEFT, RIGHT, CENTER }
         public enum FlowDirection { HORIZONTAL, VERTICAL }
+
+        public abstract Dimensions RenderDimensions { get; }
         //public abstract int Height { get; set; }
 
         public abstract void Add(string box);
@@ -273,10 +275,10 @@ namespace SEScripts.XUI.BoxRenderer
             _Flow = RenderBox.FlowDirection.VERTICAL;
             _Align = RenderBox.TextAlign.LEFT;
             _MinWidth = 0;
-            _MaxWidth =  Int32.MaxValue;
+            _MaxWidth =  int.MaxValue;
             _DesiredWidth = -1;
             _MinHeight = 0;
-            _MaxHeight = Int32.MaxValue;
+            _MaxHeight = int.MaxValue;
             _DesiredHeight = -1;
             minHeightIsCached = false;
             minWidthIsCached = false;
@@ -286,7 +288,7 @@ namespace SEScripts.XUI.BoxRenderer
             //}
         }
 
-        public IEnumerable<StringBuilder> GetLines(int maxWidth, int maxHeight)
+        public virtual IEnumerable<StringBuilder> GetLines(int maxWidth, int maxHeight)
         {
             //using (new SimpleProfiler("RenderBox.GetLines(int, int)"))
             //{
@@ -307,10 +309,10 @@ namespace SEScripts.XUI.BoxRenderer
             //{
             //Logger.debug("NodeBox.GetRenderedLines()");
             //Logger.IncLvl();
-            int height = GetActualHeight(Int32.MaxValue);
+            int height = GetActualHeight(int.MaxValue);
             for (int i = 0; i < height; i++)
             {
-                yield return GetLine(i, Int32.MaxValue, Int32.MaxValue);
+                yield return GetLine(i, int.MaxValue, int.MaxValue);
             }
             //Logger.DecLvl();
             //}
@@ -320,7 +322,7 @@ namespace SEScripts.XUI.BoxRenderer
         {
             //using (new SimpleProfiler("RenderBox.AlignLine(ref StringBuilder)"))
             //{
-            AlignLine(ref line, Int32.MaxValue);
+            AlignLine(ref line, int.MaxValue);
             //}
         }
 
@@ -398,6 +400,24 @@ namespace SEScripts.XUI.BoxRenderer
             if (Parent != null)
                 Parent?.ClearCache();
         }
+
+        public abstract void RenderPass1();
+
+        public abstract void RenderPass2(int maxWidth, int maxHeight);
+        public abstract List<string> FinalRender();
+    }
+
+    public struct Dimensions
+    {
+        public Dimensions(int width, int height)
+        {
+            Width = width;
+            Height = height;
+        }
+
+        public int Width;
+        public int Height;
+
     }
 
 }

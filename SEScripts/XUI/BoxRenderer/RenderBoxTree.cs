@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Sandbox.Game.Gui;
 using SEScripts.Lib;
 using SEScripts.Lib.LoggerNS;
 using SEScripts.Lib.Profilers;
@@ -12,6 +12,7 @@ namespace SEScripts.XUI.BoxRenderer
 {
     public class RenderBoxTree : RenderBox
     {
+        private Dimensions _renderDimensions;
         List<RenderBox> Boxes;
 
         public RenderBox this[int i]
@@ -186,6 +187,11 @@ namespace SEScripts.XUI.BoxRenderer
                     return desiredHeightCache;
                 }
             }
+        }
+
+        public override Dimensions RenderDimensions
+        {
+            get { return _renderDimensions; }
         }
 
         public RenderBoxTree() : base()
@@ -421,5 +427,65 @@ namespace SEScripts.XUI.BoxRenderer
             CalculateDynamicHeight(maxWidth, maxHeight);
         }
 
+        //////////////////////////////////
+
+        public override void RenderPass1()
+        {
+            _renderDimensions = new Dimensions(0, 0);
+            foreach (var child in Boxes)
+            {
+                child.RenderPass1();
+                _renderDimensions.Width += child.RenderDimensions.Width + 1;
+                _renderDimensions.Height += child.RenderDimensions.Height;
+            }
+            _renderDimensions.Width--;
+            if (Boxes.Count < 2)
+            {
+                _renderDimensions.Width--;
+            }
+        }
+
+        public override void RenderPass2(int maxWidth, int maxHeight)
+        {
+            if (maxWidth == -1)
+                maxWidth = MaxWidth;
+            else if (MaxWidth != -1)
+                maxWidth = Math.Min(maxWidth, MaxWidth);
+
+            if (maxHeight == -1)
+                maxHeight = MaxHeight;
+            else if (MaxHeight != -1)
+                maxHeight = Math.Min(maxHeight, MaxHeight);
+
+            if (Flow == RenderBox.FlowDirection.VERTICAL)
+            {
+                int floatingMaxHeight = maxHeight;
+                floatingMaxHeight = floatingMaxHeight - MinHeight - 1;
+                foreach (RenderBox box in Boxes)
+                {
+                    int boxMinHeight = box.MinHeight;
+                    int boxMaxHeight = floatingMaxHeight + boxMinHeight + 1;
+                    int boxHeight = box.GetActualHeight(boxMaxHeight);
+                    box.RenderPass2(maxWidth, boxMaxHeight);
+                    floatingMaxHeight = floatingMaxHeight - boxHeight + boxMinHeight;
+                }
+            }
+            else
+            {
+                int floatingMaxWidth = maxWidth;
+                floatingMaxWidth = floatingMaxWidth - MinWidth - 1;
+                foreach (RenderBox box in Boxes)
+                {
+                    int boxMinWidth = box.MinWidth;
+                    box.RenderPass2(1 + floatingMaxWidth + boxMinWidth, maxHeight);
+                    floatingMaxWidth = floatingMaxWidth - box.RenderDimensions.Width;
+                }
+            }
+        }
+
+        public override List<string> FinalRender()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

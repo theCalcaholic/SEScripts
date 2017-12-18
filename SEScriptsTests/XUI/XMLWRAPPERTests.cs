@@ -65,7 +65,7 @@ namespace SEScripts.XUI.Tests
             Console.WriteLine("-------------------------------------------------------------");
             Console.WriteLine("Result:");
             Console.WriteLine("-------------------------------------------------------------");
-            Console.WriteLine(tree.Render(658, 60));
+            Console.WriteLine(tree.Render(2000, 60));
             Console.WriteLine("-------------------------------------------------------------");
             Console.WriteLine("Log:");
             Console.WriteLine("-------------------------------------------------------------");

@@ -18,6 +18,8 @@ namespace SEScripts.XUI.BoxRenderer
         int offsetCache;
         int lastIndex;
         Dictionary<int, StringBuilder> LineCache;
+        private Dimensions _renderDimensions;
+        private List<string> _renderedLines;
 
         public override RenderBox.FlowDirection Flow
         {
@@ -95,6 +97,16 @@ namespace SEScripts.XUI.BoxRenderer
                     return base.DesiredHeight;
                 else
                     return DynamicHeight;
+            }
+        }
+
+
+        private bool RenderingInProcess;
+        public override Dimensions RenderDimensions
+        {
+            get
+            {
+                return _renderDimensions;
             }
         }
 
@@ -269,6 +281,7 @@ namespace SEScripts.XUI.BoxRenderer
         {
             //using (new SimpleProfiler("RenderBoxLeaf.Clear()"))
             //{
+                _renderDimensions = new Dimensions(10, 1);
                 Content = "";
                 DynamicHeight = -1;
                 MinWidthOverride = 0;
@@ -360,5 +373,46 @@ namespace SEScripts.XUI.BoxRenderer
             CalculateDynamicHeight(maxWidth, maxHeight);
         }
 
+        public override void RenderPass1()
+        {
+            _renderDimensions = new Dimensions(10, 1);
+            _renderedLines = new List<string>();
+            _renderedLines.Add(Content);
+        }
+
+        public override void RenderPass2(int maxWidth, int maxHeight)
+        {
+            if (Content.Length == 0)
+            {
+                _renderDimensions = new Dimensions(0,0);
+                return;
+            }
+            _renderedLines = new List<string> {""};
+            _renderDimensions = new Dimensions(0, 0);
+            int currentWidth = 0;
+            int currentLine = 0;
+            foreach (char c in Content)
+            {
+                int charWidth = TextUtils.GetCharWidth(c);
+                if (currentWidth + charWidth + 1 <= maxWidth)
+                {
+                    _renderedLines[currentLine] = _renderedLines[currentLine] + c;
+                    currentWidth += 1 + charWidth;
+                }
+                else
+                {
+                    _renderedLines.Add(c.ToString());
+                    _renderDimensions.Width = Math.Max(_renderDimensions.Width, currentWidth);
+                    currentLine++;
+                    currentWidth = 0;
+                }
+            }
+            _renderDimensions.Height = currentLine + 1;
+        }
+
+        public override List<string> FinalRender()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
