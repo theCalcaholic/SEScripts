@@ -10,7 +10,7 @@ using SEScripts.Lib.Profilers;
 
 namespace SEScripts.XUI.BoxRenderer
 {
-    public class RenderBoxLeaf : RenderBox
+    public class RenderBoxLeaf : IRenderBox
     {
         public string Content;
         int DynamicHeight;
@@ -21,9 +21,9 @@ namespace SEScripts.XUI.BoxRenderer
         private Dimensions _renderDimensions;
         private List<string> _renderedLines;
 
-        public override RenderBox.FlowDirection Flow
+        public override IRenderBox.FlowDirection Flow
         {
-            get { return RenderBox.FlowDirection.VERTICAL; }
+            get { return IRenderBox.FlowDirection.VERTICAL; }
             set { }
         }
 

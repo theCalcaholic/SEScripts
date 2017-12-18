@@ -100,7 +100,7 @@ namespace SEScripts.XUI.XML
             //renderString = prefix + renderString;
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             //using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
             //{
@@ -115,14 +115,14 @@ namespace SEScripts.XUI.XML
 
                 if (IsSelectable())
                 {
-                    RenderBox childCache = new RenderBoxLeaf(IsSelected() ?
+                    IRenderBox childCache = new RenderBoxLeaf(IsSelected() ?
                         new StringBuilder("<<") :
                         TextUtils.CreateStringOfLength(' ', TextUtils.GetTextWidth("<<")));
                     childCache.MaxWidth = childCache.MinWidth;
                     cache.Add(childCache);
                 }
                 RenderBoxTree contentCache = new RenderBoxTree();
-                contentCache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
+                contentCache.Flow = GetAttribute("flow") == "horizontal" ? IRenderBox.FlowDirection.HORIZONTAL : IRenderBox.FlowDirection.VERTICAL;
 
                 foreach (XMLTree child in Children)
                 {
@@ -131,7 +131,7 @@ namespace SEScripts.XUI.XML
                 cache.Add(contentCache);
 
                 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
-                cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+                cache.Flow = IRenderBox.FlowDirection.HORIZONTAL;
                 
                 return cache;
             }

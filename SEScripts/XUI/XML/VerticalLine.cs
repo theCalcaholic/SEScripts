@@ -34,11 +34,11 @@ namespace SEScripts.XUI.XML
             segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL));
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             //using (new Logger("VerticalLine.GetRenderBox()"))
             //{
-                RenderBox cache = new RenderBoxLeaf();
+                IRenderBox cache = new RenderBoxLeaf();
                 cache.PadChar = '|';
                 cache.type = Type;
                 //cache.Add("_");

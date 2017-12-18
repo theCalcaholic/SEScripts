@@ -38,13 +38,13 @@ namespace SEScripts.XUI.XML
             //Logger.DecLvl();
         }
 
-        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             //using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
             //{
                 //Logger.debug("TextNode.GetRenderCache(int)");
                 //Logger.IncLvl();
-                RenderBox cache = new RenderBoxLeaf(Content);
+                IRenderBox cache = new RenderBoxLeaf(Content);
                 cache.type = Type;
                 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
                 //Logger.DecLvl();

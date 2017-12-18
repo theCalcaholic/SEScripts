@@ -10,7 +10,7 @@ using SEScripts.Lib.Profilers;
 
 namespace SEScripts.XUI.BoxRenderer
 {
-    public abstract class RenderBox
+    public abstract class IRenderBox
     {
         protected bool minHeightIsCached;
         protected bool minWidthIsCached;
@@ -38,15 +38,15 @@ namespace SEScripts.XUI.BoxRenderer
         public abstract void Clear();
         public abstract void CalculateDynamicHeight(int maxWidth, int maxHeight);
         public abstract void Initialize(int maxWidth, int maxHeight);
-        private RenderBox.FlowDirection _Flow;
-        private RenderBox.TextAlign _Align;
+        private IRenderBox.FlowDirection _Flow;
+        private IRenderBox.TextAlign _Align;
         protected int _MinWidth;
         protected int _MaxWidth;
         protected int _DesiredWidth;
         protected int _MinHeight;
         protected int _MaxHeight;
         protected int _DesiredHeight;
-        public RenderBox Parent;
+        public IRenderBox Parent;
         public string type;
 
         public int GetActualWidth(int maxWidth)
@@ -102,7 +102,7 @@ namespace SEScripts.XUI.BoxRenderer
 
         }
 
-        public RenderBox.TextAlign Align
+        public IRenderBox.TextAlign Align
         {
             get { return _Align; }
             set
@@ -111,7 +111,7 @@ namespace SEScripts.XUI.BoxRenderer
             }
         }
 
-        public virtual RenderBox.FlowDirection Flow
+        public virtual IRenderBox.FlowDirection Flow
         {
             get { return _Flow; }
             set
@@ -266,14 +266,14 @@ namespace SEScripts.XUI.BoxRenderer
             }
         }
 
-        public RenderBox()
+        public IRenderBox()
         {
             //using (new Logger("RenderBox.__construct()", Logger.Mode.LOG))
             //{
             //Logger.debug("NodeBox constructor()");
             PadChar = ' ';
-            _Flow = RenderBox.FlowDirection.VERTICAL;
-            _Align = RenderBox.TextAlign.LEFT;
+            _Flow = IRenderBox.FlowDirection.VERTICAL;
+            _Align = IRenderBox.TextAlign.LEFT;
             _MinWidth = 0;
             _MaxWidth =  int.MaxValue;
             _DesiredWidth = -1;

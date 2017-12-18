@@ -22,8 +22,8 @@ namespace SEScripts.XUI.XML
 {
     public class ProgressBar : XMLTree
     {
-        RenderBox emptyBar;
-        RenderBox filledBar;
+        IRenderBox emptyBar;
+        IRenderBox filledBar;
 
         float StepSize
         {
@@ -143,7 +143,7 @@ namespace SEScripts.XUI.XML
             //Logger.DecLvl();
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             //Logger.debug("ProgressBar.GetRenderCache(int)");
             //Logger.IncLvl();
@@ -151,13 +151,13 @@ namespace SEScripts.XUI.XML
             cache.type = Type;
             int outerWidth = TextUtils.GetTextWidth(IsSelected() ? "<[]>" : " [] ") + 2;
             string prefixString = (IsSelected() ? "<" : " ") + "[";
-            RenderBox prefix = new RenderBoxLeaf(prefixString);
+            IRenderBox prefix = new RenderBoxLeaf(prefixString);
             prefix.type = "progressbarPrefix";
             prefix.MinWidth = TextUtils.GetTextWidth(prefixString);
             prefix.MaxWidth = prefix.MinWidth;
             prefix.MinHeight = 1;
             string suffixString = "]" + (IsSelected() ? ">" : " ");
-            RenderBox suffix = new RenderBoxLeaf(suffixString);
+            IRenderBox suffix = new RenderBoxLeaf(suffixString);
             suffix.type = "progressbarSuffix";
             suffix.MinWidth = TextUtils.GetTextWidth(suffixString);
             suffix.MaxWidth = suffix.MinWidth;
@@ -218,19 +218,19 @@ namespace SEScripts.XUI.XML
             //Logger.debug = true;
             //Logger.log("  actual width: " + filledBar.GetActualWidth(maxWidth));
 
-            cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            cache.Flow = IRenderBox.FlowDirection.HORIZONTAL;
             //GetAttribute("flow") == "horizontal" ? NodeBox.FlowDirection.HORIZONTAL : NodeBox.FlowDirection.VERTICAL;
 
             switch (GetAttribute("alignself"))
             {
                 case "right":
-                    cache.Align = RenderBox.TextAlign.RIGHT;
+                    cache.Align = IRenderBox.TextAlign.RIGHT;
                     break;
                 case "center":
-                    cache.Align = RenderBox.TextAlign.CENTER;
+                    cache.Align = IRenderBox.TextAlign.CENTER;
                     break;
                 default:
-                    cache.Align = RenderBox.TextAlign.LEFT;
+                    cache.Align = IRenderBox.TextAlign.LEFT;
                     break;
             }
             //Logger.DecLvl();

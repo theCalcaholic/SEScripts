@@ -66,7 +66,7 @@ namespace SEScripts.XUI.XML
             return values;
         }
 
-        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             using (new Logger("Menu.GetRenderBox(int, int)"))
             {
@@ -90,7 +90,7 @@ namespace SEScripts.XUI.XML
                 {
                     menuPoint = new RenderBoxTree();
                     menuPoint.type = Type + "_menupoint";
-                    menuPoint.Flow = RenderBox.FlowDirection.HORIZONTAL;
+                    menuPoint.Flow = IRenderBox.FlowDirection.HORIZONTAL;
                     if (child.IsSelected())
                     {
                         menuPoint.Add(prefixSelected);
@@ -99,7 +99,7 @@ namespace SEScripts.XUI.XML
                     {
                         menuPoint.Add(prefix);
                     }
-                    RenderBox childBox = child.GetRenderBox(maxWidth, maxHeight);
+                    IRenderBox childBox = child.GetRenderBox(maxWidth, maxHeight);
                     menuPoint.Add(childBox);
                     cache.Add(menuPoint);
                 }

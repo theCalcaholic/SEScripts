@@ -38,11 +38,11 @@ namespace SEScripts.XUI.XML
             //Logger.DecLvl();
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             //Logger.debug("GetRenderCache(int)");
             //Logger.IncLvl();
-            RenderBox cache = new RenderBoxLeaf();
+            IRenderBox cache = new RenderBoxLeaf();
             cache.type = Type;
             cache.MinHeight = 1;
             int width = ResolveSize(GetAttribute("width"), maxWidth);

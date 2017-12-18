@@ -32,7 +32,7 @@ namespace SEScripts.XUI.XML
         protected bool Activated;
         protected Dictionary<string, string> Attributes;
         private bool _hasUserInputBindings;
-        private RenderBox _renderCache;
+        private IRenderBox _renderCache;
         public bool HasUserInputBindings
         {
             get { return _hasUserInputBindings; }
@@ -56,7 +56,7 @@ namespace SEScripts.XUI.XML
 
         protected bool RerenderRequired;
 
-        public virtual RenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public virtual IRenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             //using (Logger logger = new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)", Logger.Mode.LOG))
             //{
@@ -72,7 +72,7 @@ namespace SEScripts.XUI.XML
                 cache.type = Type;
                 //Console.WriteLine(Type);
                 //logger.log("1", Logger.Mode.LOG);
-                RenderBox childCache;
+                IRenderBox childCache;
                 foreach (XMLTree child in Children)
                 {
                     //TODO: Problems with relative height/width values
@@ -89,23 +89,23 @@ namespace SEScripts.XUI.XML
             //}
         }
 
-        protected void UpdateRenderCacheProperties(RenderBox cache, int maxWidth, int maxHeight)
+        protected void UpdateRenderCacheProperties(IRenderBox cache, int maxWidth, int maxHeight)
         {
             //using (Logger logger = new Logger("XMLTree<" + Type + ">.UpdateRenderCacheProperties(NodeBox, int)", Logger.Mode.LOG))
             //{
                 //Logger.IncLvl();
-                cache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
+                cache.Flow = GetAttribute("flow") == "horizontal" ? IRenderBox.FlowDirection.HORIZONTAL : IRenderBox.FlowDirection.VERTICAL;
 
                 switch (GetAttribute("alignself"))
                 {
                     case "right":
-                        cache.Align = RenderBox.TextAlign.RIGHT;
+                        cache.Align = IRenderBox.TextAlign.RIGHT;
                         break;
                     case "center":
-                        cache.Align = RenderBox.TextAlign.CENTER;
+                        cache.Align = IRenderBox.TextAlign.CENTER;
                         break;
                     default:
-                        cache.Align = RenderBox.TextAlign.LEFT;
+                        cache.Align = IRenderBox.TextAlign.LEFT;
                         break;
                 }
                 cache.MinWidth = Math.Max(0, ResolveSize(GetAttribute("minwidth"), maxWidth));
@@ -871,7 +871,7 @@ namespace SEScripts.XUI.XML
                 //Logger.debug(Type + ".Render(int)");
                 //Logger.IncLvl();
                 //Logger.log("RENDERING::PREPARE");
-                RenderBox cache = GetRenderBox(maxWidth, maxHeight);
+                IRenderBox cache = GetRenderBox(maxWidth, maxHeight);
                 //logger.log("Rendering::START", Logger.Mode.LOG);
                 //Logger.log("RENDERING::START");
                 string result = cache.Render(maxWidth, maxHeight);

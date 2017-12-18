@@ -218,7 +218,7 @@ namespace SEScripts.XUI.XML
 
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             using (Logger logger = new Logger("TextInput.GetRenderCache(int)", Logger.Mode.LOG))
             {
@@ -226,7 +226,7 @@ namespace SEScripts.XUI.XML
                 UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
                 RenderBoxLeaf content = new RenderBoxLeaf();
                 cache.type = Type;
-                cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+                cache.Flow = IRenderBox.FlowDirection.HORIZONTAL;
                 cache.Add(content);
                 content.Add((IsSelected() ? new string(new char[] { (char)187 }) : " ") + " ");
                 content.MinWidth = TextUtils.GetTextWidth(new string(new char[] { (char)187, ' ' }));

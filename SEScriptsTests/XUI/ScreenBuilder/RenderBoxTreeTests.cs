@@ -44,7 +44,7 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual(expectedWidth, tree.MinWidth);
 
             tree.MinWidth = 0;
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
 
             expectedWidth = TextUtils.GetTextWidth(line1.ToString() + line2.ToString());
             Assert.AreEqual(expectedWidth, tree.MinWidth);
@@ -70,7 +70,7 @@ namespace SEScripts.XUI.Tests
                     ), 
                 tree.MinWidth);
 
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
             Assert.AreEqual(
                     TextUtils.GetTextWidth(
                         tree.GetLine(0).ToString()),
@@ -82,7 +82,7 @@ namespace SEScripts.XUI.Tests
             string rightline1 = "ghi";
             string rightline2 = "jkl";
             tree = new RenderBoxTree();
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
             RenderBoxTree leftBox = new RenderBoxTree();
             leftBox.Add(leftline1);
             leftBox.Add(leftline2);
@@ -178,7 +178,7 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual(expectedHeight, tree.MinHeight);
 
             tree.MinHeight = 0;
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
 
             expectedHeight = 1;
             Assert.AreEqual(expectedHeight, tree.MinHeight);
@@ -201,7 +201,7 @@ namespace SEScripts.XUI.Tests
                 2,
                 tree.MinHeight);
 
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
             Assert.AreEqual(
                     1,
                     tree.MinHeight);
@@ -211,7 +211,7 @@ namespace SEScripts.XUI.Tests
             string leftline2 = "f";
             string rightline1 = "ghi";
             tree = new RenderBoxTree();
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
             RenderBoxTree leftBox = new RenderBoxTree();
             leftBox.Add(leftline1);
             leftBox.Add(leftline2);
@@ -283,9 +283,9 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual(-1, tree.MaxWidth);
             Assert.AreEqual(0, tree.MinWidth);
             Assert.AreEqual(-1, tree.DesiredWidth);
-            Assert.AreEqual(RenderBox.TextAlign.LEFT, tree.Align);
+            Assert.AreEqual(IRenderBox.TextAlign.LEFT, tree.Align);
             Assert.AreEqual(0, tree.Count);
-            Assert.AreEqual(RenderBox.FlowDirection.VERTICAL, tree.Flow);
+            Assert.AreEqual(IRenderBox.FlowDirection.VERTICAL, tree.Flow);
         }
 
         [TestMethod()]
@@ -338,7 +338,7 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual<string>(line2.ToString(), tree.GetLine(1).ToString());
             Assert.AreEqual<string>(TextUtils.CreateStringOfLength(' ', tree.MaxWidth).ToString(), tree.GetLine(2).ToString());
 
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
             tree.MinWidth = TextUtils.GetTextWidth(line1.ToString()) + TextUtils.GetTextWidth(line2.ToString()) + 1;
             tree.MaxWidth = TextUtils.GetTextWidth(line1.ToString()) + TextUtils.GetTextWidth(line2.ToString()) + 1;
 
@@ -351,7 +351,7 @@ namespace SEScripts.XUI.Tests
             string rightline1 = "ghi";
             string rightline2 = "jkl";
             tree = new RenderBoxTree();
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
             RenderBoxTree leftBox = new RenderBoxTree();
             leftBox.Add(leftline1);
             leftBox.Add(leftline2);
@@ -407,7 +407,7 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual<string>(line2.ToString(), tree.GetLine(1).ToString());
             Assert.AreEqual<string>(TextUtils.CreateStringOfLength(' ', tree.MinWidth).ToString(), tree.GetLine(2).ToString());
 
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
 
             Assert.AreEqual<string>(line1.ToString() + line2, tree.GetLine(0).ToString());
             Console.WriteLine("testing empty line, horizontal");
@@ -418,7 +418,7 @@ namespace SEScripts.XUI.Tests
             string rightline1 = "ghi";
             string rightline2 = "jkl";
             tree = new RenderBoxTree();
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
             RenderBoxTree leftBox = new RenderBoxTree();
             leftBox.Add(leftline1);
             leftBox.Add(leftline2);
@@ -482,7 +482,7 @@ namespace SEScripts.XUI.Tests
                 tree.GetLine(1).ToString());
             Assert.AreEqual<string>(TextUtils.CreateStringOfLength(' ', customMinWidth).ToString(), tree.GetLine(2).ToString());
 
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
             tree.MinWidth = tree.MinWidth - 50;
 
             Console.WriteLine("Test runs until here.");
@@ -503,7 +503,7 @@ namespace SEScripts.XUI.Tests
             string rightline1 = "ghi";
             string rightline2 = "jkl";
             tree = new RenderBoxTree();
-            tree.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            tree.Flow = IRenderBox.FlowDirection.HORIZONTAL;
             RenderBoxTree leftBox = new RenderBoxTree();
             leftBox.Add(leftline1);
             leftBox.Add(leftline2);
@@ -567,13 +567,13 @@ namespace SEScripts.XUI.Tests
             rightBox.Add(rightLeaf3);
             rightBox.MinWidth = Math.Max(rightLeaf1.MaxWidth, Math.Max(rightLeaf2.MaxWidth, rightLeaf3.MaxWidth));
             rightBox.MaxWidth = Math.Max(rightLeaf1.MaxWidth, Math.Max(rightLeaf2.MaxWidth, rightLeaf3.MaxWidth));
-            rightBox.Align = RenderBox.TextAlign.RIGHT;
+            rightBox.Align = IRenderBox.TextAlign.RIGHT;
 
             frame.Add(leftBox);
             frame.Add(rightBox);
             frame.MinWidth = leftBox.MaxWidth + 1 + rightBox.MaxWidth;
             frame.MaxWidth = leftBox.MaxWidth + 1 + rightBox.MaxWidth;
-            frame.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            frame.Flow = IRenderBox.FlowDirection.HORIZONTAL;
             
             foreach(StringBuilder line in frame.GetLines())
             {

@@ -28,7 +28,7 @@ namespace SEScripts.XUI.XML.Tests
 
             // check default settings
 
-            Assert.IsInstanceOfType(tree, typeof(RenderBox));
+            Assert.IsInstanceOfType(tree, typeof(IRenderBox));
             Assert.IsFalse(tree.HasUserInputBindings);
             Assert.IsNull(tree.GetParent());
             Assert.IsNull(tree.GetChild(0));

@@ -122,8 +122,8 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual(-1, leaf.MaxWidth);
             Assert.AreEqual(0, leaf.MinWidth);
             Assert.AreEqual(-1, leaf.DesiredWidth);
-            Assert.AreEqual(RenderBox.TextAlign.LEFT, leaf.Align);
-            Assert.AreEqual(RenderBox.FlowDirection.VERTICAL, leaf.Flow);
+            Assert.AreEqual(IRenderBox.TextAlign.LEFT, leaf.Align);
+            Assert.AreEqual(IRenderBox.FlowDirection.VERTICAL, leaf.Flow);
         }
 
         [TestMethod()]
@@ -138,8 +138,8 @@ namespace SEScripts.XUI.Tests
             Assert.AreEqual(-1f, leaf.MaxWidth);
             //Assert.AreEqual(leaf.Width, leaf.MinWidth);
             Assert.AreEqual(-1f, leaf.DesiredWidth);
-            Assert.AreEqual(RenderBox.TextAlign.LEFT, leaf.Align);
-            Assert.AreEqual(RenderBox.FlowDirection.VERTICAL, leaf.Flow);
+            Assert.AreEqual(IRenderBox.TextAlign.LEFT, leaf.Align);
+            Assert.AreEqual(IRenderBox.FlowDirection.VERTICAL, leaf.Flow);
         }
 
         [TestMethod()]

@@ -10,12 +10,12 @@ using SEScripts.Lib.Profilers;
 
 namespace SEScripts.XUI.BoxRenderer
 {
-    public class RenderBoxTree : RenderBox
+    public class RenderBoxTree : IRenderBox
     {
         private Dimensions _renderDimensions;
-        List<RenderBox> Boxes;
+        List<IRenderBox> Boxes;
 
-        public RenderBox this[int i]
+        public IRenderBox this[int i]
         {
             get
             {
@@ -50,9 +50,9 @@ namespace SEScripts.XUI.BoxRenderer
                     //int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
                     int minHeight = 0;
                     int boxMinHeight;
-                    foreach (RenderBox box in Boxes)
+                    foreach (IRenderBox box in Boxes)
                     {
-                        if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+                        if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
                         {
                             minHeight = Math.Max(minHeight, box.MinHeight);
                         }
@@ -85,11 +85,11 @@ namespace SEScripts.XUI.BoxRenderer
                     //Logger.IncLvl();
                     if (minWidthIsCached && false)
                         return minWidthCache;
-                    int minWidth = (Flow == RenderBox.FlowDirection.HORIZONTAL ? 0 : _MinWidth);
+                    int minWidth = (Flow == IRenderBox.FlowDirection.HORIZONTAL ? 0 : _MinWidth);
                     int boxMinWidth;
-                    foreach (RenderBox box in Boxes)
+                    foreach (IRenderBox box in Boxes)
                     {
-                        if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+                        if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
                         {
                             boxMinWidth = box.MinWidth;
                             if (boxMinWidth > 0)
@@ -104,7 +104,7 @@ namespace SEScripts.XUI.BoxRenderer
                             minWidth = Math.Max(box.MinWidth, minWidth);
                         }
                     }
-                    if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+                    if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
                         minWidth = Math.Max(_MinWidth, minWidth - 1);
                     //Logger.debug("minwidth = " + minWidth);
                     minWidthCache = minWidth;
@@ -125,11 +125,11 @@ namespace SEScripts.XUI.BoxRenderer
                 //Logger.IncLvl();
                 if (desiredWidthIsCached && false)
                     return desiredWidthCache;
-                int desiredWidth = (Flow == RenderBox.FlowDirection.HORIZONTAL ? 0 : _DesiredWidth);
+                int desiredWidth = (Flow == IRenderBox.FlowDirection.HORIZONTAL ? 0 : _DesiredWidth);
                 int boxDesWidth;
-                foreach (RenderBox box in Boxes)
+                foreach (IRenderBox box in Boxes)
                 {
-                    if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+                    if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
                     {
                         boxDesWidth = box.DesiredWidth;
                         if (boxDesWidth > 0)
@@ -144,7 +144,7 @@ namespace SEScripts.XUI.BoxRenderer
                         desiredWidth = Math.Max(box.DesiredWidth, desiredWidth);
                     }
                 }
-                if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+                if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
                     desiredWidth = Math.Max(_DesiredWidth, desiredWidth - 1);
                 //Logger.debug("minwidth = " + minWidth);
                 desiredWidthCache = desiredWidth;
@@ -167,9 +167,9 @@ namespace SEScripts.XUI.BoxRenderer
                     //int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
                     int desiredHeight = 0;
                     int boxDesHeight;
-                    foreach (RenderBox box in Boxes)
+                    foreach (IRenderBox box in Boxes)
                     {
-                        if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+                        if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
                         {
                             desiredHeight = Math.Max(desiredHeight, box.DesiredHeight);
                         }
@@ -199,7 +199,7 @@ namespace SEScripts.XUI.BoxRenderer
             //using (new Logger("RenderBoxTree.__construct()", Logger.Mode.LOG))
             //{
                 //Logger.debug("NodeBoxTree constructor()");
-                Boxes = new List<RenderBox>();
+                Boxes = new List<IRenderBox>();
             //}
         }
 
@@ -241,20 +241,20 @@ namespace SEScripts.XUI.BoxRenderer
             //}
         }
 
-        public void AddAt(int position, RenderBox box)
+        public void AddAt(int position, IRenderBox box)
         {
             //using (new SimpleProfiler("RenderBoxTree.AddAt(int, RenderBox)"))
             //{
                 //Logger.debug("NodeBoxTree.AddAt(int, NodeBox)");
                 //Logger.IncLvl();
-                Boxes.AddOrInsert<RenderBox>(box, position);
+                Boxes.AddOrInsert<IRenderBox>(box, position);
                 box.Parent = this;
                 ClearCache();
                 //Logger.DecLvl();
             //}
         }
 
-        public void Add(RenderBox box)
+        public void Add(IRenderBox box)
         {
             //using (new SimpleProfiler("RenderBoxTree.Add(RenderBox)"))
             //{
@@ -299,12 +299,12 @@ namespace SEScripts.XUI.BoxRenderer
                 int boxHeight;
                 int boxMaxHeight;
                 //bool foundLine = false;
-                if (Flow == RenderBox.FlowDirection.VERTICAL)
+                if (Flow == IRenderBox.FlowDirection.VERTICAL)
                 {
                     int floatingMaxHeight = maxHeight;
                     floatingMaxHeight = floatingMaxHeight - MinHeight - 1;
                     logger.log("floating max height: " + floatingMaxHeight, Logger.Mode.LOG);
-                    foreach (RenderBox box in Boxes)
+                    foreach (IRenderBox box in Boxes)
                     {
                         boxMinHeight = box.MinHeight;
                         boxMaxHeight = floatingMaxHeight + boxMinHeight + 1;
@@ -332,7 +332,7 @@ namespace SEScripts.XUI.BoxRenderer
                     logger.log("floatingMaxWidth: " + floatingMaxWidth);
                     StringBuilder nextLine;
                     int boxMinWidth;
-                    foreach (RenderBox box in Boxes)
+                    foreach (IRenderBox box in Boxes)
                     {
                         boxMinWidth = box.MinWidth;
                         nextLine = box.GetLine(index, 1 + floatingMaxWidth + boxMinWidth, maxHeight);
@@ -383,7 +383,7 @@ namespace SEScripts.XUI.BoxRenderer
                 int boxHeight;
                 int boxMaxHeight;
                 //bool foundLine = false;
-                if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+                if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
                 {
                     int floatingMaxWidth = maxWidth;
                     if (floatingMaxWidth != -1)
@@ -391,7 +391,7 @@ namespace SEScripts.XUI.BoxRenderer
                     int boxMinWidth;
                     int boxMaxWidth;
                     int boxWidth;
-                    foreach (RenderBox box in Boxes)
+                    foreach (IRenderBox box in Boxes)
                     {
                         boxMinWidth = box.MinWidth;
                         boxMaxWidth = Math.Max(boxMinWidth, 1 + floatingMaxWidth + boxMinWidth);
@@ -408,7 +408,7 @@ namespace SEScripts.XUI.BoxRenderer
                     if (floatingMaxHeight != -1)
                         floatingMaxHeight = Math.Max(floatingMaxHeight - MinHeight, 0) - 1;
                     logger.log("floating max height: " + floatingMaxHeight, Logger.Mode.LOG);
-                    foreach (RenderBox box in Boxes)
+                    foreach (IRenderBox box in Boxes)
                     {
                         boxMinHeight = box.MinHeight;
                         boxMaxHeight = floatingMaxHeight + boxMinHeight + 1;
@@ -457,11 +457,11 @@ namespace SEScripts.XUI.BoxRenderer
             else if (MaxHeight != -1)
                 maxHeight = Math.Min(maxHeight, MaxHeight);
 
-            if (Flow == RenderBox.FlowDirection.VERTICAL)
+            if (Flow == IRenderBox.FlowDirection.VERTICAL)
             {
                 int floatingMaxHeight = maxHeight;
                 floatingMaxHeight = floatingMaxHeight - MinHeight - 1;
-                foreach (RenderBox box in Boxes)
+                foreach (IRenderBox box in Boxes)
                 {
                     int boxMinHeight = box.MinHeight;
                     int boxMaxHeight = floatingMaxHeight + boxMinHeight + 1;
@@ -474,7 +474,7 @@ namespace SEScripts.XUI.BoxRenderer
             {
                 int floatingMaxWidth = maxWidth;
                 floatingMaxWidth = floatingMaxWidth - MinWidth - 1;
-                foreach (RenderBox box in Boxes)
+                foreach (IRenderBox box in Boxes)
                 {
                     int boxMinWidth = box.MinWidth;
                     box.RenderPass2(1 + floatingMaxWidth + boxMinWidth, maxHeight);

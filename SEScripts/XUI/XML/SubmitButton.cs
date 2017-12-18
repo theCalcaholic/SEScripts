@@ -40,7 +40,7 @@ namespace SEScripts.XUI.XML
             return base.PostRender(segments, width, availableWidth);
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             //Logger.debug("SubmitButton.GetRenderCache(int)");
             //Logger.IncLvl();
@@ -50,7 +50,7 @@ namespace SEScripts.XUI.XML
             childCache.MaxWidth = childCache.MinWidth;
             cache.Add(childCache);
             RenderBoxTree contentCache = new RenderBoxTree();
-            contentCache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
+            contentCache.Flow = GetAttribute("flow") == "horizontal" ? IRenderBox.FlowDirection.HORIZONTAL : IRenderBox.FlowDirection.VERTICAL;
             foreach (XMLTree child in Children)
             {
                 contentCache.Add(child.GetRenderBox(maxWidth, maxHeight));
@@ -62,7 +62,7 @@ namespace SEScripts.XUI.XML
 
             UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 
-            cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+            cache.Flow = IRenderBox.FlowDirection.HORIZONTAL;
 
             //Logger.DecLvl();
             return cache;

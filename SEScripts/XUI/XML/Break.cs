@@ -34,11 +34,11 @@ namespace SEScripts.XUI.XML
             return "";
         }*/
 
-        public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
         {
             //using (new Logger("Break.GetRenderBox(int, int)"))
             //{
-                RenderBox cache = new RenderBoxLeaf("\n");
+                IRenderBox cache = new RenderBoxLeaf("\n");
                 cache.type = Type;
                 cache.MaxHeight = (GetParent() as XMLTree)?.GetAttribute("flow") == "horizontal" ? 1 : 0;
                 cache.MaxWidth = 0;
