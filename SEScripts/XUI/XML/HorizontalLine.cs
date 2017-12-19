@@ -35,7 +35,7 @@ namespace SEScripts.XUI.XML
             segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL));
         }*/
 
-        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
         {
             //using (new Logger("HorizontalLine.GetRenderBox()"))
             //{
@@ -43,7 +43,7 @@ namespace SEScripts.XUI.XML
                 cache.type = Type;
                 //cache.Add("_");
                 cache.PadChar = '_';
-                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+                UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
                 return cache;
             //}
         }

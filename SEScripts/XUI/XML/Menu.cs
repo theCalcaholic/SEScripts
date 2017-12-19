@@ -66,11 +66,11 @@ namespace SEScripts.XUI.XML
             return values;
         }
 
-        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
         {
             using (new Logger("Menu.GetRenderBox(int, int)"))
             {
-                RenderBoxLeaf prefix = new RenderBoxLeaf();
+                RenderBoxTree prefix = new RenderBoxTree();
                 prefix.MinHeight = 1;
                 prefix.MaxHeight = 1;
                 prefix.type = Type + "_prefix";
@@ -83,7 +83,7 @@ namespace SEScripts.XUI.XML
                 prefixSelected.MinWidth = prefixWidth - 1;
                 prefixSelected.MaxHeight = 1;
                 RenderBoxTree cache = new RenderBoxTree();
-                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+                UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
                 cache.type = Type;
                 RenderBoxTree menuPoint;
                 foreach (XMLTree child in Children)
@@ -99,7 +99,7 @@ namespace SEScripts.XUI.XML
                     {
                         menuPoint.Add(prefix);
                     }
-                    IRenderBox childBox = child.GetRenderBox(maxWidth, maxHeight);
+                    IRenderBox childBox = child.GetRenderBox(Math.Max(cache._MinWidth, cache._DesiredWidth), Math.Max(cache._MaxHeight, cache._DesiredHeight));
                     menuPoint.Add(childBox);
                     cache.Add(menuPoint);
                 }

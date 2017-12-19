@@ -66,8 +66,9 @@
     <Compile Include="GenericTestClass.cs" />
     <Compile Include="Lib\TextUtilsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="XUI\ScreenBuilder\RenderBoxLeafTests.cs" />
-    <Compile Include="XUI\ScreenBuilder\RenderBoxTreeTests.cs" />
+    <Compile Include="XUI\BoxRenderer\RenderBoxLeafTests.cs" />
+    <Compile Include="XUI\BoxRenderer\RenderBoxTreeTests.cs" />
+    <Compile Include="XUI\BoxRenderer\WidthCalculationTest.cs" />
     <Compile Include="XUI\XMLWRAPPERTests.cs" />
     <Compile Include="XUI\XML\GenericTests.cs" />
   </ItemGroup>

@@ -15,6 +15,7 @@ namespace SEScripts.XUI.BoxRenderer
         public string Content;
         int DynamicHeight;
         int MinWidthOverride;
+        int TextWidth;
         int offsetCache;
         int lastIndex;
         Dictionary<int, StringBuilder> LineCache;
@@ -31,22 +32,25 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                if (!InitState.Initialized)
-                    Initialize(Int32.MaxValue, Int32.MaxValue);
+                //using (new Logger("RenderBoxLeaf.MinHeight.get", Logger.Mode.LOG))
+                //{
+                    //if (!InitState.Initialized)
+                    //    Initialize(int.MaxValue, int.MaxValue);
 
-                if (Content.Length > 0)
-                {
-                    minHeightCache = Math.Max(_MinHeight, LineCache.Count);
-                }
-                else
-                {
-                    minHeightCache = _MinHeight;
-                }
-                /*if(MaxHeight != -1)
-                {
-                    minHeightCache = Math.Min(minHeightCache, MaxHeight);
-                }*/
-                return minHeightCache;
+
+                    if (minHeightIsCached && false)
+                        return minHeightCache;
+
+                    if (Content.Length > 0)
+                    {
+                        minHeightCache = Math.Max(_MinHeight, LineCache?.Count ?? (Content.Length == 0 ? 0 : 1));
+                    }
+                    else
+                    {
+                        minHeightCache = _MinHeight;
+                    }
+                    return minHeightCache;
+                //}
             }
             set
             {
@@ -55,25 +59,40 @@ namespace SEScripts.XUI.BoxRenderer
             }
         }
 
+        public override int MaxWidth
+        {
+            get
+            {
+                if (TextWidth != 0)
+                    return TextWidth;
+                return _MaxWidth;
+            }
+        }
+
         public override int MinWidth
         {
             get
             {
-                //using (new SimpleProfiler("RenderBoxLeaf.MinWidth.get"))
-                //{
+                using (Logger logger = new Logger("RenderBoxLeaf.MinWidth.get", Logger.Mode.LOG))
+                {
+                    //using (new SimpleProfiler("RenderBoxLeaf.MinWidth.get"))
+                    //{
                     //Logger.debug("NodeBoxLeaf.MinWidth.get");
                     //Logger.IncLvl();
                     if (minWidthIsCached && false)
                         return minWidthCache;
-                    minWidthCache = Math.Max(MinWidthOverride, 
-                        Content.Length == 0 ? 
-                        _MinWidth : 
-                        Math.Max(25, _MinWidth));
+                    minWidthCache = Math.Max(MinWidthOverride,
+                        Content.Length == 0 ?
+                            _MinWidth :
+                            Math.Max(25, _MinWidth));
                     //Logger.debug("minwidth = " + minWidth);
                     minWidthIsCached = true;
                     //Logger.DecLvl();
+                    logger.log("content: " + Content);
+                    logger.log("minwidth: " + minWidthCache);
                     return minWidthCache;
-                //}
+                    //}
+                }
             }
             set
             {
@@ -100,8 +119,6 @@ namespace SEScripts.XUI.BoxRenderer
             }
         }
 
-
-        private bool RenderingInProcess;
         public override Dimensions RenderDimensions
         {
             get
@@ -188,10 +205,17 @@ namespace SEScripts.XUI.BoxRenderer
 
         public override StringBuilder GetLine(int index)
         {
-            return GetLine(index, -1, -1);
+            return GetLine(index, int.MaxValue, int.MaxValue);
         }
 
+
         public override StringBuilder GetLine(int index, int maxWidth, int maxHeight)
+        {
+            return GetLine(index, maxWidth, maxHeight, true);
+
+        }
+
+        public StringBuilder GetLine(int index, int maxWidth, int maxHeight, bool doAlign)
         {
             using (Logger logger = new Logger("RenderBoxLeaf.GetLine(int, int, int)", Logger.Mode.LOG))
             {
@@ -206,7 +230,7 @@ namespace SEScripts.XUI.BoxRenderer
                 if (index < _MaxHeight)
                 {
                     int height = GetActualHeight(maxHeight);
-                    int width = GetActualWidth(maxWidth);
+                    int width = Math.Min(maxWidth, MaxWidth);
                     int offset = 0;
                     int spacePos = -1;
                     int i = 0;
@@ -252,16 +276,16 @@ namespace SEScripts.XUI.BoxRenderer
                         }
                         logger.log("result: " + lineString);
                         line = new StringBuilder(lineString);
-                        AlignLine(ref line, maxWidth);
+                        if(doAlign) AlignLine(ref line, maxWidth);
                         if (line.Length > 0)
                             LineCache[index] = line;
                     }
-                    else
+                    else if(doAlign)
                     {
                         AlignLine(ref line, maxWidth);
                     }
                 }
-                else
+                else if(doAlign)
                 {
                     AlignLine(ref line, maxWidth);
                 }
@@ -285,13 +309,14 @@ namespace SEScripts.XUI.BoxRenderer
                 Content = "";
                 DynamicHeight = -1;
                 MinWidthOverride = 0;
+                TextWidth = 0;
                 LineCache = new Dictionary<int, StringBuilder>();
                 ClearCache();
             //}
         }
 
 
-        public override void CalculateDynamicHeight(int maxWidth, int maxHeight)
+        public override void CalculateDimensions(int maxWidth, int maxHeight)
         {
             using (Logger logger = new Logger("RenderBoxLeaf.CalculateDynamicHeight(int, int)", Logger.Mode.LOG))
             {
@@ -334,35 +359,33 @@ namespace SEScripts.XUI.BoxRenderer
                 }
                 logger.log("Dynamic Height is: " + DynamicHeight, Logger.Mode.LOG);*/
 
-                LineCache = new Dictionary<int, StringBuilder>();
-                StringBuilder line;
-                int index = -1;
-                if(maxWidth <= 0)
-                {
-                    for(int i = 0; i < GetActualHeight(maxHeight); i++)
-                        LineCache[i] = new StringBuilder();
-                    MinWidthOverride = 0;
-                    return;
-                }
-                //Console.WriteLine("start loop");
-
-                do
-                {
-                    line = GetLine(++index, maxWidth, maxHeight);
-                    //Console.WriteLine("content length: " + Content.Length);
-                    //Console.WriteLine("offsetcache: " + offsetCache);
-                }
-                while (LineCache.ContainsKey(index));
+                BuildLineCache(maxWidth, maxHeight);
                 //Console.WriteLine("linecache size: " + LineCache.Count);
                 MinWidthOverride = 0;
-                foreach(StringBuilder currLine in LineCache.Values)
+                TextWidth = 0;
+                int lineWidth;
+                foreach (StringBuilder currLine in LineCache.Values)
                 {
-                    MinWidthOverride = Math.Max(TextUtils.GetTextWidth(currLine.ToString()), MinWidthOverride);
+                    lineWidth = TextUtils.GetTextWidth(currLine.ToString());
+                    MinWidthOverride = Math.Max(lineWidth, MinWidthOverride);
+                    TextWidth = Math.Max(lineWidth, TextWidth);
 
                 }
-
+                DynamicHeight = LineCache.Count();
                 InitState.MaxWidth = maxWidth;
                 InitState.MaxHeight = maxHeight;
+
+                for(int i = 0; i < LineCache.Count(); i++)
+                {
+                    StringBuilder line = LineCache[i];
+                    AlignLine(ref line, maxWidth);
+                    LineCache[i] = line;
+                }
+
+                logger.log("dynamic height:" + DynamicHeight);
+                logger.log("minwidthoverride: " + MinWidthOverride);
+                //minWidthIsCached = false;
+                //minHeightIsCached = false;
                 
             }
 
@@ -370,7 +393,35 @@ namespace SEScripts.XUI.BoxRenderer
 
         public override void Initialize(int maxWidth, int maxHeight)
         {
-            CalculateDynamicHeight(maxWidth, maxHeight);
+            //ParseWidthDefinitions(maxWidth, maxHeight);
+            CalculateDimensions(maxWidth, maxHeight);
+        }
+
+        private void BuildLineCache(int maxWidth, int maxHeight)
+        {
+            LineCache = new Dictionary<int, StringBuilder>();
+            StringBuilder line;
+            int index = -1;
+            if (maxWidth <= 0)
+            {
+                int height = GetActualHeight(maxHeight);
+                for (int i = 0; i < height; i++)
+                    LineCache[i] = new StringBuilder();
+                MinWidthOverride = 0;
+                return;
+            }
+            else
+            {
+                //Console.WriteLine("start loop");
+
+                do
+                {
+                    line = GetLine(++index, maxWidth, maxHeight, false);
+                    //Console.WriteLine("content length: " + Content.Length);
+                    //Console.WriteLine("offsetcache: " + offsetCache);
+                }
+                while (LineCache.ContainsKey(index));
+            }
         }
 
         public override void RenderPass1()

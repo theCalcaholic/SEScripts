@@ -178,25 +178,25 @@ namespace SEScripts.XUI.XML
 
             cache.Add(suffix);
 
-            int width = ResolveSize(GetAttribute("minwidth"), maxWidth);
+            int width = ResolveSize(GetAttribute("minwidth"), maxWidth) ?? 0;
             if (width >= outerWidth)
             {
                 filledBar.MinWidth = (int)((width - outerWidth) * FillLevel);
                 emptyBar.MinWidth = (int)((width - outerWidth) * (1 - FillLevel));
             }
-            width = ResolveSize(GetAttribute("maxwidth"), maxWidth);
+            width = ResolveSize(GetAttribute("maxwidth"), maxWidth) ?? 0;
             if (width >= outerWidth)
             {
                 filledBar.MaxWidth = (int) ((width - outerWidth) * FillLevel);
                 emptyBar.MaxWidth = (int)((width - outerWidth) * (1 - FillLevel));
             }
-            width = ResolveSize(GetAttribute("width"), maxWidth);
+            width = ResolveSize(GetAttribute("width"), maxWidth) ?? 0;
             if (width >= outerWidth)
             {
                 filledBar.DesiredWidth = (int)((width - outerWidth) * FillLevel);
                 emptyBar.DesiredWidth = (int)((width - outerWidth) * (1 - FillLevel));
             }
-            width = ResolveSize(GetAttribute("forcewidth"), maxWidth);
+            width = ResolveSize(GetAttribute("forcewidth"), maxWidth) ?? 0;
             if (width >= outerWidth)
             {
                 int forcedWidth = (int)((width - outerWidth) * FillLevel);

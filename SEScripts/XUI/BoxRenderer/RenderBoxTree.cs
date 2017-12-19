@@ -43,8 +43,8 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                using (Logger logger = new Logger("RenderBoxTree.MinHeight.get", Logger.Mode.LOG))
-                {
+                //using (Logger logger = new Logger("RenderBoxTree.MinHeight.get", Logger.Mode.LOG))
+                //{
                     if (minHeightIsCached && false)
                         return minHeightCache;
                     //int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
@@ -62,16 +62,16 @@ namespace SEScripts.XUI.BoxRenderer
                             if (boxMinHeight > 0)
                             {
                                 minHeight += boxMinHeight;
-                                logger.log("min height + " + boxMinHeight, Logger.Mode.LOG);
+                                //logger.log("min height + " + boxMinHeight, Logger.Mode.LOG);
                             }
                         }
                     }
                     minHeightCache = Math.Max(0, Math.Max(_MinHeight, minHeight));
-                    logger.log("minheight = " + minHeightCache.ToString(), Logger.Mode.LOG);
+                    //logger.log("minheight = " + minHeightCache.ToString(), Logger.Mode.LOG);
                     minHeightIsCached = true;
                     //Logger.DecLvl();
                     return minHeightCache;
-                }
+                //}
             }
         }
 
@@ -79,10 +79,9 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                //using (new SimpleProfiler("RenderBoxTree.MinWidth.get"))
-                //{
-                    //Logger.debug("NodeBoxTree.MinWidth.get");
-                    //Logger.IncLvl();
+                using (var logger = new Logger("RenderBoxTree.MinWidth.Get", Logger.Mode.LOG))
+                {
+                    logger.log("type: " + type);
                     if (minWidthIsCached && false)
                         return minWidthCache;
                     int minWidth = (Flow == IRenderBox.FlowDirection.HORIZONTAL ? 0 : _MinWidth);
@@ -111,7 +110,7 @@ namespace SEScripts.XUI.BoxRenderer
                     minWidthIsCached = true;
                     //Logger.DecLvl();
                     return minWidthCache;
-                //}
+                }
             }
         }
 
@@ -159,9 +158,9 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                using (Logger logger = new Logger("RenderBoxTree.DesiredHeight.get", Logger.Mode.LOG))
-                {
-                    logger.log("Type: " + type);
+                //using (Logger logger = new Logger("RenderBoxTree.DesiredHeight.get", Logger.Mode.LOG))
+                //{
+                    //logger.log("Type: " + type);
                     if (desiredHeightIsCached && false)
                         return desiredHeightCache;
                     //int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
@@ -177,15 +176,15 @@ namespace SEScripts.XUI.BoxRenderer
                         {
                             boxDesHeight = Math.Max(box.DesiredHeight, box.MinHeight);
                             desiredHeight += boxDesHeight;
-                            logger.log("desired height + " + boxDesHeight, Logger.Mode.LOG);
+                            //logger.log("desired height + " + boxDesHeight, Logger.Mode.LOG);
                         }
                     }
                     desiredHeightCache = Math.Max(_DesiredHeight, desiredHeight);
-                    logger.log("desired height = " + desiredHeightCache.ToString(), Logger.Mode.LOG);
+                    //logger.log("desired height = " + desiredHeightCache.ToString(), Logger.Mode.LOG);
                     desiredHeightIsCached = true;
                     //Logger.DecLvl();
                     return desiredHeightCache;
-                }
+                //}
             }
         }
 
@@ -249,6 +248,7 @@ namespace SEScripts.XUI.BoxRenderer
                 //Logger.IncLvl();
                 Boxes.AddOrInsert<IRenderBox>(box, position);
                 box.Parent = this;
+                box.PadChar = PadChar;
                 ClearCache();
                 //Logger.DecLvl();
             //}
@@ -360,7 +360,7 @@ namespace SEScripts.XUI.BoxRenderer
             //Logger.DecLvl();
         }
 
-        public override void CalculateDynamicHeight(int maxWidth, int maxHeight)
+        public override void CalculateDimensions(int maxWidth, int maxHeight)
         {
             using (Logger logger = new Logger("RenderBoxTree.CalculateDynamicHeight(int)", Logger.Mode.LOG))
             {
@@ -370,24 +370,17 @@ namespace SEScripts.XUI.BoxRenderer
                 logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
                 logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
                 logger.log("min width: " + MinWidth);
-                if (maxWidth == -1)
-                    maxWidth = MaxWidth;
-                if (MaxWidth != -1)
-                    maxWidth = Math.Min(maxWidth, MaxWidth);
 
-                if (maxHeight == -1)
-                    maxHeight = MaxHeight;
-                if (MaxHeight != -1)
-                    maxHeight = Math.Min(maxHeight, MaxHeight);
+                maxWidth = Math.Min(maxWidth, MaxWidth);
+                maxHeight = Math.Min(maxHeight, MaxHeight);
+
                 int boxMinHeight;
                 int boxHeight;
                 int boxMaxHeight;
                 //bool foundLine = false;
                 if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
                 {
-                    int floatingMaxWidth = maxWidth;
-                    if (floatingMaxWidth != -1)
-                        floatingMaxWidth = floatingMaxWidth - MinWidth - 1;
+                    int floatingMaxWidth = maxWidth - MinWidth - 1;
                     int boxMinWidth;
                     int boxMaxWidth;
                     int boxWidth;
@@ -395,18 +388,16 @@ namespace SEScripts.XUI.BoxRenderer
                     {
                         boxMinWidth = box.MinWidth;
                         boxMaxWidth = Math.Max(boxMinWidth, 1 + floatingMaxWidth + boxMinWidth);
-                        boxWidth = box.GetActualWidth(boxMaxWidth);
                         logger.log("floating max width: " + floatingMaxWidth);
                         logger.log("boxminwidth: " + boxMinWidth);
-                        box.CalculateDynamicHeight(boxMaxWidth, maxHeight);
+                        box.CalculateDimensions(boxMaxWidth, maxHeight);
+                        boxWidth = box.GetActualWidth(boxMaxWidth);
                         floatingMaxWidth = floatingMaxWidth - boxWidth + boxMinWidth;
                     }
                 }
                 else
                 {
-                    int floatingMaxHeight = maxHeight;
-                    if (floatingMaxHeight != -1)
-                        floatingMaxHeight = Math.Max(floatingMaxHeight - MinHeight, 0) - 1;
+                    int floatingMaxHeight = Math.Max(maxHeight - MinHeight, 0) - 1;
                     logger.log("floating max height: " + floatingMaxHeight, Logger.Mode.LOG);
                     foreach (IRenderBox box in Boxes)
                     {
@@ -414,17 +405,36 @@ namespace SEScripts.XUI.BoxRenderer
                         boxMaxHeight = floatingMaxHeight + boxMinHeight + 1;
                         logger.log("boxMaxHeight: " + boxMaxHeight, Logger.Mode.LOG);
                         boxHeight = box.GetActualHeight(boxMaxHeight);
-                        box.CalculateDynamicHeight(maxWidth, boxMaxHeight);
-                        if (floatingMaxHeight != -1)
-                            floatingMaxHeight = Math.Max(0, floatingMaxHeight - boxHeight + boxMinHeight);
+                        logger.log("maxWidth: " + maxWidth.ToString());
+                        box.CalculateDimensions(maxWidth, boxMaxHeight);
+                        floatingMaxHeight = Math.Max(0, floatingMaxHeight - boxHeight + boxMinHeight);
                     }
                 }
+                //minWidthIsCached = false;
+                //minHeightIsCached = false;
             }
         }
 
         public override void Initialize(int maxWidth, int maxHeight)
         {
-            CalculateDynamicHeight(maxWidth, maxHeight);
+            // RecursivelyParseWidthDefinitions(maxWidth, maxHeight);
+            CalculateDimensions(maxWidth, maxHeight);
+        }
+
+        public void RecursivelyParseWidthDefinitions(int maxWidth, int maxHeight)
+        {
+            using (var logger = new Logger("RenderBoxTree.RecursivelyParseWidthDefinitions(int, int)"))
+            {
+                ParseWidthDefinitions(maxWidth, maxHeight);
+                foreach (IRenderBox box in Boxes)
+                {
+                    var tree = (box as RenderBoxTree);
+                    if (tree == null)
+                        box.ParseWidthDefinitions(Math.Max(_MinWidth, _DesiredWidth), Math.Max(_MinHeight, _DesiredHeight));
+                    else
+                        tree.RecursivelyParseWidthDefinitions(MaxWidth, MaxHeight);
+                }
+            }
         }
 
         //////////////////////////////////

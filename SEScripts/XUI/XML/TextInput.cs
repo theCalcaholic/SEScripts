@@ -218,12 +218,12 @@ namespace SEScripts.XUI.XML
 
         }*/
 
-        public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
         {
             using (Logger logger = new Logger("TextInput.GetRenderCache(int)", Logger.Mode.LOG))
             {
                 RenderBoxTree cache = new RenderBoxTree();
-                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+                UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
                 RenderBoxLeaf content = new RenderBoxLeaf();
                 cache.type = Type;
                 cache.Flow = IRenderBox.FlowDirection.HORIZONTAL;
@@ -252,7 +252,6 @@ namespace SEScripts.XUI.XML
                 {
                     cache[i].MaxWidth = cache[i].MinWidth;
                 }*/
-                logger.log("height: " + cache.GetActualHeight(maxHeight), Logger.Mode.LOG);
                 return cache;
             }
         }

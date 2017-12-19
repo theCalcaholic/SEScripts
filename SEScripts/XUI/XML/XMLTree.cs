@@ -56,10 +56,10 @@ namespace SEScripts.XUI.XML
 
         protected bool RerenderRequired;
 
-        public virtual IRenderBox GetRenderBox(int maxWidth, int maxHeight)
+        public virtual IRenderBox GetRenderBox(int containerWidth, int containerHeight)
         {
-            //using (Logger logger = new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)", Logger.Mode.LOG))
-            //{
+            using (Logger logger = new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)", Logger.Mode.LOG))
+            {
                 //Logger.debug("XMLTree.GetRenderCache(int)");
                 //Logger.IncLvl();
                 /*if(_renderCache != null)
@@ -70,30 +70,36 @@ namespace SEScripts.XUI.XML
 
                 RenderBoxTree cache = new RenderBoxTree();
                 cache.type = Type;
+                UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
                 //Console.WriteLine(Type);
                 //logger.log("1", Logger.Mode.LOG);
                 IRenderBox childCache;
+                IRenderBox.TextAlign align;
+                
                 foreach (XMLTree child in Children)
                 {
                     //TODO: Problems with relative height/width values
-                    childCache = child.GetRenderBox(maxWidth, maxHeight);
+                    childCache = child.GetRenderBox(Math.Max(cache._DesiredWidth, cache._MinWidth), Math.Max(cache._DesiredHeight, cache._MinHeight));
+                    if (child as TextNode != null && Enum.TryParse<IRenderBox.TextAlign>(GetAttribute("alignchildren")?.ToUpper() ?? "LEFT", out align))
+                        childCache.Align = align;
                     //logger.log("-", Logger.Mode.LOG);
                     cache.Add(childCache);
+                        
                 }
 
                 //logger.log("2", Logger.Mode.LOG);
-                UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 
                 //_renderCache = cache;
                 return cache;
-            //}
+            }
         }
 
-        protected void UpdateRenderCacheProperties(IRenderBox cache, int maxWidth, int maxHeight)
+        protected void UpdateRenderCacheProperties(IRenderBox cache, int containerWidth, int containerHeight)
         {
-            //using (Logger logger = new Logger("XMLTree<" + Type + ">.UpdateRenderCacheProperties(NodeBox, int)", Logger.Mode.LOG))
-            //{
-                //Logger.IncLvl();
+            using (Logger logger = new Logger("XMLTree<" + Type + ">.UpdateRenderCacheProperties(NodeBox, int)", Logger.Mode.LOG))
+            {
+                logger.log("containerWidth: " + containerWidth);
+                logger.log("containerHeight: " + containerHeight);
                 cache.Flow = GetAttribute("flow") == "horizontal" ? IRenderBox.FlowDirection.HORIZONTAL : IRenderBox.FlowDirection.VERTICAL;
 
                 switch (GetAttribute("alignself"))
@@ -108,19 +114,19 @@ namespace SEScripts.XUI.XML
                         cache.Align = IRenderBox.TextAlign.LEFT;
                         break;
                 }
-                cache.MinWidth = Math.Max(0, ResolveSize(GetAttribute("minwidth"), maxWidth));
-                cache.MaxWidth = ResolveSize(GetAttribute("maxwidth"), maxWidth);
-                cache.DesiredWidth = ResolveSize(GetAttribute("width"), maxWidth);
-                int forcedWidth = ResolveSize(GetAttribute("forcewidth"), maxWidth);
+                cache.MinWidth = Math.Max(0, ResolveSize(GetAttribute("minwidth"), containerWidth) ?? 0);
+                cache.MaxWidth = ResolveSize(GetAttribute("maxwidth"), containerWidth) ?? int.MaxValue;
+                cache.DesiredWidth = ResolveSize(GetAttribute("width"), containerWidth) ?? -1;
+                int forcedWidth = ResolveSize(GetAttribute("forcewidth"), containerWidth) ?? -1;
                 if (forcedWidth != -1)
                 {
                     cache.MinWidth = forcedWidth;
                     cache.MaxWidth = forcedWidth;
                 }
-                cache.MinHeight = Math.Max(0, ResolveSize(GetAttribute("minheight"), maxHeight));
-                cache.MaxHeight = ResolveSize(GetAttribute("maxheight"), maxHeight);
-                cache.DesiredHeight = ResolveSize(GetAttribute("height"), maxHeight);
-                int forcedHeight = ResolveSize(GetAttribute("forceheight"), maxWidth);
+                cache.MinHeight = Math.Max(0, ResolveSize(GetAttribute("minheight"), containerHeight) ?? 0);
+                cache.MaxHeight = ResolveSize(GetAttribute("maxheight"), containerHeight) ?? int.MaxValue;
+                cache.DesiredHeight = ResolveSize(GetAttribute("height"), containerHeight) ?? -1;
+                int forcedHeight = ResolveSize(GetAttribute("forceheight"), containerHeight) ?? -1;
                 if (forcedHeight != -1)
                 {
                     //logger.log("Apply forced height (" + forcedHeight + ")", Logger.Mode.LOG);
@@ -128,29 +134,30 @@ namespace SEScripts.XUI.XML
                     cache.MaxHeight = forcedHeight;
                 }
                 //cache.Height = CalculateWidth(GetAttribute("height"), -1);
-            //}
+            }
         }
 
-        public static int ResolveSize(string widthString, int maxWidth)
+        public static int? ResolveSize(string widthString, int containerWidth)
         {
             //using (Logger logger = new Logger("XMLTree.ResolvePercentage(string, int)", Logger.Mode.LOG))
             //{
-                if(widthString != null)
-                    widthString = widthString?.Trim();
-                float fWidth;
-                if (widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
-                {
-                    if (maxWidth == -1)
-                        return -1;
-                    return (int)(fWidth / 100f * Math.Max(0, maxWidth));
-                }
-                else
-                {
-                    int iWidth = -1;
-                    if (Int32.TryParse(widthString, out iWidth))
-                        return iWidth;
-                    return -1;
-                }
+            if (widthString == null)
+                return null;
+            widthString = widthString?.Trim();
+
+            if (widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out float fWidth))
+            {
+                if (containerWidth == -1 || containerWidth == int.MaxValue)
+                    return null;
+                return (int)(fWidth / 100f * Math.Max(0, containerWidth));
+            }
+            else
+            {
+                int iWidth = -1;
+                if (Int32.TryParse(widthString, out iWidth))
+                    return iWidth;
+                return null;
+            }
             //}
         }
 
@@ -864,17 +871,17 @@ namespace SEScripts.XUI.XML
             //Logger.DecLvl();
         }*/
 
-        public virtual string Render(int maxWidth, int maxHeight)
+        public virtual string Render(int containerWidth, int containerHeight)
         {
             //using (Logger logger = new Logger("XMLTree<" + Type + ">.Render(int, int)", Logger.Mode.LOG))
             //{
                 //Logger.debug(Type + ".Render(int)");
                 //Logger.IncLvl();
                 //Logger.log("RENDERING::PREPARE");
-                IRenderBox cache = GetRenderBox(maxWidth, maxHeight);
+                IRenderBox cache = GetRenderBox(containerWidth, containerHeight);
                 //logger.log("Rendering::START", Logger.Mode.LOG);
                 //Logger.log("RENDERING::START");
-                string result = cache.Render(maxWidth, maxHeight);
+                string result = cache.Render(containerWidth, containerHeight);
                 //Logger.DecLvl();
                 return result;
             //}
