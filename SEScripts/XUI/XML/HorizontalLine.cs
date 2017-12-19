@@ -24,6 +24,7 @@ namespace SEScripts.XUI.XML
     {
         public HorizontalLine() : base()
         {
+            Console.WriteLine("HL");
             Type = "hl";
             SetAttribute("width", "100%");
             SetAttribute("minheight", "1");
@@ -39,11 +40,16 @@ namespace SEScripts.XUI.XML
         {
             //using (new Logger("HorizontalLine.GetRenderBox()"))
             //{
-                IRenderBox cache = new RenderBoxLeaf();
+                IRenderBox cache = new RenderBoxTree();
+                UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
                 cache.type = Type;
                 //cache.Add("_");
                 cache.PadChar = '_';
-                UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
+                Console.WriteLine("THE FUCKING PAD CHAR IS: " + cache.PadChar);
+                cache.MinWidth = containerWidth;
+                cache.MaxWidth = containerWidth;
+                cache.MinHeight = 1;
+                cache.MaxHeight = 1;
                 return cache;
             //}
         }

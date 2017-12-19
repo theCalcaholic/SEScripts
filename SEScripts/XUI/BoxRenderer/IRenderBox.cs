@@ -25,8 +25,7 @@ namespace SEScripts.XUI.BoxRenderer
         public InitializationState InitState;
         public enum TextAlign { LEFT, RIGHT, CENTER }
         public enum FlowDirection { HORIZONTAL, VERTICAL }
-
-        public abstract Dimensions RenderDimensions { get; }
+        
         //public abstract int Height { get; set; }
 
         public abstract void Add(string box);
@@ -255,35 +254,20 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                //Logger.debug("NodeBox.MaxHeight.get()");
-                //Logger.IncLvl();
-                //Logger.debug("maxheight = " + _MaxHeight);
-                //Logger.DecLvl();
                 return _MaxHeight;
             }
             set
             {
-                //Logger.debug("NodeBox.MaxHeight.set()");
-                //Logger.IncLvl();
-                //Logger.debug("maxheight = " + value);
-                //using (Logger logger = new Logger("RenderBox.MaxHeight.set", Logger.Mode.LOG))
-                //{
-                //logger.log("value: " + value, Logger.Mode.LOG);
                 if (value < 0)
                     _MaxHeight = int.MaxValue;
                 else
                     _MaxHeight = value;
                 ClearCache();
-                //}
-                //Logger.DecLvl();
             }
         }
 
         public IRenderBox()
         {
-            //using (new Logger("RenderBox.__construct()", Logger.Mode.LOG))
-            //{
-            //Logger.debug("NodeBox constructor()");
             PadChar = ' ';
             _Flow = IRenderBox.FlowDirection.VERTICAL;
             _Align = IRenderBox.TextAlign.LEFT;
@@ -298,7 +282,6 @@ namespace SEScripts.XUI.BoxRenderer
             desiredHeightIsCached = false;
             desiredWidthIsCached = false;
             InitState = new InitializationState();
-            //}
         }
 
         public bool IsRenderingInProgress()
@@ -308,46 +291,43 @@ namespace SEScripts.XUI.BoxRenderer
 
         public virtual IEnumerable<StringBuilder> GetLines(int maxWidth, int maxHeight)
         {
-            //using (new SimpleProfiler("RenderBox.GetLines(int, int)"))
-            //{
-            //Logger.debug("NodeBox.GetRenderedLines()");
-            //Logger.IncLvl();
             int height = GetActualHeight(maxHeight);
             for (int i = 0; i < height; i++)
             {
                 yield return GetLine(i, maxWidth, maxHeight);
             }
-            //Logger.DecLvl();
-            //}
-
         }
         public IEnumerable<StringBuilder> GetLines()
         {
-            //using (new SimpleProfiler("RenderBox.GetLines()"))
-            //{
-            //Logger.debug("NodeBox.GetRenderedLines()");
-            //Logger.IncLvl();
             int height = GetActualHeight(int.MaxValue);
             for (int i = 0; i < height; i++)
             {
                 yield return GetLine(i, int.MaxValue, int.MaxValue);
             }
-            //Logger.DecLvl();
-            //}
         }
 
         protected void AlignLine(ref StringBuilder line)
         {
-            //using (new SimpleProfiler("RenderBox.AlignLine(ref StringBuilder)"))
-            //{
             AlignLine(ref line, int.MaxValue);
-            //}
         }
 
         protected void AlignLine(ref StringBuilder line, int maxWidth)
         {
+            AlignLine(ref line, maxWidth, Align, PadChar);
+        }
+
+        protected void AlignLine(ref StringBuilder line, IRenderBox.TextAlign Alignment)
+        {
+            AlignLine(ref line, int.MaxValue, Alignment, PadChar);
+        }
+
+        protected void AlignLine(ref StringBuilder line, int maxWidth, IRenderBox.TextAlign Alignment, char padChar)
+        {
             using (Logger logger = new Logger("RenderBox.AlignLine(ref StringBuilder, int)", Logger.Mode.LOG))
             {
+            logger.log("Type: " + type);
+            logger.log("pad char is: " + padChar);
+                logger.log("this.PadChar is: " + PadChar);
             logger.log("max width is " + maxWidth, Logger.Mode.LOG);
             int actualWidth = GetActualWidth(maxWidth);
             logger.log("actualWidth: " + actualWidth, Logger.Mode.LOG);
@@ -359,21 +339,19 @@ namespace SEScripts.XUI.BoxRenderer
 
             if (remainingWidth > 0) // line is not wide enough; padding necessary
             {
-                ////Logger.debug("line is so far: |" + line.ToString() + "|");
                 logger.log("padding...", Logger.Mode.LOG);
-                switch (Align)
+                switch (Alignment)
                 {
                     case TextAlign.CENTER:
-                        line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.BOTH, PadChar);
+                        line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.BOTH, padChar);
                         break;
                     case TextAlign.RIGHT:
-                        line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.LEFT, PadChar);
+                        line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.LEFT, padChar);
                         break;
                     default:
-                        line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.RIGHT, PadChar);
+                        line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.RIGHT, padChar);
                         break;
                 }
-                ////Logger.debug("line is so far: |" + line.ToString() + "|");
             }
             else if (remainingWidth < 0)
             {
@@ -396,20 +374,16 @@ namespace SEScripts.XUI.BoxRenderer
 
         public string Render(int maxWidth, int maxHeight)
         {
-            //using (Logger logger = new Logger("RenderBox.Render(" + maxWidth + ", " + maxHeight + ")", Logger.Mode.LOG))
-            //{
             Initialize(maxWidth, maxHeight);
             StringBuilder result = new StringBuilder();
             foreach (StringBuilder line in GetLines(maxWidth, maxHeight))
             {
-                //logger.log("rendering line " + (i++), Logger.Mode.LOG);
                 result.Append(line);
                 result.Append("\n");
             }
             if (result.Length > 0)
                 result.Remove(result.Length - 1, 1);
             return result.ToString();
-            //}
         }
 
         public void ClearCache()
@@ -420,27 +394,13 @@ namespace SEScripts.XUI.BoxRenderer
                 Parent?.ClearCache();
         }
 
-        public void ParseWidthDefinitions(int maxWidth, int maxHeight)
-        {
-            _MinWidth = ResolveSize(MinWidthDef, maxWidth) ?? 0;
-            _MaxWidth = ResolveSize(MaxWidthDef, maxWidth) ?? int.MaxValue;
-            _MinHeight = ResolveSize(MinHeightDef, maxHeight) ?? 0;
-            _MaxHeight = ResolveSize(MaxHeightDef, maxHeight) ?? int.MaxValue;
-            _DesiredWidth = ResolveSize(DesiredWidthDef, maxWidth) ?? -1;
-            _DesiredHeight = ResolveSize(DesiredHeightDef, maxHeight) ?? -1;
-
-        }
-
         public static int? ResolveSize(string widthString, int max)
         {
-            //using (Logger logger = new Logger("XMLTree.ResolvePercentage(string, int)", Logger.Mode.LOG))
-            //{
             if (widthString == null)
                 return null;
 
             widthString = widthString?.Trim();
-            float fWidth;
-            if (widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
+            if (widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out float fWidth))
             {
                 if (max < 0 || max == int.MaxValue)
                     return null;
@@ -453,26 +413,7 @@ namespace SEScripts.XUI.BoxRenderer
                     return iWidth;
                 return -1;
             }
-            //}
         }
-
-        public abstract void RenderPass1();
-
-        public abstract void RenderPass2(int maxWidth, int maxHeight);
-        public abstract List<string> FinalRender();
-    }
-
-    public struct Dimensions
-    {
-        public Dimensions(int width, int height)
-        {
-            Width = width;
-            Height = height;
-        }
-
-        public int Width;
-        public int Height;
-
     }
     
 

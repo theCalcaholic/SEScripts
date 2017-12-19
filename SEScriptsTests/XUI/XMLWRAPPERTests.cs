@@ -39,17 +39,17 @@ namespace SEScripts.XUI.Tests
                 "<uicontrols alignSelf='center'>Main Menu</uicontrols>" +
                 "<hl/>" +
                 "<container flow='horizontal' width='100%'>" +
-                    "<leftcontainer width='50%'>" +
+                    "<leftcontainer alignChildren='center' width='50%'>" +
                         "<menu>" +  
                             "<menuitem route='xml:'>Show Status</menuitem>" +
                             "<menuitem>Option 2</menuitem>" +
                         "</menu>" +
-                        "<progressbar width='300' alignSelf='left' emptyString=' ' filledString='/' selectable value='0.3'/>" +
+                        "<progressbar width='300' emptyString=' ' filledString='/' selectable value='0.3'/>" +
                     "</leftcontainer>" +
                     "<rightcontainer width='50%'>" +
-                    "<menu width='100%' alignSelf='right'>" +
-                        "<menuitem alignSelf='right' route='xml:<uicontrols/><hl/>another page (yay!)'>Link</menuitem>" +
-                        "<menuitem alignChildren='right'>this link is dead</menuitem>" +
+                    "<menu alignChildren='right'>" +
+                        "<menuitem route='xml:<uicontrols/><hl/>another page (yay!)'>Link</menuitem>" +
+                        "<menuitem >this link is dead</menuitem>" +
                     "</menu>" +
                     "</rightcontainer>" +
                 "</container>" +
@@ -60,14 +60,14 @@ namespace SEScripts.XUI.Tests
             ;
 
             string axmlString = "<container flow='horizontal' width='100%'>..." +
-                            "<leftcontainer width='50%'>" +
-                                "<menu alignChildren='center'>" +
+                            "<leftcontainer alignChildren='center' width='50%'>" +
+                                "<menu>" +
                                     "<menuitem route='xml:'>Show Status</menuitem>" +
                                     "<menuitem>Option 2</menuitem>" +
                                 "</menu>" +
                             "</leftcontainer>..." +
                             "<rightcontainer width='50%'>" +
-                            "<menu width='100%'>" +
+                            "<menu>" +
                                 "<menuitem route='xml:<uicontrols/><hl/>another page (yay!)'>Link</menuitem>" +
                                 "<menuitem>this link is dead</menuitem>" +
                             "</menu>" +
@@ -84,7 +84,7 @@ namespace SEScripts.XUI.Tests
             Console.WriteLine(Logger.Output);
             Logger.Clear();
 
-            int maxWidth = 1000;
+            int maxWidth = 800;
             int maxHeight = 60;
 
             IRenderBox renderBox = tree.GetRenderBox(maxWidth, maxHeight);

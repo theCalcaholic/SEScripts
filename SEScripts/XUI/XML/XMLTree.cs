@@ -80,7 +80,8 @@ namespace SEScripts.XUI.XML
                 {
                     //TODO: Problems with relative height/width values
                     childCache = child.GetRenderBox(Math.Max(cache._DesiredWidth, cache._MinWidth), Math.Max(cache._DesiredHeight, cache._MinHeight));
-                    if (child as TextNode != null && Enum.TryParse<IRenderBox.TextAlign>(GetAttribute("alignchildren")?.ToUpper() ?? "LEFT", out align))
+                    if (child.GetAttribute("alignself") == null
+                            && Enum.TryParse<IRenderBox.TextAlign>(GetAttribute("alignchildren")?.ToUpper() ?? "LEFT", out align))
                         childCache.Align = align;
                     //logger.log("-", Logger.Mode.LOG);
                     cache.Add(childCache);
@@ -179,8 +180,7 @@ namespace SEScripts.XUI.XML
                 Type = "NULL";
 
                 // set attribute defaults
-                SetAttribute("alignself", "left");
-                SetAttribute("aligntext", "left");
+                //SetAttribute("alignself", "left");
                 SetAttribute("selected", "false");
                 SetAttribute("selectable", "false");
                 SetAttribute("flow", "vertical");

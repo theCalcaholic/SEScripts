@@ -14,12 +14,10 @@ namespace SEScripts.XUI.BoxRenderer
     {
         public string Content;
         int DynamicHeight;
-        int MinWidthOverride;
         int TextWidth;
         int offsetCache;
         int lastIndex;
         Dictionary<int, StringBuilder> LineCache;
-        private Dimensions _renderDimensions;
         private List<string> _renderedLines;
 
         public override IRenderBox.FlowDirection Flow
@@ -81,7 +79,7 @@ namespace SEScripts.XUI.BoxRenderer
                     //Logger.IncLvl();
                     if (minWidthIsCached && false)
                         return minWidthCache;
-                    minWidthCache = Math.Max(MinWidthOverride,
+                    minWidthCache = Math.Max(TextWidth,
                         Content.Length == 0 ?
                             _MinWidth :
                             Math.Max(25, _MinWidth));
@@ -116,14 +114,6 @@ namespace SEScripts.XUI.BoxRenderer
                     return base.DesiredHeight;
                 else
                     return DynamicHeight;
-            }
-        }
-
-        public override Dimensions RenderDimensions
-        {
-            get
-            {
-                return _renderDimensions;
             }
         }
 
@@ -227,7 +217,7 @@ namespace SEScripts.XUI.BoxRenderer
                     return LineCache[index];
                 }
                 StringBuilder line = new StringBuilder();
-                if (index < _MaxHeight)
+                if ((DynamicHeight > 0 && index < DynamicHeight) || index < _MaxHeight)
                 {
                     int height = GetActualHeight(maxHeight);
                     int width = Math.Min(maxWidth, MaxWidth);
@@ -287,7 +277,7 @@ namespace SEScripts.XUI.BoxRenderer
                 }
                 else if(doAlign)
                 {
-                    AlignLine(ref line, maxWidth);
+                    AlignLine(ref line, MinWidth);
                 }
 
 
@@ -303,16 +293,11 @@ namespace SEScripts.XUI.BoxRenderer
 
         public override void Clear()
         {
-            //using (new SimpleProfiler("RenderBoxLeaf.Clear()"))
-            //{
-                _renderDimensions = new Dimensions(10, 1);
-                Content = "";
-                DynamicHeight = -1;
-                MinWidthOverride = 0;
-                TextWidth = 0;
-                LineCache = new Dictionary<int, StringBuilder>();
-                ClearCache();
-            //}
+            Content = "";
+            DynamicHeight = -1;
+            TextWidth = 0;
+            LineCache = new Dictionary<int, StringBuilder>();
+            ClearCache();
         }
 
 
@@ -361,13 +346,11 @@ namespace SEScripts.XUI.BoxRenderer
 
                 BuildLineCache(maxWidth, maxHeight);
                 //Console.WriteLine("linecache size: " + LineCache.Count);
-                MinWidthOverride = 0;
                 TextWidth = 0;
                 int lineWidth;
                 foreach (StringBuilder currLine in LineCache.Values)
                 {
                     lineWidth = TextUtils.GetTextWidth(currLine.ToString());
-                    MinWidthOverride = Math.Max(lineWidth, MinWidthOverride);
                     TextWidth = Math.Max(lineWidth, TextWidth);
 
                 }
@@ -383,7 +366,7 @@ namespace SEScripts.XUI.BoxRenderer
                 }
 
                 logger.log("dynamic height:" + DynamicHeight);
-                logger.log("minwidthoverride: " + MinWidthOverride);
+                logger.log("text width: " + TextWidth);
                 //minWidthIsCached = false;
                 //minHeightIsCached = false;
                 
@@ -407,7 +390,6 @@ namespace SEScripts.XUI.BoxRenderer
                 int height = GetActualHeight(maxHeight);
                 for (int i = 0; i < height; i++)
                     LineCache[i] = new StringBuilder();
-                MinWidthOverride = 0;
                 return;
             }
             else
@@ -422,48 +404,6 @@ namespace SEScripts.XUI.BoxRenderer
                 }
                 while (LineCache.ContainsKey(index));
             }
-        }
-
-        public override void RenderPass1()
-        {
-            _renderDimensions = new Dimensions(10, 1);
-            _renderedLines = new List<string>();
-            _renderedLines.Add(Content);
-        }
-
-        public override void RenderPass2(int maxWidth, int maxHeight)
-        {
-            if (Content.Length == 0)
-            {
-                _renderDimensions = new Dimensions(0,0);
-                return;
-            }
-            _renderedLines = new List<string> {""};
-            _renderDimensions = new Dimensions(0, 0);
-            int currentWidth = 0;
-            int currentLine = 0;
-            foreach (char c in Content)
-            {
-                int charWidth = TextUtils.GetCharWidth(c);
-                if (currentWidth + charWidth + 1 <= maxWidth)
-                {
-                    _renderedLines[currentLine] = _renderedLines[currentLine] + c;
-                    currentWidth += 1 + charWidth;
-                }
-                else
-                {
-                    _renderedLines.Add(c.ToString());
-                    _renderDimensions.Width = Math.Max(_renderDimensions.Width, currentWidth);
-                    currentLine++;
-                    currentWidth = 0;
-                }
-            }
-            _renderDimensions.Height = currentLine + 1;
-        }
-
-        public override List<string> FinalRender()
-        {
-            throw new NotImplementedException();
         }
     }
 }

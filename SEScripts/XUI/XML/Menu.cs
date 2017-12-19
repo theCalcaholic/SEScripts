@@ -86,6 +86,7 @@ namespace SEScripts.XUI.XML
                 UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
                 cache.type = Type;
                 RenderBoxTree menuPoint;
+                IRenderBox.TextAlign align;
                 foreach (XMLTree child in Children)
                 {
                     menuPoint = new RenderBoxTree();
@@ -101,6 +102,9 @@ namespace SEScripts.XUI.XML
                     }
                     IRenderBox childBox = child.GetRenderBox(Math.Max(cache._MinWidth, cache._DesiredWidth), Math.Max(cache._MaxHeight, cache._DesiredHeight));
                     menuPoint.Add(childBox);
+                    if (child.GetAttribute("alignself") == null
+                            && Enum.TryParse<IRenderBox.TextAlign>(GetAttribute("alignchildren")?.ToUpper() ?? "LEFT", out align))
+                        menuPoint.Align = align;
                     cache.Add(menuPoint);
                 }
                 return cache;

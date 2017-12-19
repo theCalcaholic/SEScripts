@@ -12,7 +12,6 @@ namespace SEScripts.XUI.BoxRenderer
 {
     public class RenderBoxTree : IRenderBox
     {
-        private Dimensions _renderDimensions;
         List<IRenderBox> Boxes;
 
         public IRenderBox this[int i]
@@ -188,11 +187,6 @@ namespace SEScripts.XUI.BoxRenderer
             }
         }
 
-        public override Dimensions RenderDimensions
-        {
-            get { return _renderDimensions; }
-        }
-
         public RenderBoxTree() : base()
         {
             //using (new Logger("RenderBoxTree.__construct()", Logger.Mode.LOG))
@@ -248,7 +242,6 @@ namespace SEScripts.XUI.BoxRenderer
                 //Logger.IncLvl();
                 Boxes.AddOrInsert<IRenderBox>(box, position);
                 box.Parent = this;
-                box.PadChar = PadChar;
                 ClearCache();
                 //Logger.DecLvl();
             //}
@@ -268,7 +261,7 @@ namespace SEScripts.XUI.BoxRenderer
 
         public override StringBuilder GetLine(int index)
         {
-                return GetLine(index, -1, -1);
+                return GetLine(index, int.MaxValue, int.MaxValue);
         }
 
         public override StringBuilder GetLine(int index, int maxWidth, int maxHeight)
@@ -284,16 +277,10 @@ namespace SEScripts.XUI.BoxRenderer
                 //Logger.debug("NodeBoxTree.GetLine(int, int)");
                 //Logger.IncLvl();
                 StringBuilder line = new StringBuilder();
-
-                if (maxWidth == -1)
-                    maxWidth = MaxWidth;
-                else if (MaxWidth != -1)
-                    maxWidth = Math.Min(maxWidth, MaxWidth);
-
-                if (maxHeight == -1)
-                    maxHeight = MaxHeight;
-                else if (MaxHeight != -1)
-                    maxHeight = Math.Min(maxHeight, MaxHeight);
+                
+                maxWidth = Math.Min(maxWidth, MaxWidth);
+                
+                maxHeight = Math.Min(maxHeight, MaxHeight);
 
                 int boxMinHeight;
                 int boxHeight;
@@ -313,6 +300,7 @@ namespace SEScripts.XUI.BoxRenderer
                         if (index < boxHeight)
                         {
                             line = box.GetLine(index, maxWidth, boxMaxHeight);
+                            AlignLine(ref line, maxWidth, box.Align, box.PadChar);
                             //Logger.debug("child box width is " + TextUtils.GetTextWidth(line));
                             //foundLine = true;
                             break;
@@ -420,82 +408,6 @@ namespace SEScripts.XUI.BoxRenderer
             // RecursivelyParseWidthDefinitions(maxWidth, maxHeight);
             CalculateDimensions(maxWidth, maxHeight);
         }
-
-        public void RecursivelyParseWidthDefinitions(int maxWidth, int maxHeight)
-        {
-            using (var logger = new Logger("RenderBoxTree.RecursivelyParseWidthDefinitions(int, int)"))
-            {
-                ParseWidthDefinitions(maxWidth, maxHeight);
-                foreach (IRenderBox box in Boxes)
-                {
-                    var tree = (box as RenderBoxTree);
-                    if (tree == null)
-                        box.ParseWidthDefinitions(Math.Max(_MinWidth, _DesiredWidth), Math.Max(_MinHeight, _DesiredHeight));
-                    else
-                        tree.RecursivelyParseWidthDefinitions(MaxWidth, MaxHeight);
-                }
-            }
-        }
-
-        //////////////////////////////////
-
-        public override void RenderPass1()
-        {
-            _renderDimensions = new Dimensions(0, 0);
-            foreach (var child in Boxes)
-            {
-                child.RenderPass1();
-                _renderDimensions.Width += child.RenderDimensions.Width + 1;
-                _renderDimensions.Height += child.RenderDimensions.Height;
-            }
-            _renderDimensions.Width--;
-            if (Boxes.Count < 2)
-            {
-                _renderDimensions.Width--;
-            }
-        }
-
-        public override void RenderPass2(int maxWidth, int maxHeight)
-        {
-            if (maxWidth == -1)
-                maxWidth = MaxWidth;
-            else if (MaxWidth != -1)
-                maxWidth = Math.Min(maxWidth, MaxWidth);
-
-            if (maxHeight == -1)
-                maxHeight = MaxHeight;
-            else if (MaxHeight != -1)
-                maxHeight = Math.Min(maxHeight, MaxHeight);
-
-            if (Flow == IRenderBox.FlowDirection.VERTICAL)
-            {
-                int floatingMaxHeight = maxHeight;
-                floatingMaxHeight = floatingMaxHeight - MinHeight - 1;
-                foreach (IRenderBox box in Boxes)
-                {
-                    int boxMinHeight = box.MinHeight;
-                    int boxMaxHeight = floatingMaxHeight + boxMinHeight + 1;
-                    int boxHeight = box.GetActualHeight(boxMaxHeight);
-                    box.RenderPass2(maxWidth, boxMaxHeight);
-                    floatingMaxHeight = floatingMaxHeight - boxHeight + boxMinHeight;
-                }
-            }
-            else
-            {
-                int floatingMaxWidth = maxWidth;
-                floatingMaxWidth = floatingMaxWidth - MinWidth - 1;
-                foreach (IRenderBox box in Boxes)
-                {
-                    int boxMinWidth = box.MinWidth;
-                    box.RenderPass2(1 + floatingMaxWidth + boxMinWidth, maxHeight);
-                    floatingMaxWidth = floatingMaxWidth - box.RenderDimensions.Width;
-                }
-            }
-        }
-
-        public override List<string> FinalRender()
-        {
-            throw new NotImplementedException();
-        }
+        
     }
 }

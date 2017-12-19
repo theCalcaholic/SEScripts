@@ -32,7 +32,7 @@ namespace SEScripts.XUI.XML
             Content = content;
             Content.Replace("\n", "");
             Content = Content.Trim(new char[] { '\n', ' ', '\r' });
-            SetAttribute("width", "100%");
+            //SetAttribute("width", "100%");
             //Logger.debug("final content: " + Content);
             RerenderRequired = true;
             //Logger.DecLvl();
