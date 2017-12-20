@@ -14,7 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib.LoggerNS;
+//using SEScripts.Lib.LoggerNS;
 using SEScripts.Lib;
 
 namespace SEScripts.XUI.XML
@@ -263,11 +263,11 @@ namespace SEScripts.XUI.XML
             int height = 20;
             ApplyScreenProperties(panel);
 
-            using (new Logger("RENDERING...", Logger.Mode.LOG))
-            {
+            //using (new Logger("RENDERING...", Logger.Mode.LOG))
+            //{
                 string text = ui.Render(width, height);
                 panel.WritePublicText(text);
-            }
+            //}
         }
 
         public long GetSelectedFont()
@@ -418,8 +418,8 @@ namespace SEScripts.XUI.XML
 
         public bool UpdateUserInput()
         {
-            using (new Logger("UIController.RefreshUserInput()", Logger.Mode.LOG))
-            {
+            //using (new Logger("UIController.RefreshUserInput()", Logger.Mode.LOG))
+            //{
                 //Logger.IncLvl();
                 if (!UserInputActive || UserInputSource == null)
                 {
@@ -490,13 +490,13 @@ namespace SEScripts.XUI.XML
                 }
 
                 return inputHasChanged;
-            }
+            //}
         }
 
         private void CollectUserInputBindings()
         {
-            using (Logger logger = new Logger("UIController.CollectUserInputBindings()", Logger.Mode.LOG))
-            {
+            //using (Logger logger = new Logger("UIController.CollectUserInputBindings()", Logger.Mode.LOG))
+            //{
                 XMLTree node;
                 Queue<XMLParentNode> nodes = new Queue<XMLParentNode>();
                 nodes.Enqueue(ui);
@@ -505,11 +505,11 @@ namespace SEScripts.XUI.XML
                     node = nodes.Dequeue() as XMLTree;
                     if (!node.HasUserInputBindings)
                     {
-                        logger.log("node has no userinputbindings", Logger.Mode.LOG);
+                        //logger.log("node has no userinputbindings", Logger.Mode.LOG);
                     }
                     if (node != null && node.HasUserInputBindings)
                     {
-                        logger.log("Checking " + node.Type + " node...", Logger.Mode.LOG);
+                        //logger.log("Checking " + node.Type + " node...", Logger.Mode.LOG);
                         for (int i = 0; i < node.NumberOfChildren; i++)
                         {
                             nodes.Enqueue(node.GetChild(i));
@@ -522,7 +522,7 @@ namespace SEScripts.XUI.XML
                     }
                 }
             }
-        }
+        //}
     }
 
     //EMBED SEScripts.XUI.XML.XMLParentNode

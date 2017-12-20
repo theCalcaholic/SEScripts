@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using SEScripts.Lib;
-using SEScripts.Lib.LoggerNS;
+//using SEScripts.Lib.LoggerNS;
 using SEScripts.Lib.Profilers;
 
 namespace SEScripts.XUI.BoxRenderer
@@ -71,38 +71,24 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                using (Logger logger = new Logger("RenderBoxLeaf.MinWidth.get", Logger.Mode.LOG))
-                {
-                    //using (new SimpleProfiler("RenderBoxLeaf.MinWidth.get"))
-                    //{
-                    //Logger.debug("NodeBoxLeaf.MinWidth.get");
-                    //Logger.IncLvl();
+                //using (Logger logger = new Logger("RenderBoxLeaf.MinWidth.get", Logger.Mode.LOG))
+                //{
                     if (minWidthIsCached && false)
                         return minWidthCache;
                     minWidthCache = Math.Max(TextWidth,
                         Content.Length == 0 ?
                             _MinWidth :
                             Math.Max(25, _MinWidth));
-                    //Logger.debug("minwidth = " + minWidth);
                     minWidthIsCached = true;
-                    //Logger.DecLvl();
-                    logger.log("content: " + Content);
-                    logger.log("minwidth: " + minWidthCache);
+                    //logger.log("content: " + Content);
+                    //logger.log("minwidth: " + minWidthCache);
                     return minWidthCache;
-                    //}
-                }
+                //}
             }
             set
             {
-                //using (new SimpleProfiler("RenderBoxLeaf.MinWidth.set"))
-                //{
-                    //Logger.debug("NodeBoxLeaf.MinWidth.set()");
-                    //Logger.IncLvl();
-                    //Logger.debug("minwidth = " + value);
-                    _MinWidth = value;
-                    ClearCache();
-                    //Logger.DecLvl();
-                //}
+                _MinWidth = value;
+                ClearCache();
             }
         }
 
@@ -207,8 +193,8 @@ namespace SEScripts.XUI.BoxRenderer
 
         public StringBuilder GetLine(int index, int maxWidth, int maxHeight, bool doAlign)
         {
-            using (Logger logger = new Logger("RenderBoxLeaf.GetLine(int, int, int)", Logger.Mode.LOG))
-            {
+            //using (Logger logger = new Logger("RenderBoxLeaf.GetLine(int, int, int)", Logger.Mode.LOG))
+            //{
                 //logger.log("type: " + type, Logger.Mode.LOG);
                 //logger.log("index: " + index, Logger.Mode.LOG);
                 //logger.log("maxwidth: " + maxWidth, Logger.Mode.LOG);
@@ -229,12 +215,12 @@ namespace SEScripts.XUI.BoxRenderer
                         offset = offsetCache;
                         i = lastIndex;
                     }*/
-                    using (Logger logger1 = new Logger("loop"))
+                    //using (Logger logger1 = new Logger("loop"))
                         for (; i < index; i++)
                         {
                             if (offset < Content.Length)
                             {
-                                logger1.log("old offset: " + offset);
+                                //logger1.log("old offset: " + offset);
                                 string lineString = TextUtils.SubstringOfWidth(Content, width, offset);
                                 int length = lineString.Length;
                                 spacePos = Content.LastIndexOf(' ', Math.Min(Content.Length - 1, offset + length), length);
@@ -242,10 +228,10 @@ namespace SEScripts.XUI.BoxRenderer
                                     offset += length;
                                 else
                                     offset = spacePos + 1;
-                                logger1.log("line string: " + lineString);
-                                logger.log("offset: " + offset);
-                                logger1.log("length: " + length);
-                                logger1.log("space pos: " + spacePos);
+                                //logger1.log("line string: " + lineString);
+                                //logger.log("offset: " + offset);
+                                //logger1.log("length: " + length);
+                                //logger1.log("space pos: " + spacePos);
                                 //offset += TextUtils.SubstringOfWidth(Content, width, offset).Length;
 
                             }
@@ -255,7 +241,7 @@ namespace SEScripts.XUI.BoxRenderer
                     if (offset < Content.Length)
                     {
                         string lineString = TextUtils.SubstringOfWidth(Content, width, offset).Trim();
-                        logger.log("line: " + lineString, Logger.Mode.LOG);
+                        //logger.log("line: " + lineString, Logger.Mode.LOG);
                         if (lineString.Length + offset < Content.Length)
                         {
                             spacePos = lineString.LastIndexOf(' ', lineString.Length - 1, lineString.Length);
@@ -264,7 +250,7 @@ namespace SEScripts.XUI.BoxRenderer
                                 lineString = lineString.Substring(0, spacePos);
                             }
                         }
-                        logger.log("result: " + lineString);
+                        //logger.log("result: " + lineString);
                         line = new StringBuilder(lineString);
                         if(doAlign) AlignLine(ref line, maxWidth);
                         if (line.Length > 0)
@@ -282,13 +268,13 @@ namespace SEScripts.XUI.BoxRenderer
 
 
 
-                logger.log("Content is: " + Content, Logger.Mode.LOG);
-                logger.log("Line (" + index + ") is: " + line, Logger.Mode.LOG);
-                logger.log("line is {" + line + "}", Logger.Mode.LOG);
+                //logger.log("Content is: " + Content, Logger.Mode.LOG);
+                //logger.log("Line (" + index + ") is: " + line, Logger.Mode.LOG);
+                //logger.log("line is {" + line + "}", Logger.Mode.LOG);
                 //Logger.log("instructions: " + (P.Runtime.CurrentInstructionCount - instructions) + " -> " + P.Runtime.CurrentInstructionCount + "/" + P.Runtime.MaxInstructionCount)
                 //Logger.DecLvl();
                 return line;
-            }
+            //}
         }
 
         public override void Clear()
@@ -303,46 +289,18 @@ namespace SEScripts.XUI.BoxRenderer
 
         public override void CalculateDimensions(int maxWidth, int maxHeight)
         {
-            using (Logger logger = new Logger("RenderBoxLeaf.CalculateDynamicHeight(int, int)", Logger.Mode.LOG))
-            {
+            //using (Logger logger = new Logger("RenderBoxLeaf.CalculateDynamicHeight(int, int)", Logger.Mode.LOG))
+            //{
 
                 InitState.Initialized = true;
-                logger.log("Type: " + type, Logger.Mode.LOG);
-                logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
-                logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
-                logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
-                logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
-                logger.log("min width: " + MinWidth);
-                if(InitState.Initialized) logger.log("min height: " + MinHeight);
-                /*logger.log("Type: " + type, Logger.Mode.LOG);
-                logger.log("max width: " + maxWidth, Logger.Mode.LOG);
-                logger.log("max height: " + MaxHeight, Logger.Mode.LOG);
-                int contentWidth = TextUtils.GetTextWidth(Content);
-                logger.log("content width: " + contentWidth, Logger.Mode.LOG);
-                if (maxWidth <= 0 || contentWidth == 0)
-                    DynamicHeight = -1;
-                else
-                {
-                    maxWidth = (_DesiredWidth == -1 ? maxWidth : Math.Min(_DesiredWidth, maxWidth));
-                    DynamicHeight = 0;
-                    MinWidthOverride = 0;
-                    int wordWidth;
-                    int widthSum = 0;
-                    foreach (string word in words)
-                    {
-                        wordWidth = TextUtils.GetTextWidth(word);
-                        widthSum += wordWidth;
-                        if (widthSum > maxWidth)
-                        {
-                            DynamicHeight++;
-                            widthSum = TextUtils.GetTextWidth(word.Substring(
-                                word.LastIndexOf))
-                        }
-                        else
-                            MinWidthOverride = Math.Max(MinWidthOverride, wordWidth);
-                    }
-                }
-                logger.log("Dynamic Height is: " + DynamicHeight, Logger.Mode.LOG);*/
+                //logger.log("Type: " + type, Logger.Mode.LOG);
+                //logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
+                //logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
+                //logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
+                //logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
+                //logger.log("min width: " + MinWidth);
+                //if(InitState.Initialized) logger.log("min height: " + MinHeight);
+                
 
                 BuildLineCache(maxWidth, maxHeight);
                 //Console.WriteLine("linecache size: " + LineCache.Count);
@@ -365,12 +323,12 @@ namespace SEScripts.XUI.BoxRenderer
                     LineCache[i] = line;
                 }
 
-                logger.log("dynamic height:" + DynamicHeight);
-                logger.log("text width: " + TextWidth);
+                //logger.log("dynamic height:" + DynamicHeight);
+                //logger.log("text width: " + TextWidth);
                 //minWidthIsCached = false;
                 //minHeightIsCached = false;
                 
-            }
+            //}
 
         }
 

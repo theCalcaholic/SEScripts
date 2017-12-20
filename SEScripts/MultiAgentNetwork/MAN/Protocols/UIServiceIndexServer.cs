@@ -302,10 +302,10 @@ namespace SEScripts.MultiAgentNetwork.MAN.Protocols
             //Logger.DecLvl();
         }
     }
-    
-    //EMBED SEScripts.MAN.Protocols.UIServerProtocol.cs
-    //EMBED SEScripts.MAN.Protocols.AgentProtocol
-    //EMBED SEScripts.MAN.Models.AgentMessage
-    //EMBED SEScripts.MAN.Models.PlatformService
-    //EMBED SEScripts.MAN.Models.AgentId
+
+    //EMBED SEScripts.MultiAgentNetwork.MAN.Protocols.UIServerProtocol
+    //EMBED SEScripts.MultiAgentNetwork.MAN.Protocols.AgentProtocol
+    //EMBED SEScripts.MultiAgentNetwork.MAN.Models.AgentMessage
+    //EMBED SEScripts.MultiAgentNetwork.MAN.Models.PlatformService
+    //EMBED SEScripts.MultiAgentNetwork.MAN.Models.AgentId
 }

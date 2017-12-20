@@ -2191,7 +2191,6 @@ Holder.SetKnowledgeEntry("HomePageActive", false, this);
 }
 }
 
-
 public class UIServerProtocol : AgentProtocol
 {
 public override string GetProtocolId()
@@ -2558,225 +2557,8 @@ Set(key, floatValue);
 }
 }
 
-
-public class Logger : IDisposable
-{
-public enum Mode { DEBUG, LOG, ERROR, WARNING, CONSOLE};
-private static StringBuilder Log = new StringBuilder();
-static public bool DEBUG = false;
-protected static StringBuilder Prefix = new StringBuilder();
-protected Program Prog;
-protected Mode logMode;
-private bool disposed;
-public static string Output
-{
-get { return Log.ToString(); }
-}
-public Logger(string message) : this(message, Mode.DEBUG) {}
-public Logger(string message, Mode mode) : this(message, mode, null) {}
-public Logger(string message, Mode mode, Program program)
-{
-disposed = false;
-if (!DEBUG && mode == Mode.DEBUG)
-return;
-Prog = program;
-logMode = mode;
-log(message, logMode);
-IncLvl();
-}
-public void log(string message, Mode mode)
-{
-log(new StringBuilder(message), mode);
-}
-public void log(StringBuilder message, Mode mode)
-{
-StringBuilder msg = new StringBuilder().Append(Prefix);
-if (logMode != Mode.LOG && logMode != Mode.CONSOLE)
-msg.Append(logMode.ToString()).Append(": ");
-msg.Append(message);
-Log.Append(msg).Append("\n");
-if (logMode == Mode.CONSOLE)
-{
-if(Prog != null)
-Prog?.Echo(msg.ToString());
-}
-}
-private void IncLvl()
-{
-Prefix.Append("  ");
-}
-private void DecLvl()
-{
-if( Prefix.Length >= 2)
-Prefix.Remove(Prefix.Length - 2, 2);
-}
-
-public virtual void Dispose()
-{
-if (!disposed)
-{
-DecLvl();
-}
-disposed = true;
-}
-public static void Clear()
-{
-Log = new StringBuilder();
-}
-}
-
-public static class Parser
-{
-public static string PackData(Dictionary<string, string> data)
-{
-StringBuilder dataString = new StringBuilder();
-foreach (string key in data.Keys)
-{
-dataString.Append(key + "=\"" + data[key] + "\" ");
-}
-return dataString.ToString();
-}
-public static string Sanitize(string xmlDefinition)
-{
-//using (new Logger("Parser.Sanitize"))
-//{
-return xmlDefinition.Replace("\"", "\\\"").Replace("'", "\\'");
-//}
-}
-public static string UnescapeQuotes(string xmlDefinition)
-{
-return xmlDefinition.Replace("\\\"", "\"").Replace("\\'", "'");
-}
-public static int GetNextUnescaped(char[] needles, string haystack)
-{
-return GetNextUnescaped(needles, haystack, 0);
-}
-public static int GetNextUnescaped(char[] needles, string haystack, int start)
-{
-return GetNextUnescaped(needles, haystack, start, haystack.Length - start);
-}
-public static int GetNextUnescaped(char[] needles, string haystack, int start, int count)
-{
-////Logger.debug("GetNextUnescaped():");
-////Logger.IncLvl();
-int end = start + count - 1;
-int needlePos = haystack.IndexOfAny(needles, start, end - start + 1);
-while (needlePos > 0 && haystack[needlePos - 1] == '\\')
-{
-needlePos = haystack.IndexOfAny(needles, needlePos + 1, end - needlePos);
-}
-////Logger.DecLvl();
-return needlePos;
-}
-public static int GetNextOutsideQuotes(char needle, string haystack)
-{
-return GetNextOutsideQuotes(new char[] { needle }, haystack);
-}
-public static int GetNextOutsideQuotes(char needle, string haystack, bool ignoreEscapedQuotes)
-{
-return GetNextOutsideQuotes(new char[] { needle }, haystack, ignoreEscapedQuotes);
-}
-public static int GetNextOutsideQuotes(char[] needles, string haystack)
-{
-return GetNextOutsideQuotes(needles, haystack, true);
-}
-public static int GetNextOutsideQuotes(
-char[] needles,
-string haystack,
-bool ignoreEscapedQuotes
-)
-{
-//using (Logger logger = new Logger("GetNextOutsideQuotes():"))
-//{
-char[] quoteChars = new char[] { '\'', '"' };
-int needlePos = -1;
-int quoteEnd = -1;
-int quoteStart;
-while (needlePos == -1)
-{
-if (ignoreEscapedQuotes)
-{
-quoteStart = GetNextUnescaped(quoteChars, haystack, quoteEnd + 1);
-}
-else
-{
-quoteStart = haystack.IndexOfAny(quoteChars, quoteEnd + 1);
-}
-if (quoteStart == -1)
-{
-needlePos = GetNextUnescaped(needles, haystack, quoteEnd + 1);
-}
-else
-{
-needlePos = GetNextUnescaped(
-needles,
-haystack,
-quoteEnd + 1,
-quoteStart - quoteEnd - 1
-);
-if (needlePos != -1)
-{
-//Logger.log("found needle: " + haystack.Substring(needlePos), Logger.Mode.DEBUG);
-}
-if (ignoreEscapedQuotes)
-{
-quoteEnd = GetNextUnescaped(
-new char[] { haystack[quoteStart] },
-haystack,
-quoteStart + 1
-);
-}
-else
-{
-quoteEnd = haystack.IndexOf(haystack[quoteStart], quoteStart + 1);
-}
-}
-}
-return needlePos;
-//}
-}
-public static List<String> ParamString2List(string arg)
-{
-//using (new Logger("Parser.ParamString2List(string)"))
-//{
-arg = arg.Trim() + " ";
-List<string> argList = new List<string>();
-char[] quoteChars = new char[] { '\'', '"' };
-int spacePos = -1;
-while (spacePos != arg.Length - 1)
-{
-arg = arg.Substring(spacePos + 1);
-spacePos = Parser.GetNextOutsideQuotes(new char[] { ' ', '\n' }, arg);
-argList.Add(arg.Substring(0, spacePos).Trim(quoteChars));
-}
-return argList;
-//}
-}
-public static Dictionary<string, string> GetXMLAttributes(string attributeString)
-{
-//using (new Logger("Parser.GetXMLAttributes(string)"))
-//{
-Dictionary<string, string> attributes = new Dictionary<string, string>();
-char[] quoteChars = new char[] { '\'', '"' };
-List<string> attributeList = ParamString2List(attributeString);
-int equalChar;
-foreach (string attribute in attributeList)
-{
-equalChar = attribute.IndexOf('=');
-if (equalChar == -1)
-{
-attributes[attribute.Substring(0).ToLower()] = "true";
-}
-else
-{
-attributes[attribute.Substring(0, equalChar).ToLower()] =
-attribute.Substring(equalChar + 1).Trim(quoteChars);
-}
-}
-return attributes;
-//}
-}
-}
+//!EMBED SEScripts.Lib.Logger
+//!EMBED SEScripts.Lib.Parser
 
 public static class TextUtils
 {
@@ -2919,10 +2701,104 @@ result.Append("\n");
 if (result.Length > 0)
 result.Remove(result.Length - 1, 1);
 return result;
-}
 //}
 }
+public static string SubstringOfWidth(string str, int width, int offset=0)
+{
+if (str.Length == 0)
+return str;
+if (selectedFont == FONT.MONOSPACE)
+{
+return str.Substring(offset, Math.Min(str.Length - offset, (width + 1) / 25));
+}
+else
+{
+string result = "";
+int currentWidth = 0;
+for (int i = offset; i < str.Length; i++)
+{
+width += LetterWidths.GetValueOrDefault(str[i], 6) + 1;
+if (currentWidth - 1 > width)
+result = str.Substring(offset, i - 1);
+}
+return result;
+}
+}
+}
 
+public class Logger : IDisposable
+{
+public enum Mode { DEBUG, LOG, ERROR, WARNING, CONSOLE};
+private static StringBuilder Log = new StringBuilder();
+static public bool DEBUG = false;
+protected static StringBuilder Prefix = new StringBuilder();
+protected Program Prog;
+protected Mode logMode;
+private bool disposed;
+public static string Output
+{
+get { return Log.ToString(); }
+}
+public Logger(string message) : this(message, Mode.DEBUG) {}
+public Logger(string message, Mode mode) : this(message, mode, null) {}
+public Logger(string message, Mode mode, Program program)
+{
+disposed = false;
+if (!DEBUG && mode == Mode.DEBUG)
+return;
+Prog = program;
+logMode = mode;
+log(message, logMode);
+IncLvl();
+}
+public void log(string message, Mode mode)
+{
+log(new StringBuilder(message), mode);
+}
+public void log(string message)
+{
+log(new StringBuilder(message));
+}
+public void log(StringBuilder message)
+{
+log(message, logMode);
+}
+public void log(StringBuilder message, Mode mode)
+{
+StringBuilder msg = new StringBuilder().Append(Prefix);
+if (mode != Mode.LOG && mode != Mode.CONSOLE)
+msg.Append(mode.ToString()).Append(": ");
+msg.Append(message);
+Log.Append(msg).Append("\n");
+if (mode == Mode.CONSOLE)
+{
+if(Prog != null)
+Prog?.Echo(msg.ToString());
+}
+}
+private void IncLvl()
+{
+Prefix.Append("  ");
+}
+private void DecLvl()
+{
+if( Prefix.Length >= 2)
+Prefix.Remove(Prefix.Length - 2, 2);
+}
+
+public virtual void Dispose()
+{
+if (!disposed)
+{
+DecLvl();
+}
+disposed = true;
+}
+public static void Clear()
+{
+Log = new StringBuilder();
+}
+}
 public static class XML
 {
 public static Dictionary<string, Func<XMLTree>> NodeRegister = new Dictionary<string, Func<XMLTree>> {
@@ -3132,7 +3008,7 @@ protected int SelectedChild;
 protected bool Activated;
 protected Dictionary<string, string> Attributes;
 private bool _hasUserInputBindings;
-private RenderBox _renderCache;
+private IRenderBox _renderCache;
 public bool HasUserInputBindings
 {
 get { return _hasUserInputBindings; }
@@ -3153,7 +3029,7 @@ return Children.Count;
 }
 }
 protected bool RerenderRequired;
-public virtual RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public virtual IRenderBox GetRenderBox(int containerWidth, int containerHeight)
 {
 //using (Logger logger = new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)", Logger.Mode.LOG))
 //{
@@ -3165,53 +3041,60 @@ return _renderCache;
 }*/
 RenderBoxTree cache = new RenderBoxTree();
 cache.type = Type;
+UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
 //Console.WriteLine(Type);
 //logger.log("1", Logger.Mode.LOG);
-RenderBox childCache;
+IRenderBox childCache;
+IRenderBox.TextAlign align;
+
 foreach (XMLTree child in Children)
 {
 //TODO: Problems with relative height/width values
-childCache = child.GetRenderBox(maxWidth, maxHeight);
+childCache = child.GetRenderBox(Math.Max(cache._DesiredWidth, cache._MinWidth), Math.Max(cache._DesiredHeight, cache._MinHeight));
+if (child.GetAttribute("alignself") == null
+&& Enum.TryParse<IRenderBox.TextAlign>(GetAttribute("alignchildren")?.ToUpper() ?? "LEFT", out align))
+childCache.Align = align;
 //logger.log("-", Logger.Mode.LOG);
 cache.Add(childCache);
+
 }
 //logger.log("2", Logger.Mode.LOG);
-UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 //_renderCache = cache;
 return cache;
 //}
 }
-protected void UpdateRenderCacheProperties(RenderBox cache, int maxWidth, int maxHeight)
+protected void UpdateRenderCacheProperties(IRenderBox cache, int containerWidth, int containerHeight)
 {
 //using (Logger logger = new Logger("XMLTree<" + Type + ">.UpdateRenderCacheProperties(NodeBox, int)", Logger.Mode.LOG))
 //{
-//Logger.IncLvl();
-cache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
+//logger.log("containerWidth: " + containerWidth);
+//logger.log("containerHeight: " + containerHeight);
+cache.Flow = GetAttribute("flow") == "horizontal" ? IRenderBox.FlowDirection.HORIZONTAL : IRenderBox.FlowDirection.VERTICAL;
 switch (GetAttribute("alignself"))
 {
 case "right":
-cache.Align = RenderBox.TextAlign.RIGHT;
+cache.Align = IRenderBox.TextAlign.RIGHT;
 break;
 case "center":
-cache.Align = RenderBox.TextAlign.CENTER;
+cache.Align = IRenderBox.TextAlign.CENTER;
 break;
 default:
-cache.Align = RenderBox.TextAlign.LEFT;
+cache.Align = IRenderBox.TextAlign.LEFT;
 break;
 }
-cache.MinWidth = Math.Max(0, ResolveSize(GetAttribute("minwidth"), maxWidth));
-cache.MaxWidth = ResolveSize(GetAttribute("maxwidth"), maxWidth);
-cache.DesiredWidth = ResolveSize(GetAttribute("width"), maxWidth);
-int forcedWidth = ResolveSize(GetAttribute("forcewidth"), maxWidth);
+cache.MinWidth = Math.Max(0, ResolveSize(GetAttribute("minwidth"), containerWidth) ?? 0);
+cache.MaxWidth = ResolveSize(GetAttribute("maxwidth"), containerWidth) ?? int.MaxValue;
+cache.DesiredWidth = ResolveSize(GetAttribute("width"), containerWidth) ?? -1;
+int forcedWidth = ResolveSize(GetAttribute("forcewidth"), containerWidth) ?? -1;
 if (forcedWidth != -1)
 {
 cache.MinWidth = forcedWidth;
 cache.MaxWidth = forcedWidth;
 }
-cache.MinHeight = Math.Max(0, ResolveSize(GetAttribute("minheight"), maxHeight));
-cache.MaxHeight = ResolveSize(GetAttribute("maxheight"), maxHeight);
-cache.DesiredHeight = ResolveSize(GetAttribute("height"), maxHeight);
-int forcedHeight = ResolveSize(GetAttribute("forceheight"), maxWidth);
+cache.MinHeight = Math.Max(0, ResolveSize(GetAttribute("minheight"), containerHeight) ?? 0);
+cache.MaxHeight = ResolveSize(GetAttribute("maxheight"), containerHeight) ?? int.MaxValue;
+cache.DesiredHeight = ResolveSize(GetAttribute("height"), containerHeight) ?? -1;
+int forcedHeight = ResolveSize(GetAttribute("forceheight"), containerHeight) ?? -1;
 if (forcedHeight != -1)
 {
 //logger.log("Apply forced height (" + forcedHeight + ")", Logger.Mode.LOG);
@@ -3221,25 +3104,25 @@ cache.MaxHeight = forcedHeight;
 //cache.Height = CalculateWidth(GetAttribute("height"), -1);
 //}
 }
-public static int ResolveSize(string widthString, int maxWidth)
+public static int? ResolveSize(string widthString, int containerWidth)
 {
 //using (Logger logger = new Logger("XMLTree.ResolvePercentage(string, int)", Logger.Mode.LOG))
 //{
-if(widthString != null)
+if (widthString == null)
+return null;
 widthString = widthString?.Trim();
-float fWidth;
-if (widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
+if (widthString != null && widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out float fWidth))
 {
-if (maxWidth == -1)
-return -1;
-return (int)(fWidth / 100f * Math.Max(0, maxWidth));
+if (containerWidth == -1 || containerWidth == int.MaxValue)
+return null;
+return (int)(fWidth / 100f * Math.Max(0, containerWidth));
 }
 else
 {
 int iWidth = -1;
 if (Int32.TryParse(widthString, out iWidth))
 return iWidth;
-return -1;
+return null;
 }
 //}
 }
@@ -3260,8 +3143,7 @@ Attributes = new Dictionary<string, string>();
 RerenderRequired = true;
 Type = "NULL";
 // set attribute defaults
-SetAttribute("alignself", "left");
-SetAttribute("aligntext", "left");
+//SetAttribute("alignself", "left");
 SetAttribute("selected", "false");
 SetAttribute("selectable", "false");
 SetAttribute("flow", "vertical");
@@ -3531,8 +3413,6 @@ return null;
 }
 public virtual void SetAttribute(string key, string value)
 {
-//Logger.debug(Type + ": SetAttribute():");
-//Logger.IncLvl();
 if (key == "selectable")
 {
 bool shouldBeSelectable = value == "true";
@@ -3558,44 +3438,7 @@ if(Parent != null)
 Parent.HasUserInputBindings = true;
 }
 }
-else if (key == "flow")
-{
-if(value == "horizontal")
-{
-//RenderCach.Flow = NodeBox.FlowDirection.HORIZONTAL;
-}
-else
-{
-//base.Flow = NodeBox.FlowDirection.VERTICAL;
-}
-RerenderRequired = true;
-}
-else if (key == "align")
-{
-switch(value)
-{
-case "right":
-//base.Align = NodeBox.TextAlign.RIGHT;
-break;
-case "center":
-//base.Align = NodeBox.TextAlign.CENTER;
-break;
-default:
-//base.Align = NodeBox.TextAlign.LEFT;
-break;
-}
-RerenderRequired = true;
-}
-else if (key == "width")
-{
-int width;
-if(Int32.TryParse(value, out width))
-{
-//base.DesiredWidth = width;
-}
-}
 Attributes[key] = value;
-//Logger.DecLvl();
 }
 public XMLParentNode RetrieveRoot()
 {
@@ -3882,17 +3725,17 @@ box.Add(child);
 RerenderRequired = false;
 //Logger.DecLvl();
 }*/
-public virtual string Render(int maxWidth, int maxHeight)
+public virtual string Render(int containerWidth, int containerHeight)
 {
 //using (Logger logger = new Logger("XMLTree<" + Type + ">.Render(int, int)", Logger.Mode.LOG))
 //{
 //Logger.debug(Type + ".Render(int)");
 //Logger.IncLvl();
 //Logger.log("RENDERING::PREPARE");
-RenderBox cache = GetRenderBox(maxWidth, maxHeight);
+IRenderBox cache = GetRenderBox(containerWidth, containerHeight);
 //logger.log("Rendering::START", Logger.Mode.LOG);
 //Logger.log("RENDERING::START");
-string result = cache.Render(maxWidth, maxHeight);
+string result = cache.Render(containerWidth, containerHeight);
 //Logger.DecLvl();
 return result;
 //}
@@ -3914,6 +3757,335 @@ bool SelectNext();
 void DetachChild(XMLTree child);
 }
 
+public abstract class IRenderBox
+{
+protected bool minHeightIsCached;
+protected bool minWidthIsCached;
+protected bool desiredHeightIsCached;
+protected bool desiredWidthIsCached;
+protected int minHeightCache;
+protected int minWidthCache;
+protected int desiredHeightCache;
+protected int desiredWidthCache;
+public bool DEBUG = false;
+public char PadChar;
+public InitializationState InitState;
+public enum TextAlign { LEFT, RIGHT, CENTER }
+public enum FlowDirection { HORIZONTAL, VERTICAL }
+
+//public abstract int Height { get; set; }
+public abstract void Add(string box);
+public abstract void Add(StringBuilder box);
+public abstract void AddAt(int position, string box);
+public abstract void AddAt(int position, StringBuilder box);
+public abstract StringBuilder GetLine(int index);
+public abstract StringBuilder GetLine(int index, int maxWidth, int maxHeight);
+public abstract void Clear();
+public abstract void Initialize(int maxWidth, int maxHeight);
+public abstract void CalculateDimensions(int maxWidth, int maxHeight);
+private IRenderBox.FlowDirection _Flow;
+private IRenderBox.TextAlign _Align;
+public int _MinWidth;
+public int _MaxWidth;
+public int _DesiredWidth;
+public int _MinHeight;
+public int _MaxHeight;
+public int _DesiredHeight;
+public IRenderBox Parent;
+public string type;
+private bool RenderingInProcess;
+public string MinWidthDef;
+public string MaxWidthDef;
+public string MinHeightDef;
+public string MaxHeightDef;
+public string DesiredWidthDef;
+public string DesiredHeightDef;
+public virtual int GetActualWidth(int maxWidth)
+{
+//using (Logger logger = new Logger("RenderBox.GetActualWidth(int)", Logger.Mode.LOG))
+//{
+//logger.log("Type: " + type, Logger.Mode.LOG);
+//if (this as RenderBoxLeaf != null)
+//    logger.log("content: |" + (this as RenderBoxLeaf).Content + "|", Logger.Mode.LOG);
+// logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
+// logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
+//logger.log("min width: " + MinWidth, Logger.Mode.LOG);
+//logger.log("desired width: " + DesiredWidth, Logger.Mode.LOG);
+maxWidth = Math.Min(MaxWidth, maxWidth);
+
+int desired;
+desired = Math.Max(DesiredWidth, MinWidth);
+desired = Math.Min(desired, maxWidth);
+return desired;
+//}
+}
+public int GetIndependentWidth(int maxWidth)
+{
+//using (Logger logger = new Logger("RenderBoxTree.GetIndependentWidth(int)", Logger.Mode.LOG))
+//{
+//logger.log("Type: " + type, Logger.Mode.LOG);
+//logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
+//logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
+//logger.log("min width: " + _MinWidth, Logger.Mode.LOG);
+//logger.log("desired width: " + DesiredWidth, Logger.Mode.LOG);
+maxWidth = Math.Min(MaxWidth, maxWidth);
+int desired;
+desired = Math.Max(DesiredWidth, _MinWidth);
+desired = Math.Min(desired, maxWidth);
+return desired;
+//}
+}
+public int GetActualHeight(int maxHeight)
+{
+//using (Logger logger = new Logger("RenderBox.GetActualHeight(int)", Logger.Mode.LOG))
+//{
+//logger.log("Type: " + type, Logger.Mode.LOG);
+//logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
+//logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
+maxHeight = Math.Min(MaxHeight, maxHeight);
+
+int desired = DesiredHeight == -1 ? MinHeight : Math.Max(MinHeight, DesiredHeight);
+//Logger.DecLvl();
+//logger.log("maxheight: " + maxHeight, Logger.Mode.LOG);
+//logger.log("minheight: " + MinHeight, Logger.Mode.LOG);
+//logger.log("Desired Height: " + DesiredHeight, Logger.Mode.LOG);
+//logger.log("actual height: " + Math.Min(desired, maxHeight) + " (min( " + desired + ", " + maxHeight + ")", Logger.Mode.LOG);
+return Math.Max(0, Math.Min(desired, maxHeight));
+//}
+}
+public IRenderBox.TextAlign Align
+{
+get { return _Align; }
+set
+{
+_Align = value;
+}
+}
+public virtual IRenderBox.FlowDirection Flow
+{
+get { return _Flow; }
+set
+{
+_Flow = value;
+ClearCache();
+}
+}
+public virtual int MinWidth
+{
+get
+{
+return _MinWidth;
+}
+set
+{
+_MinWidth = Math.Max(0, value);
+ClearCache();
+}
+}
+public virtual int DesiredWidth
+{
+get
+{
+return _DesiredWidth;
+}
+set
+{
+_DesiredWidth = value;
+}
+}
+public virtual int MaxWidth
+{
+get
+{
+return _MaxWidth;
+}
+set
+{
+if (value < 0)
+_MaxWidth = int.MaxValue;
+else
+_MaxWidth = value;
+}
+}
+public virtual int MinHeight
+{
+get
+{
+return _MinHeight;
+}
+set
+{
+_MinHeight = Math.Max(0, value);
+ClearCache();
+}
+}
+public virtual int DesiredHeight
+{
+get
+{
+return _DesiredHeight;
+}
+set
+{
+_DesiredHeight = value;
+}
+}
+public int MaxHeight
+{
+get
+{
+return _MaxHeight;
+}
+set
+{
+if (value < 0)
+_MaxHeight = int.MaxValue;
+else
+_MaxHeight = value;
+ClearCache();
+}
+}
+public IRenderBox()
+{
+PadChar = ' ';
+_Flow = IRenderBox.FlowDirection.VERTICAL;
+_Align = IRenderBox.TextAlign.LEFT;
+_MinWidth = 0;
+_MaxWidth =  int.MaxValue;
+_DesiredWidth = -1;
+_MinHeight = 0;
+_MaxHeight = int.MaxValue;
+_DesiredHeight = -1;
+minHeightIsCached = false;
+minWidthIsCached = false;
+desiredHeightIsCached = false;
+desiredWidthIsCached = false;
+InitState = new InitializationState();
+}
+public bool IsRenderingInProgress()
+{
+return RenderingInProcess || (Parent == null ? false : Parent.IsRenderingInProgress());
+}
+public virtual IEnumerable<StringBuilder> GetLines(int maxWidth, int maxHeight)
+{
+int height = GetActualHeight(maxHeight);
+for (int i = 0; i < height; i++)
+{
+yield return GetLine(i, maxWidth, maxHeight);
+}
+}
+public IEnumerable<StringBuilder> GetLines()
+{
+int height = GetActualHeight(int.MaxValue);
+for (int i = 0; i < height; i++)
+{
+yield return GetLine(i, int.MaxValue, int.MaxValue);
+}
+}
+protected void AlignLine(ref StringBuilder line)
+{
+AlignLine(ref line, int.MaxValue);
+}
+protected void AlignLine(ref StringBuilder line, int maxWidth)
+{
+AlignLine(ref line, maxWidth, Align, PadChar);
+}
+protected void AlignLine(ref StringBuilder line, IRenderBox.TextAlign Alignment)
+{
+AlignLine(ref line, int.MaxValue, Alignment, PadChar);
+}
+protected void AlignLine(ref StringBuilder line, int maxWidth, IRenderBox.TextAlign Alignment, char padChar)
+{
+//using (Logger logger = new Logger("RenderBox.AlignLine(ref StringBuilder, int)", Logger.Mode.LOG))
+//{
+//logger.log("Type: " + type);
+//logger.log("pad char is: " + padChar);
+//logger.log("this.PadChar is: " + PadChar);
+//logger.log("max width is " + maxWidth, Logger.Mode.LOG);
+int actualWidth = GetActualWidth(maxWidth);
+//logger.log("actualWidth: " + actualWidth, Logger.Mode.LOG);
+//logger.log("line is: |" + line + "|", Logger.Mode.LOG);
+//logger.log("line width: " + TextUtils.GetTextWidth(line.ToString()));
+int remainingWidth = actualWidth - TextUtils.GetTextWidth(line.ToString());
+//logger.log("remaining width is " + remainingWidth, Logger.Mode.LOG);
+//logger.log("Aligning " + _Align.ToString() + "...");
+if (remainingWidth > 0) // line is not wide enough; padding necessary
+{
+//logger.log("padding...", Logger.Mode.LOG);
+switch (Alignment)
+{
+case TextAlign.CENTER:
+line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.BOTH, padChar);
+break;
+case TextAlign.RIGHT:
+line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.LEFT, padChar);
+break;
+default:
+line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.RIGHT, padChar);
+break;
+}
+}
+else if (remainingWidth < 0)
+{
+line = new StringBuilder(line.ToString());
+while (remainingWidth < 0)
+{
+remainingWidth += TextUtils.GetTextWidth(new string(new char[] { line[line.Length - 1] })) + 1;
+line.Remove(line.Length - 1, 1);
+}
+}
+//logger.log("aligned line is: {" + line + "}", Logger.Mode.LOG);
+//}
+}
+public string Render(int maxWidth, int maxHeight)
+{
+Initialize(maxWidth, maxHeight);
+StringBuilder result = new StringBuilder();
+foreach (StringBuilder line in GetLines(maxWidth, maxHeight))
+{
+result.Append(line);
+result.Append("\n");
+}
+if (result.Length > 0)
+result.Remove(result.Length - 1, 1);
+return result.ToString();
+}
+public void ClearCache()
+{
+minHeightIsCached = false;
+minWidthIsCached = false;
+if (Parent != null)
+Parent?.ClearCache();
+}
+public static int? ResolveSize(string widthString, int max)
+{
+if (widthString == null)
+return null;
+widthString = widthString?.Trim();
+if (widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out float fWidth))
+{
+if (max < 0 || max == int.MaxValue)
+return null;
+return (int)(fWidth / 100f * Math.Max(0, max));
+}
+else
+{
+int iWidth;
+if (int.TryParse(widthString, out iWidth))
+return iWidth;
+return -1;
+}
+}
+}
+
+
+public class InitializationState
+{
+public int MaxWidth;
+public int MaxHeight;
+public bool Initialized;
+}
+
 public class TextNode : XMLTree
 {
 public string Content;
@@ -3926,18 +4098,20 @@ Type = "textnode";
 Content = content;
 Content.Replace("\n", "");
 Content = Content.Trim(new char[] { '\n', ' ', '\r' });
+//SetAttribute("width", "100%");
 //Logger.debug("final content: " + Content);
 RerenderRequired = true;
 //Logger.DecLvl();
 }
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
 {
 //using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
 //{
 //Logger.debug("TextNode.GetRenderCache(int)");
 //Logger.IncLvl();
-RenderBox cache = new RenderBoxLeaf(Content);
+IRenderBox cache = new RenderBoxLeaf(Content);
 cache.type = Type;
+UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
 //Logger.DecLvl();
 return cache;
 //}
@@ -3992,9 +4166,9 @@ Definition = definition;
 }
 public void Follow(UIController controller)
 {
-using (Logger logger = new Logger("Route.Follow(UIController)", Logger.Mode.LOG))
-{
-logger.log("route def: " + Definition, Logger.Mode.LOG);
+//using (Logger logger = new Logger("Route.Follow(UIController)", Logger.Mode.LOG))
+//{
+//logger.log("route def: " + Definition, Logger.Mode.LOG);
 //Logger.debug("Route.Follow()");
 //Logger.IncLvl();
 string[] DefTypeAndValue = Definition.Split(new char[] { ':' }, 2);
@@ -4006,9 +4180,9 @@ DefTypeAndValue.Length >= 2 ? DefTypeAndValue[1] : null, controller
 }
 else
 {
-logger.log("route not understood.", Logger.Mode.WARNING);
+//logger.log("route not understood.", Logger.Mode.WARNING);
 }
-}
+//}
 //Logger.DecLvl();
 }
 static public void RegisterRouteFunction(string id, Action<UIController> fn)
@@ -4234,11 +4408,11 @@ int width = panelWidth == -1 ? -1 : (int)(((float)panelWidth) / panel.GetValue<S
 //TODO: Get height of screen
 int height = 20;
 ApplyScreenProperties(panel);
-using (new Logger("RENDERING...", Logger.Mode.LOG))
-{
+//using (new Logger("RENDERING...", Logger.Mode.LOG))
+//{
 string text = ui.Render(width, height);
 panel.WritePublicText(text);
-}
+//}
 }
 public long GetSelectedFont()
 {
@@ -4367,8 +4541,8 @@ UserInputBindings.Add(node);
 }
 public bool UpdateUserInput()
 {
-using (new Logger("UIController.RefreshUserInput()", Logger.Mode.LOG))
-{
+//using (new Logger("UIController.RefreshUserInput()", Logger.Mode.LOG))
+//{
 //Logger.IncLvl();
 if (!UserInputActive || UserInputSource == null)
 {
@@ -4434,12 +4608,12 @@ case TextInputMode.PUBLIC_TEXT:
 break;
 }
 return inputHasChanged;
-}
+//}
 }
 private void CollectUserInputBindings()
 {
-using (Logger logger = new Logger("UIController.CollectUserInputBindings()", Logger.Mode.LOG))
-{
+//using (Logger logger = new Logger("UIController.CollectUserInputBindings()", Logger.Mode.LOG))
+//{
 XMLTree node;
 Queue<XMLParentNode> nodes = new Queue<XMLParentNode>();
 nodes.Enqueue(ui);
@@ -4448,11 +4622,11 @@ while (nodes.Count != 0)
 node = nodes.Dequeue() as XMLTree;
 if (!node.HasUserInputBindings)
 {
-logger.log("node has no userinputbindings", Logger.Mode.LOG);
+//logger.log("node has no userinputbindings", Logger.Mode.LOG);
 }
 if (node != null && node.HasUserInputBindings)
 {
-logger.log("Checking " + node.Type + " node...", Logger.Mode.LOG);
+//logger.log("Checking " + node.Type + " node...", Logger.Mode.LOG);
 for (int i = 0; i < node.NumberOfChildren; i++)
 {
 nodes.Enqueue(node.GetChild(i));
@@ -4464,7 +4638,7 @@ RegisterInputBinding(node);
 }
 }
 }
-}
+//}
 }
 
 public abstract class UIFactory
@@ -4543,28 +4717,32 @@ values[name] = value;
 }
 return values;
 }
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
 {
-using (new Logger("Menu.GetRenderBox(int, int)"))
-{
-RenderBoxLeaf prefix = new RenderBoxLeaf();
+//using (new Logger("Menu.GetRenderBox(int, int)"))
+//{
+RenderBoxTree prefix = new RenderBoxTree();
 prefix.MinHeight = 1;
+prefix.MaxHeight = 1;
 prefix.type = Type + "_prefix";
-RenderBoxLeaf prefixSelected = new RenderBoxLeaf(">> ");
+RenderBoxLeaf prefixSelected = new RenderBoxLeaf(">>");
 prefixSelected.type = Type + "_prefixSelected";
-int prefixWidth = prefixSelected.MinWidth;
+int prefixWidth = TextUtils.GetTextWidth(">> ");
 prefix.MaxWidth = prefixWidth;
 prefix.MinWidth = prefixWidth;
 prefixSelected.MaxWidth = prefixWidth;
+prefixSelected.MinWidth = prefixWidth - 1;
+prefixSelected.MaxHeight = 1;
 RenderBoxTree cache = new RenderBoxTree();
-UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
 cache.type = Type;
 RenderBoxTree menuPoint;
+IRenderBox.TextAlign align;
 foreach (XMLTree child in Children)
 {
 menuPoint = new RenderBoxTree();
 menuPoint.type = Type + "_menupoint";
-menuPoint.Flow = RenderBox.FlowDirection.HORIZONTAL;
+menuPoint.Flow = IRenderBox.FlowDirection.HORIZONTAL;
 if (child.IsSelected())
 {
 menuPoint.Add(prefixSelected);
@@ -4573,13 +4751,16 @@ else
 {
 menuPoint.Add(prefix);
 }
-RenderBox childBox = child.GetRenderBox(maxWidth, maxHeight);
+IRenderBox childBox = child.GetRenderBox(Math.Max(cache._MinWidth, cache._DesiredWidth), Math.Max(cache._MaxHeight, cache._DesiredHeight));
 menuPoint.Add(childBox);
+if (child.GetAttribute("alignself") == null
+&& Enum.TryParse<IRenderBox.TextAlign>(GetAttribute("alignchildren")?.ToUpper() ?? "LEFT", out align))
+menuPoint.Align = align;
 cache.Add(menuPoint);
 }
 return cache;
 }
-}
+//}
 }
 
 public class MenuItem : XMLTree
@@ -4620,8 +4801,8 @@ break;
 public override void OnKeyPressed(string keyCode)
 {
 //Logger.debug(Type + ": OnKeyPressed():");
-using (Logger logger = new Logger("MenuItem.OnKeyPressed(string)", Logger.Mode.LOG))
-{
+//using (Logger logger = new Logger("MenuItem.OnKeyPressed(string)", Logger.Mode.LOG))
+//{
 switch (keyCode)
 {
 case "RIGHT/SUBMIT":
@@ -4632,14 +4813,14 @@ FollowRoute(TargetRoute);
 }
 else
 {
-logger.log("target route is null!", Logger.Mode.WARNING);
+//logger.log("target route is null!", Logger.Mode.WARNING);
 //Logger.debug("No route set!");
 }
 break;
 }
 base.OnKeyPressed(keyCode);
 //Logger.DecLvl();
-}
+//}
 }
 public void SetRoute(Route route)
 {
@@ -4650,8 +4831,8 @@ TargetRoute = route;
 
 public class ProgressBar : XMLTree
 {
-RenderBox emptyBar;
-RenderBox filledBar;
+IRenderBox emptyBar;
+IRenderBox filledBar;
 float StepSize
 {
 get
@@ -4707,7 +4888,7 @@ public ProgressBar(float fillLevel, bool selectable) : base()
 Type = "progressbar";
 PreventDefault("LEFT/ABORT");
 PreventDefault("RIGHT/SUBMIT");
-SetAttribute("width", "500");
+SetAttribute("minwidth", "500");
 SetAttribute("filledstring", "|");
 SetAttribute("emptystring", "'");
 SetAttribute("value", fillLevel.ToString());
@@ -4761,48 +4942,56 @@ renderString += "]" + suffix;
 segments.Add(renderString);
 //Logger.DecLvl();
 }*/
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 //Logger.debug("ProgressBar.GetRenderCache(int)");
 //Logger.IncLvl();
 RenderBoxTree cache = new RenderBoxTree();
 cache.type = Type;
 int outerWidth = TextUtils.GetTextWidth(IsSelected() ? "<[]>" : " [] ") + 2;
-RenderBox prefix = new RenderBoxLeaf(
-(IsSelected() ? "<" : " ") + "[");
+string prefixString = (IsSelected() ? "<" : " ") + "[";
+IRenderBox prefix = new RenderBoxLeaf(prefixString);
+prefix.type = "progressbarPrefix";
+prefix.MinWidth = TextUtils.GetTextWidth(prefixString);
 prefix.MaxWidth = prefix.MinWidth;
-RenderBox suffix = new RenderBoxLeaf(
-"]" + (IsSelected() ? ">" : " "));
+prefix.MinHeight = 1;
+string suffixString = "]" + (IsSelected() ? ">" : " ");
+IRenderBox suffix = new RenderBoxLeaf(suffixString);
+suffix.type = "progressbarSuffix";
+suffix.MinWidth = TextUtils.GetTextWidth(suffixString);
 suffix.MaxWidth = suffix.MinWidth;
+suffix.MinHeight = 1;
 cache.Add(prefix);
 filledBar = new RenderBoxLeaf();
+filledBar.type = "filledBar";
 filledBar.PadChar = GetAttribute("filledstring")[0];
 filledBar.MinHeight = 1;
 cache.Add(filledBar);
 emptyBar = new RenderBoxLeaf();
+emptyBar.type = "emptybar";
 emptyBar.MinHeight = 1;
 emptyBar.PadChar = GetAttribute("emptystring")[0];
 cache.Add(emptyBar);
 cache.Add(suffix);
-int width = ResolveSize(GetAttribute("minwidth"), maxWidth);
+int width = ResolveSize(GetAttribute("minwidth"), maxWidth) ?? 0;
 if (width >= outerWidth)
 {
 filledBar.MinWidth = (int)((width - outerWidth) * FillLevel);
 emptyBar.MinWidth = (int)((width - outerWidth) * (1 - FillLevel));
 }
-width = ResolveSize(GetAttribute("maxwidth"), maxWidth);
+width = ResolveSize(GetAttribute("maxwidth"), maxWidth) ?? 0;
 if (width >= outerWidth)
 {
 filledBar.MaxWidth = (int) ((width - outerWidth) * FillLevel);
 emptyBar.MaxWidth = (int)((width - outerWidth) * (1 - FillLevel));
 }
-width = ResolveSize(GetAttribute("width"), maxWidth);
+width = ResolveSize(GetAttribute("width"), maxWidth) ?? 0;
 if (width >= outerWidth)
 {
 filledBar.DesiredWidth = (int)((width - outerWidth) * FillLevel);
 emptyBar.DesiredWidth = (int)((width - outerWidth) * (1 - FillLevel));
 }
-width = ResolveSize(GetAttribute("forcewidth"), maxWidth);
+width = ResolveSize(GetAttribute("forcewidth"), maxWidth) ?? 0;
 if (width >= outerWidth)
 {
 int forcedWidth = (int)((width - outerWidth) * FillLevel);
@@ -4812,7 +5001,7 @@ forcedWidth = (int)((width - outerWidth) * (1 - FillLevel));
 emptyBar.MinWidth = forcedWidth;
 emptyBar.MaxWidth = forcedWidth;
 }
-UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+//UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 //Logger.log("filledBar: ");
 //Logger.debug = false;
 //Logger.log("  fillLevel: " + FillLevel);
@@ -4822,30 +5011,30 @@ UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
 //Logger.log("  minheight: " + filledBar.MinHeight);
 //Logger.debug = true;
 //Logger.log("  actual width: " + filledBar.GetActualWidth(maxWidth));
-cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+cache.Flow = IRenderBox.FlowDirection.HORIZONTAL;
 //GetAttribute("flow") == "horizontal" ? NodeBox.FlowDirection.HORIZONTAL : NodeBox.FlowDirection.VERTICAL;
 switch (GetAttribute("alignself"))
 {
 case "right":
-cache.Align = RenderBox.TextAlign.RIGHT;
+cache.Align = IRenderBox.TextAlign.RIGHT;
 break;
 case "center":
-cache.Align = RenderBox.TextAlign.CENTER;
+cache.Align = IRenderBox.TextAlign.CENTER;
 break;
 default:
-cache.Align = RenderBox.TextAlign.LEFT;
+cache.Align = IRenderBox.TextAlign.LEFT;
 break;
 }
 //Logger.DecLvl();
 return cache;
 }
 }
-//!EMBED SEScripts.XUI.XML.Container
 
 public class HorizontalLine : XMLTree
 {
 public HorizontalLine() : base()
 {
+Console.WriteLine("HL");
 Type = "hl";
 SetAttribute("width", "100%");
 SetAttribute("minheight", "1");
@@ -4855,15 +5044,20 @@ SetAttribute("maxheight", "1");
 {
 segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL));
 }*/
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
 {
 //using (new Logger("HorizontalLine.GetRenderBox()"))
 //{
-RenderBox cache = new RenderBoxLeaf();
+IRenderBox cache = new RenderBoxTree();
+UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
 cache.type = Type;
 //cache.Add("_");
 cache.PadChar = '_';
-UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+Console.WriteLine("THE FUCKING PAD CHAR IS: " + cache.PadChar);
+cache.MinWidth = containerWidth;
+cache.MaxWidth = containerWidth;
+cache.MinHeight = 1;
+cache.MaxHeight = 1;
 return cache;
 //}
 }
@@ -4881,15 +5075,15 @@ SetAttribute("height", "100%");
 {
 segments.Add(TextUtils.CreateStringOfLength("_", width, TextUtils.RoundMode.CEIL));
 }*/
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
 {
 //using (new Logger("VerticalLine.GetRenderBox()"))
 //{
-RenderBox cache = new RenderBoxLeaf();
+IRenderBox cache = new RenderBoxLeaf();
 cache.PadChar = '|';
 cache.type = Type;
 //cache.Add("_");
-UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
 cache.MinWidth = TextUtils.GetCharWidth('|');
 return cache;
 //}
@@ -4971,7 +5165,7 @@ renderString = prefix + (tmpPrefix + renderString).Substring(prefixSpacesCount);
 return renderString;
 //renderString = prefix + renderString;
 }*/
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
 {
 //using (new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)"))
 //{
@@ -4985,21 +5179,21 @@ UpdateController();
 }
 if (IsSelectable())
 {
-RenderBox childCache = new RenderBoxLeaf(IsSelected() ?
+IRenderBox childCache = new RenderBoxLeaf(IsSelected() ?
 new StringBuilder("<<") :
 TextUtils.CreateStringOfLength(' ', TextUtils.GetTextWidth("<<")));
 childCache.MaxWidth = childCache.MinWidth;
 cache.Add(childCache);
 }
 RenderBoxTree contentCache = new RenderBoxTree();
-contentCache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
+contentCache.Flow = GetAttribute("flow") == "horizontal" ? IRenderBox.FlowDirection.HORIZONTAL : IRenderBox.FlowDirection.VERTICAL;
+UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
 foreach (XMLTree child in Children)
 {
-contentCache.Add(child.GetRenderBox(maxWidth, maxHeight));
+contentCache.Add(child.GetRenderBox(Math.Max(cache._DesiredWidth, cache._MinWidth), Math.Max(cache._DesiredHeight, cache._MinHeight)));
 }
 cache.Add(contentCache);
-UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
-cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+cache.Flow = IRenderBox.FlowDirection.HORIZONTAL;
 
 return cache;
 }
@@ -5055,8 +5249,8 @@ throw new Exception("Invalid format of allowed characters!");
 }
 
 }
-if (key == "value")
-using (new Logger("set value: " + value)) { }
+//if (key == "value")
+//using (new Logger("set value: " + value)) { }
 base.SetAttribute(key, value);
 }
 private void IncreaseLetter()
@@ -5191,20 +5385,20 @@ value = "_" + value;
 }
 segments.Add((IsSelected() ? new string(new char[] { (char)187 }) : "  ") + " " + value);
 }*/
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
 {
-using (Logger logger = new Logger("TextInput.GetRenderCache(int)", Logger.Mode.LOG))
-{
+//using (Logger logger = new Logger("TextInput.GetRenderCache(int)", Logger.Mode.LOG))
+//{
 RenderBoxTree cache = new RenderBoxTree();
-UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
+UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
 RenderBoxLeaf content = new RenderBoxLeaf();
 cache.type = Type;
-cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+cache.Flow = IRenderBox.FlowDirection.HORIZONTAL;
 cache.Add(content);
 content.Add((IsSelected() ? new string(new char[] { (char)187 }) : " ") + " ");
 content.MinWidth = TextUtils.GetTextWidth(new string(new char[] { (char)187, ' ' }));
 string value = GetAttribute("value");
-logger.log("value: " + value, Logger.Mode.LOG);
+//logger.log("value: " + value, Logger.Mode.LOG);
 if (CursorPosition != -1)
 {
 content.Add(value.Substring(0, CursorPosition));
@@ -5224,10 +5418,9 @@ for(int i = 0; i < cache.Count; i++)
 {
 cache[i].MaxWidth = cache[i].MinWidth;
 }*/
-logger.log("height: " + cache.GetActualHeight(maxHeight), Logger.Mode.LOG);
 return cache;
 }
-}
+//}
 }
 
 public abstract class DataStore : XMLTree
@@ -5269,7 +5462,7 @@ base.PreRender(ref segments, width, availableWidth);
 segments.Add(IsSelected() ? "  ]]" : "   ]");
 return base.PostRender(segments, width, availableWidth);
 }*/
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
 {
 //Logger.debug("SubmitButton.GetRenderCache(int)");
 //Logger.IncLvl();
@@ -5279,17 +5472,17 @@ RenderBoxLeaf childCache = new RenderBoxLeaf(IsSelected() ? "[[  " : "[   ");
 childCache.MaxWidth = childCache.MinWidth;
 cache.Add(childCache);
 RenderBoxTree contentCache = new RenderBoxTree();
-contentCache.Flow = GetAttribute("flow") == "horizontal" ? RenderBox.FlowDirection.HORIZONTAL : RenderBox.FlowDirection.VERTICAL;
+contentCache.Flow = GetAttribute("flow") == "horizontal" ? IRenderBox.FlowDirection.HORIZONTAL : IRenderBox.FlowDirection.VERTICAL;
+UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
 foreach (XMLTree child in Children)
 {
-contentCache.Add(child.GetRenderBox(maxWidth, maxHeight));
+contentCache.Add(child.GetRenderBox(Math.Max(cache._DesiredWidth, cache._DesiredWidth), Math.Max(cache._DesiredHeight, cache._MinHeight)));
 }
 cache.Add(contentCache);
 childCache = new RenderBoxLeaf(IsSelected() ? "  ]]" : "   ]");
 childCache.MaxWidth = childCache.MinWidth;
 cache.Add(childCache);
-UpdateRenderCacheProperties(cache, maxWidth, maxHeight);
-cache.Flow = RenderBox.FlowDirection.HORIZONTAL;
+cache.Flow = IRenderBox.FlowDirection.HORIZONTAL;
 //Logger.DecLvl();
 return cache;
 }
@@ -5306,11 +5499,11 @@ Type = "br";
 {
 return "";
 }*/
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 //using (new Logger("Break.GetRenderBox(int, int)"))
 //{
-RenderBox cache = new RenderBoxLeaf("\n");
+IRenderBox cache = new RenderBoxLeaf("\n");
 cache.type = Type;
 cache.MaxHeight = (GetParent() as XMLTree)?.GetAttribute("flow") == "horizontal" ? 1 : 0;
 cache.MaxWidth = 0;
@@ -5336,14 +5529,14 @@ SetAttribute("width", "0");
 segments.Add(TextUtils.CreateStringOfLength(" ", width));
 //Logger.DecLvl();
 }*/
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
 {
 //Logger.debug("GetRenderCache(int)");
 //Logger.IncLvl();
-RenderBox cache = new RenderBoxLeaf();
+IRenderBox cache = new RenderBoxLeaf();
 cache.type = Type;
 cache.MinHeight = 1;
-int width = ResolveSize(GetAttribute("width"), maxWidth);
+int width = ResolveSize(GetAttribute("width"), containerWidth) ?? 0;
 cache.MinWidth = width;
 cache.MaxWidth = width;
 //Logger.DecLvl();
@@ -5361,11 +5554,11 @@ Type = "hidden";
 {
 return null;
 }*/
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 //using (new Logger("Hidden.GetRenderCache(int)", Logger.Mode.LOG))
 //{
-RenderBox cache = new RenderBoxTree();
+IRenderBox cache = new RenderBoxTree();
 cache.type = Type;
 cache.MaxWidth = 0;
 cache.MaxHeight = 0;
@@ -5384,11 +5577,11 @@ Type = "hiddendata";
 {
 return null;
 }*/
-public override RenderBox GetRenderBox(int maxWidth, int maxHeight)
+public override IRenderBox GetRenderBox(int maxWidth, int maxHeight)
 {
 //using (new Logger("hiddenData.GetRenderCache(int)"))
 //{
-RenderBox cache = new RenderBoxTree();
+IRenderBox cache = new RenderBoxTree();
 cache.type = Type;
 cache.MaxWidth = 0;
 cache.MaxHeight = 0;
@@ -5428,453 +5621,88 @@ base.SetAttribute(key, value);
 }
 }
 
-public abstract class RenderBox
-{
-protected bool minHeightIsCached;
-protected bool minWidthIsCached;
-protected int minHeightCache;
-protected int minWidthCache;
-public bool DEBUG = false;
-public char PadChar;
-public enum TextAlign { LEFT, RIGHT, CENTER }
-public enum FlowDirection { HORIZONTAL, VERTICAL }
-//public abstract int Height { get; set; }
-public abstract void Add(string box);
-public abstract void Add(StringBuilder box);
-public abstract void AddAt(int position, string box);
-public abstract void AddAt(int position, StringBuilder box);
-public abstract StringBuilder GetLine(int index);
-public abstract StringBuilder GetLine(int index, int maxWidth, int maxHeight);
-public abstract void Clear();
-private RenderBox.FlowDirection _Flow;
-private RenderBox.TextAlign _Align;
-protected int _MinWidth;
-protected int _MaxWidth;
-protected int _DesiredWidth;
-protected int _MinHeight;
-protected int _MaxHeight;
-protected int _DesiredHeight;
-public RenderBox Parent;
-public string type;
-public int GetActualWidth(int maxWidth)
-{
-using (Logger logger = new Logger("RenderBox.GetActualWidth(int)", Logger.Mode.LOG))
-{
-logger.log("Type: " + type, Logger.Mode.LOG);
-if (this as RenderBoxLeaf != null)
-logger.log("content: |" + (this as RenderBoxLeaf).Content + "|", Logger.Mode.LOG);
-logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
-logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
-logger.log("min width: " + MinWidth, Logger.Mode.LOG);
-logger.log("desired width: " + DesiredWidth, Logger.Mode.LOG);
-if (MaxWidth != -1)
-maxWidth = (maxWidth == -1 ? MaxWidth : Math.Min(MaxWidth, maxWidth));
-if (maxWidth == -1)
-{
-//Logger.debug("actual width equals min width");
-//Logger.DecLvl();
-return Math.Max(MinWidth, DesiredWidth);
-}
-else
-{
-int desired;
-if (DesiredWidth == -1)
-{
-//Logger.debug("actual width equals max width");
-desired = Math.Min(MinWidth, maxWidth);
-}
-else
-{
-//Logger.debug("actual width equals desired width, but if desired<min -> width=min and if desired>max -> width = max");
-desired = Math.Max(MinWidth, DesiredWidth);
-}
-//Logger.DecLvl();
-logger.log("actual width: " + Math.Min(desired, maxWidth), Logger.Mode.LOG);
-return Math.Min(desired, maxWidth);
-}
-}
-}
-public int GetActualHeight(int maxHeight)
-{
-using (Logger logger = new Logger("RenderBox.GetActualHeight(int)", Logger.Mode.LOG))
-{
-logger.log("Type: " + type, Logger.Mode.LOG);
-//logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
-//logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
-//Logger.debug("NodeBox.GetActualHeight(int)");
-//Logger.IncLvl();
-if (MaxHeight != -1)
-maxHeight = (maxHeight == -1 ? MaxHeight : Math.Min(MaxHeight, maxHeight));
-if (maxHeight == -1)
-{
-//logger.log("actual height equals min height", Logger.Mode.LOG);
-//Logger.DecLvl();
-return DesiredHeight == -1 ? MinHeight : Math.Min(MinHeight, DesiredHeight);
-}
-else
-{
-int desired = DesiredHeight == -1 ? MinHeight : Math.Max(MinHeight, DesiredHeight);
-//Logger.DecLvl();
-logger.log("actual height: " + Math.Min(desired, maxHeight) + " (min( " + desired + ", " + maxHeight + ")", Logger.Mode.LOG);
-return Math.Min(desired, maxHeight);
-}
-}
-}
-public RenderBox.TextAlign Align
-{
-get { return _Align; }
-set
-{
-_Align = value;
-}
-}
-public virtual RenderBox.FlowDirection Flow
-{
-get { return _Flow; }
-set {
-_Flow = value;
-ClearCache();
-}
-}
-public virtual int MinWidth
-{
-get
-{
-/*using (new SimpleProfiler("RenderBox.MinWidth.get"))
-//{
-//Logger.debug("NodeBox.MinWidth.get()");
-//Logger.IncLvl();
-//Logger.debug("minwidth = " + _MinWidth);
-//Logger.DecLvl();*/
-return _MinWidth;
-//}
-}
-set
-{
-//using (new SimpleProfiler("RenderBox.MinWidth.get"))
-//{
-//Logger.debug("NodeBox.MinWidth.set()");
-//Logger.IncLvl();
-//Logger.debug("minwidth = " + value);
-_MinWidth = Math.Max(0, value);
-ClearCache();
-//Logger.DecLvl();
-//}
-}
-}
-public int DesiredWidth
-{
-get
-{
-//Logger.debug("NodeBox.DesiredWidth.get()");
-//Logger.IncLvl();
-//Logger.debug("desiredwidth = " + _DesiredWidth);
-//Logger.DecLvl();
-return _DesiredWidth;
-}
-set
-{
-//Logger.debug("NodeBox.DesiredWidth.set()");
-//Logger.IncLvl();
-//Logger.debug("desiredwidth = " + value);
-_DesiredWidth = value;
-//Logger.DecLvl();
-}
-}
-public int MaxWidth
-{
-get
-{
-//Logger.debug("NodeBox.MaxWidth.get()");
-//Logger.IncLvl();
-//Logger.debug("maxwidth = " + _MaxWidth);
-//Logger.DecLvl();
-return _MaxWidth;
-}
-set
-{
-//Logger.debug("NodeBox.MaxWidth.set()");
-//Logger.IncLvl();
-//Logger.debug("maxwidth = " + value);
-_MaxWidth = value;
-//Logger.DecLvl();
-}
-}
-public virtual int MinHeight
-{
-get
-{
-//using (new SimpleProfiler("RenderBox.MinHeight.get"))
-//{
-//Logger.debug("NodeBox.MinHeight.get()");
-//Logger.IncLvl();
-//Logger.debug("minheight = " + _MinHeight);
-//Logger.DecLvl();
-return _MinHeight;
-//}
-}
-set
-{
-//using (new SimpleProfiler("RenderBox.MinHeight.set"))
-//{
-//Logger.debug("NodeBox.MinHeight.set()");
-//Logger.IncLvl();
-//Logger.debug("minheight = " + value);
-_MinHeight = Math.Max(0, value);
-ClearCache();
-//Logger.DecLvl();
-//}
-}
-}
-public int DesiredHeight
-{
-get
-{
-//Logger.debug("NodeBox.DesiredHeight.get()");
-//Logger.IncLvl();
-//Logger.debug("desiredheight = " + _DesiredHeight);
-//Logger.DecLvl();
-return _DesiredHeight;
-}
-set
-{
-//Logger.debug("NodeBox.DesiredHeight.set()");
-//Logger.IncLvl();
-//Logger.debug("desiredheight = " + value);
-_DesiredHeight = value;
-//Logger.DecLvl();
-}
-}
-public int MaxHeight
-{
-get
-{
-//Logger.debug("NodeBox.MaxHeight.get()");
-//Logger.IncLvl();
-//Logger.debug("maxheight = " + _MaxHeight);
-//Logger.DecLvl();
-return _MaxHeight;
-}
-set
-{
-//Logger.debug("NodeBox.MaxHeight.set()");
-//Logger.IncLvl();
-//Logger.debug("maxheight = " + value);
-//using (Logger logger = new Logger("RenderBox.MaxHeight.set", Logger.Mode.LOG))
-//{
-//logger.log("value: " + value, Logger.Mode.LOG);
-_MaxHeight = value;
-ClearCache();
-//}
-//Logger.DecLvl();
-}
-}
-public RenderBox()
-{
-//using (new Logger("RenderBox.__construct()", Logger.Mode.LOG))
-//{
-//Logger.debug("NodeBox constructor()");
-PadChar = ' ';
-_Flow = RenderBox.FlowDirection.VERTICAL;
-_Align = RenderBox.TextAlign.LEFT;
-_MinWidth = 0;
-_MaxWidth = -1;
-_DesiredWidth = -1;
-_MinHeight = 0;
-_MaxHeight = -1;
-_DesiredHeight = -1;
-minHeightIsCached = false;
-minWidthIsCached = false;
-//}
-}
-public IEnumerable<StringBuilder> GetLines(int maxWidth, int maxHeight)
-{
-//using (new SimpleProfiler("RenderBox.GetLines(int, int)"))
-//{
-//Logger.debug("NodeBox.GetRenderedLines()");
-//Logger.IncLvl();
-int height = GetActualHeight(maxHeight);
-for (int i = 0; i < height; i++)
-{
-yield return GetLine(i, maxWidth, maxHeight);
-}
-//Logger.DecLvl();
-//}
-}
-public IEnumerable<StringBuilder> GetLines()
-{
-//using (new SimpleProfiler("RenderBox.GetLines()"))
-//{
-//Logger.debug("NodeBox.GetRenderedLines()");
-//Logger.IncLvl();
-int height = GetActualHeight(-1);
-for (int i = 0; i < height; i++)
-{
-yield return GetLine(i, -1, -1);
-}
-//Logger.DecLvl();
-//}
-}
-protected void AlignLine(ref StringBuilder line)
-{
-//using (new SimpleProfiler("RenderBox.AlignLine(ref StringBuilder)"))
-//{
-AlignLine(ref line, -1);
-//}
-}
-protected void AlignLine(ref StringBuilder line, int maxWidth)
-{
-//using (Logger logger = new Logger("RenderBox.AlignLine(ref StringBuilder, int)", Logger.Mode.LOG))
-//{
-//Logger.debug("NodeBox.AlignLine()");
-//Logger.IncLvl();
-//Logger.debug("max width is " + maxWidth);
-int actualWidth = GetActualWidth(maxWidth);
-//logger.log("actualWidth: " + actualWidth, Logger.Mode.LOG);
-//Logger.debug("actual width is " + actualWidth);
-//Logger.debug("line width is " + TextUtils.GetTextWidth(line));
-//Logger.debug("line is: |" + line + "|");
-int remainingWidth = actualWidth - TextUtils.GetTextWidth(line.ToString());
-//Logger.debug("remaining width is " + remainingWidth);
-if (remainingWidth > 0) // line is not wide enough; padding necessary
-{
-////Logger.debug("line is so far: |" + line.ToString() + "|");
-//Logger.debug("padding...");
-switch (Align)
-{
-case TextAlign.CENTER:
-line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.BOTH, PadChar);
-break;
-case TextAlign.RIGHT:
-line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.LEFT, PadChar);
-break;
-default:
-line = TextUtils.PadText(line.ToString(), actualWidth, TextUtils.PadMode.RIGHT, PadChar);
-break;
-}
-////Logger.debug("line is so far: |" + line.ToString() + "|");
-}
-else if (remainingWidth < 0)
-{
-//Logger.debug("clipping");
-line = new StringBuilder(line.ToString());
-while (remainingWidth < 0)
-{
-remainingWidth += TextUtils.GetTextWidth(new string(new char[] { line[line.Length - 1] })) + 1;
-line.Remove(line.Length - 1, 1);
-}
-}
-else
-{
-//Logger.debug("neither padding nor clipping...");
-}
-//Logger.debug("aligned line is: {" + line + "}");
-//Logger.DecLvl();
-//}
-}
-public string Render(int maxWidth, int maxHeight)
-{
-//using (Logger logger = new Logger("RenderBox.Render(" + maxWidth + ", " + maxHeight + ")", Logger.Mode.LOG))
-//{
-StringBuilder result = new StringBuilder();
-int i = 0;
-foreach (StringBuilder line in GetLines(maxWidth, maxHeight))
-{
-//logger.log("rendering line " + (i++), Logger.Mode.LOG);
-result.Append(line);
-result.Append("\n");
-}
-if (result.Length > 0)
-result.Remove(result.Length - 1, 1);
-return result.ToString();
-//}
-}
-public void ClearCache()
-{
-minHeightIsCached = false;
-minWidthIsCached = false;
-if(Parent != null)
-Parent?.ClearCache();
-}
-}
-
-public class RenderBoxLeaf : RenderBox
+public class RenderBoxLeaf : IRenderBox
 {
 public string Content;
-public override RenderBox.FlowDirection Flow
+int DynamicHeight;
+int TextWidth;
+int offsetCache;
+int lastIndex;
+Dictionary<int, StringBuilder> LineCache;
+private List<string> _renderedLines;
+public override IRenderBox.FlowDirection Flow
 {
-get { return RenderBox.FlowDirection.VERTICAL; }
+get { return IRenderBox.FlowDirection.VERTICAL; }
 set { }
 }
 public override int MinHeight
 {
 get
 {
-//using (new SimpleProfiler("RenderBoxLeaf.MinHeight.get"))
+//using (new Logger("RenderBoxLeaf.MinHeight.get", Logger.Mode.LOG))
 //{
-//Logger.debug("NodeBoxLeaf.MinHeight.get");
-//Logger.IncLvl();
+//if (!InitState.Initialized)
+//    Initialize(int.MaxValue, int.MaxValue);
 if (minHeightIsCached && false)
 return minHeightCache;
 if (Content.Length > 0)
 {
-minHeightCache = Math.Max(_MinHeight, 1);
+minHeightCache = Math.Max(_MinHeight, LineCache?.Count ?? (Content.Length == 0 ? 0 : 1));
 }
 else
 {
 minHeightCache = _MinHeight;
 }
-if(MaxHeight != -1)
-{
-minHeightCache = Math.Min(minHeightCache, MaxHeight);
-}
-minHeightIsCached = true;
-//Logger.debug("minheight = " + minHeightCache);
-//Logger.DecLvl();
 return minHeightCache;
 //}
 }
 set
 {
-//using (new SimpleProfiler("RenderBoxLeaf.MinHeight.set"))
-//{
-//Logger.debug("NodeBoxLeaf.MinHeight.set");
-//Logger.IncLvl();
-//Logger.debug("minheight = " + value);
 _MinHeight = value;
 ClearCache();
-//Logger.DecLvl();
-//}
+}
+}
+public override int MaxWidth
+{
+get
+{
+if (TextWidth != 0)
+return TextWidth;
+return _MaxWidth;
 }
 }
 public override int MinWidth
 {
 get
 {
-//using (new SimpleProfiler("RenderBoxLeaf.MinWidth.get"))
+//using (Logger logger = new Logger("RenderBoxLeaf.MinWidth.get", Logger.Mode.LOG))
 //{
-//Logger.debug("NodeBoxLeaf.MinWidth.get");
-//Logger.IncLvl();
 if (minWidthIsCached && false)
 return minWidthCache;
-minWidthCache = MinHeight == 0 ? 0 : Math.Max(TextUtils.GetTextWidth(Content), _MinWidth);
-//Logger.debug("minwidth = " + minWidth);
+minWidthCache = Math.Max(TextWidth,
+Content.Length == 0 ?
+_MinWidth :
+Math.Max(25, _MinWidth));
 minWidthIsCached = true;
-//Logger.DecLvl();
+//logger.log("content: " + Content);
+//logger.log("minwidth: " + minWidthCache);
 return minWidthCache;
 //}
 }
 set
 {
-//using (new SimpleProfiler("RenderBoxLeaf.MinWidth.set"))
-//{
-//Logger.debug("NodeBoxLeaf.MinWidth.set()");
-//Logger.IncLvl();
-//Logger.debug("minwidth = " + value);
 _MinWidth = value;
 ClearCache();
-//Logger.DecLvl();
-//}
+}
+}
+public override int DesiredHeight
+{
+get
+{
+if (DynamicHeight == -1 || _DesiredHeight != -1)
+return base.DesiredHeight;
+else
+return DynamicHeight;
 }
 }
 public RenderBoxLeaf()
@@ -5882,8 +5710,7 @@ public RenderBoxLeaf()
 //using (new Logger("RenderBoxLeaf.__construct()", Logger.Mode.LOG))
 //{
 //Logger.debug("NodeBoxLeaf constructor()");
-Content = "";
-ClearCache();
+Clear();
 //}
 }
 public RenderBoxLeaf(StringBuilder content) : this()
@@ -5950,26 +5777,88 @@ Add(new StringBuilder(box));
 }
 public override StringBuilder GetLine(int index)
 {
-return GetLine(index, -1, -1);
+return GetLine(index, int.MaxValue, int.MaxValue);
 }
 public override StringBuilder GetLine(int index, int maxWidth, int maxHeight)
+{
+return GetLine(index, maxWidth, maxHeight, true);
+}
+public StringBuilder GetLine(int index, int maxWidth, int maxHeight, bool doAlign)
 {
 //using (Logger logger = new Logger("RenderBoxLeaf.GetLine(int, int, int)", Logger.Mode.LOG))
 //{
 //logger.log("type: " + type, Logger.Mode.LOG);
 //logger.log("index: " + index, Logger.Mode.LOG);
 //logger.log("maxwidth: " + maxWidth, Logger.Mode.LOG);
-StringBuilder line;
-if (index == 0)
+if(LineCache.ContainsKey(index))
 {
-line = new StringBuilder(Content.ToString());
+return LineCache[index];
 }
+StringBuilder line = new StringBuilder();
+if ((DynamicHeight > 0 && index < DynamicHeight) || index < _MaxHeight)
+{
+int height = GetActualHeight(maxHeight);
+int width = Math.Min(maxWidth, MaxWidth);
+int offset = 0;
+int spacePos = -1;
+int i = 0;
+/*if (index == lastIndex + 1)
+{
+offset = offsetCache;
+i = lastIndex;
+}*/
+//using (Logger logger1 = new Logger("loop"))
+for (; i < index; i++)
+{
+if (offset < Content.Length)
+{
+//logger1.log("old offset: " + offset);
+string lineString = TextUtils.SubstringOfWidth(Content, width, offset);
+int length = lineString.Length;
+spacePos = Content.LastIndexOf(' ', Math.Min(Content.Length - 1, offset + length), length);
+if (spacePos == -1 || offset + length == Content.Length)
+offset += length;
 else
-{
-line = new StringBuilder();
+offset = spacePos + 1;
+//logger1.log("line string: " + lineString);
+//logger.log("offset: " + offset);
+//logger1.log("length: " + length);
+//logger1.log("space pos: " + spacePos);
+//offset += TextUtils.SubstringOfWidth(Content, width, offset).Length;
 }
+}
+offsetCache = offset;
+lastIndex = index;
+if (offset < Content.Length)
+{
+string lineString = TextUtils.SubstringOfWidth(Content, width, offset).Trim();
+//logger.log("line: " + lineString, Logger.Mode.LOG);
+if (lineString.Length + offset < Content.Length)
+{
+spacePos = lineString.LastIndexOf(' ', lineString.Length - 1, lineString.Length);
+if (spacePos != -1 && Content[offset + lineString.Length] != ' ')
+{
+lineString = lineString.Substring(0, spacePos);
+}
+}
+//logger.log("result: " + lineString);
+line = new StringBuilder(lineString);
+if(doAlign) AlignLine(ref line, maxWidth);
+if (line.Length > 0)
+LineCache[index] = line;
+}
+else if(doAlign)
+{
 AlignLine(ref line, maxWidth);
-//Logger.debug("line is {" + line + "}");
+}
+}
+else if(doAlign)
+{
+AlignLine(ref line, MinWidth);
+}
+//logger.log("Content is: " + Content, Logger.Mode.LOG);
+//logger.log("Line (" + index + ") is: " + line, Logger.Mode.LOG);
+//logger.log("line is {" + line + "}", Logger.Mode.LOG);
 //Logger.log("instructions: " + (P.Runtime.CurrentInstructionCount - instructions) + " -> " + P.Runtime.CurrentInstructionCount + "/" + P.Runtime.MaxInstructionCount)
 //Logger.DecLvl();
 return line;
@@ -5977,18 +5866,85 @@ return line;
 }
 public override void Clear()
 {
-//using (new SimpleProfiler("RenderBoxLeaf.Clear()"))
-//{
 Content = "";
+DynamicHeight = -1;
+TextWidth = 0;
+LineCache = new Dictionary<int, StringBuilder>();
 ClearCache();
+}
+public override void CalculateDimensions(int maxWidth, int maxHeight)
+{
+//using (Logger logger = new Logger("RenderBoxLeaf.CalculateDynamicHeight(int, int)", Logger.Mode.LOG))
+//{
+InitState.Initialized = true;
+//logger.log("Type: " + type, Logger.Mode.LOG);
+//logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
+//logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
+//logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
+//logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
+//logger.log("min width: " + MinWidth);
+//if(InitState.Initialized) logger.log("min height: " + MinHeight);
+
+BuildLineCache(maxWidth, maxHeight);
+//Console.WriteLine("linecache size: " + LineCache.Count);
+TextWidth = 0;
+int lineWidth;
+foreach (StringBuilder currLine in LineCache.Values)
+{
+lineWidth = TextUtils.GetTextWidth(currLine.ToString());
+TextWidth = Math.Max(lineWidth, TextWidth);
+}
+DynamicHeight = LineCache.Count();
+InitState.MaxWidth = maxWidth;
+InitState.MaxHeight = maxHeight;
+for(int i = 0; i < LineCache.Count(); i++)
+{
+StringBuilder line = LineCache[i];
+AlignLine(ref line, maxWidth);
+LineCache[i] = line;
+}
+//logger.log("dynamic height:" + DynamicHeight);
+//logger.log("text width: " + TextWidth);
+//minWidthIsCached = false;
+//minHeightIsCached = false;
+
 //}
+}
+public override void Initialize(int maxWidth, int maxHeight)
+{
+//ParseWidthDefinitions(maxWidth, maxHeight);
+CalculateDimensions(maxWidth, maxHeight);
+}
+private void BuildLineCache(int maxWidth, int maxHeight)
+{
+LineCache = new Dictionary<int, StringBuilder>();
+StringBuilder line;
+int index = -1;
+if (maxWidth <= 0)
+{
+int height = GetActualHeight(maxHeight);
+for (int i = 0; i < height; i++)
+LineCache[i] = new StringBuilder();
+return;
+}
+else
+{
+//Console.WriteLine("start loop");
+do
+{
+line = GetLine(++index, maxWidth, maxHeight, false);
+//Console.WriteLine("content length: " + Content.Length);
+//Console.WriteLine("offsetcache: " + offsetCache);
+}
+while (LineCache.ContainsKey(index));
+}
 }
 }
 
-public class RenderBoxTree : RenderBox
+public class RenderBoxTree : IRenderBox
 {
-List<RenderBox> Boxes;
-public RenderBox this[int i]
+List<IRenderBox> Boxes;
+public IRenderBox this[int i]
 {
 get
 {
@@ -6003,29 +5959,23 @@ public int Count
 {
 get
 {
-//using (new SimpleProfiler("RenderBoxTree.Count.get"))
-//{
-//Logger.debug("NodeBoxTree.Count.get");
 return Boxes.Count;
-//}
 }
 }
 public override int MinHeight
 {
 get
 {
-//using (new SimpleProfiler("RenderBoxTree.MinHeight.get"))
+//using (Logger logger = new Logger("RenderBoxTree.MinHeight.get", Logger.Mode.LOG))
 //{
-//Logger.debug("NodeBoxTree.MinHeight.get");
-//Logger.IncLvl();
-if (minHeightIsCached)
+if (minHeightIsCached && false)
 return minHeightCache;
 //int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
 int minHeight = 0;
 int boxMinHeight;
-foreach (RenderBox box in Boxes)
+foreach (IRenderBox box in Boxes)
 {
-if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
 {
 minHeight = Math.Max(minHeight, box.MinHeight);
 }
@@ -6035,12 +5985,12 @@ boxMinHeight = box.MinHeight;
 if (boxMinHeight > 0)
 {
 minHeight += boxMinHeight;
-//Logger.debug("min height + " + boxMinHeight);
+//logger.log("min height + " + boxMinHeight, Logger.Mode.LOG);
 }
 }
 }
-//Logger.debug("minheight = " + minHeight.ToString());
 minHeightCache = Math.Max(0, Math.Max(_MinHeight, minHeight));
+//logger.log("minheight = " + minHeightCache.ToString(), Logger.Mode.LOG);
 minHeightIsCached = true;
 //Logger.DecLvl();
 return minHeightCache;
@@ -6051,17 +6001,16 @@ public override int MinWidth
 {
 get
 {
-//using (new SimpleProfiler("RenderBoxTree.MinWidth.get"))
+//using (var logger = new Logger("RenderBoxTree.MinWidth.Get", Logger.Mode.LOG))
 //{
-//Logger.debug("NodeBoxTree.MinWidth.get");
-//Logger.IncLvl();
-if (minWidthIsCached)
+//logger.log("type: " + type);
+if (minWidthIsCached && false)
 return minWidthCache;
-int minWidth = (Flow == RenderBox.FlowDirection.HORIZONTAL ? 0 : _MinWidth);
+int minWidth = (Flow == IRenderBox.FlowDirection.HORIZONTAL ? 0 : _MinWidth);
 int boxMinWidth;
-foreach (RenderBox box in Boxes)
+foreach (IRenderBox box in Boxes)
 {
-if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
 {
 boxMinWidth = box.MinWidth;
 if (boxMinWidth > 0)
@@ -6076,23 +6025,83 @@ else
 minWidth = Math.Max(box.MinWidth, minWidth);
 }
 }
-if (Flow == RenderBox.FlowDirection.HORIZONTAL)
+if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
 minWidth = Math.Max(_MinWidth, minWidth - 1);
 //Logger.debug("minwidth = " + minWidth);
-minWidthCache = Math.Max(minWidth, 0);
+minWidthCache = minWidth;
 minWidthIsCached = true;
 //Logger.DecLvl();
 return minWidthCache;
 //}
 }
 }
+public override int DesiredWidth
+{
+get
+{
+if (desiredWidthIsCached && false)
+return desiredWidthCache;
+int desiredWidth = (Flow == IRenderBox.FlowDirection.HORIZONTAL ? 0 : _DesiredWidth);
+int boxDesWidth;
+foreach (IRenderBox box in Boxes)
+{
+if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
+{
+boxDesWidth = box.DesiredWidth;
+if (boxDesWidth > 0)
+{
+desiredWidth++;
+desiredWidth += boxDesWidth;
+}
+}
+else
+{
+desiredWidth = Math.Max(box.DesiredWidth, desiredWidth);
+}
+}
+if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
+desiredWidth = Math.Max(_DesiredWidth, desiredWidth - 1);
+desiredWidthCache = desiredWidth;
+desiredWidthIsCached = true;
+return desiredWidthCache;
+}
+}
+public override int DesiredHeight
+{
+get
+{
+//using (Logger logger = new Logger("RenderBoxTree.DesiredHeight.get", Logger.Mode.LOG))
+//{
+//logger.log("Type: " + type);
+if (desiredHeightIsCached && false)
+return desiredHeightCache;
+//int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
+int desiredHeight = 0;
+int boxDesHeight;
+foreach (IRenderBox box in Boxes)
+{
+if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
+{
+desiredHeight = Math.Max(desiredHeight, box.DesiredHeight);
+}
+else
+{
+boxDesHeight = Math.Max(box.DesiredHeight, box.MinHeight);
+desiredHeight += boxDesHeight;
+//logger.log("desired height + " + boxDesHeight, Logger.Mode.LOG);
+}
+}
+desiredHeightCache = Math.Max(_DesiredHeight, desiredHeight);
+//logger.log("desired height = " + desiredHeightCache.ToString(), Logger.Mode.LOG);
+desiredHeightIsCached = true;
+//Logger.DecLvl();
+return desiredHeightCache;
+//}
+}
+}
 public RenderBoxTree() : base()
 {
-//using (new Logger("RenderBoxTree.__construct()", Logger.Mode.LOG))
-//{
-//Logger.debug("NodeBoxTree constructor()");
-Boxes = new List<RenderBox>();
-//}
+Boxes = new List<IRenderBox>();
 }
 public override void Add(string box)
 {
@@ -6103,81 +6112,66 @@ AddAt(Boxes.Count, box);
 }
 public override void AddAt(int position, string box)
 {
-//using (new SimpleProfiler("RenderBoxTree.AddAt(int, string)"))
-//{
-//Logger.debug("NodeBoxTree.AddAt(int, string)");
-//Logger.IncLvl();
 AddAt(position, new RenderBoxLeaf(box));
-//Logger.DecLvl();
-//}
 }
 public override void Add(StringBuilder box)
 {
-//using (new SimpleProfiler("RenderBoxTree.Add(StringBuilder)"))
-//{
 AddAt(Boxes.Count, box);
-//}
 }
 public override void AddAt(int position, StringBuilder box)
 {
-//using (new SimpleProfiler("RenderBoxTree.AddAt(int, StringBuilder)"))
-//{
-//Logger.debug("NodeBoxTree.AddAt(int, StringBuilder)");
-//Logger.IncLvl();
 AddAt(position, new RenderBoxLeaf(box));
-//Logger.DecLvl();
-//}
 }
-public void AddAt(int position, RenderBox box)
+public void AddAt(int position, IRenderBox box)
 {
-//using (new SimpleProfiler("RenderBoxTree.AddAt(int, RenderBox)"))
-//{
-//Logger.debug("NodeBoxTree.AddAt(int, NodeBox)");
-//Logger.IncLvl();
-Boxes.AddOrInsert<RenderBox>(box, position);
+Boxes.AddOrInsert<IRenderBox>(box, position);
 box.Parent = this;
 ClearCache();
-//Logger.DecLvl();
-//}
 }
-public void Add(RenderBox box)
+public void Add(IRenderBox box)
 {
-//using (new SimpleProfiler("RenderBoxTree.Add(RenderBox)"))
-//{
-//Logger.debug("NodeBoxTree.Add(NodeBox)");
-//Logger.IncLvl();
 AddAt(Boxes.Count, box);
-//Logger.DecLvl();
-//}
 }
 public override StringBuilder GetLine(int index)
 {
-return GetLine(index, -1, -1);
+return GetLine(index, int.MaxValue, int.MaxValue);
 }
 public override StringBuilder GetLine(int index, int maxWidth, int maxHeight)
 {
 //using (Logger logger = new Logger("RenderBoxTree.GetLine(int, int, int)", Logger.Mode.LOG))
 //{
+//logger.log("Type: " + type, Logger.Mode.LOG);
+//logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
+//logger.log("explicit max width: " + MaxWidth);
+//logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
+//logger.log("explicit max height: " + MaxHeight);
+//logger.log("min width: " + MinWidth);
 //Logger.debug("NodeBoxTree.GetLine(int, int)");
 //Logger.IncLvl();
 StringBuilder line = new StringBuilder();
-int floatingMaxHeight = Math.Min(maxHeight, MaxHeight);
-if (floatingMaxHeight != -1)
-floatingMaxHeight = Math.Max(floatingMaxHeight - MinHeight, 0) - 1;
+
+maxWidth = Math.Min(maxWidth, MaxWidth);
+
+maxHeight = Math.Min(maxHeight, MaxHeight);
 int boxMinHeight;
 int boxHeight;
 int boxMaxHeight;
 //bool foundLine = false;
-if (Flow == RenderBox.FlowDirection.VERTICAL)
+if (Flow == IRenderBox.FlowDirection.VERTICAL)
 {
-foreach (RenderBox box in Boxes)
+int floatingMaxHeight = maxHeight;
+floatingMaxHeight = floatingMaxHeight - MinHeight - 1;
+//logger.log("floating max height: " + floatingMaxHeight, Logger.Mode.LOG);
+foreach (IRenderBox box in Boxes)
 {
 boxMinHeight = box.MinHeight;
 boxMaxHeight = floatingMaxHeight + boxMinHeight + 1;
+//logger.log("boxMaxHeight: " + boxMaxHeight, Logger.Mode.LOG);
 boxHeight = box.GetActualHeight(boxMaxHeight);
 if (index < boxHeight)
 {
 line = box.GetLine(index, maxWidth, boxMaxHeight);
+AlignLine(ref line, maxWidth, box.Align, box.PadChar);
 //Logger.debug("child box width is " + TextUtils.GetTextWidth(line));
 //foundLine = true;
 break;
@@ -6186,28 +6180,24 @@ else
 {
 //logger.log("Decreasing index by " + boxHeight, Logger.Mode.LOG);
 index -= boxHeight;
-if(floatingMaxHeight != -1)
-floatingMaxHeight = Math.Max(0, floatingMaxHeight - boxHeight + boxMinHeight);
+floatingMaxHeight = floatingMaxHeight - boxHeight + boxMinHeight;
 }
 }
 }
 else
 {
-int floatingMaxWidth;
-if (maxWidth != -1)
-floatingMaxWidth = (MaxWidth == -1) ? maxWidth : Math.Min(maxWidth, MaxWidth);
-else
-floatingMaxWidth = MaxWidth;
-if (floatingMaxWidth != -1)
-floatingMaxWidth = Math.Max(floatingMaxWidth - MinWidth, 0) - 1;
+int floatingMaxWidth = maxWidth;
+floatingMaxWidth = floatingMaxWidth - MinWidth - 1;
+//logger.log("floatingMaxWidth: " + floatingMaxWidth);
 StringBuilder nextLine;
 int boxMinWidth;
-foreach (RenderBox box in Boxes)
+foreach (IRenderBox box in Boxes)
 {
 boxMinWidth = box.MinWidth;
 nextLine = box.GetLine(index, 1 + floatingMaxWidth + boxMinWidth, maxHeight);
-if (floatingMaxWidth != -1)
-floatingMaxWidth = Math.Max(0, floatingMaxWidth - TextUtils.GetTextWidth(nextLine.ToString()) + boxMinWidth);
+//logger.log("child width: " + TextUtils.GetTextWidth(nextLine.ToString()));
+floatingMaxWidth = floatingMaxWidth - TextUtils.GetTextWidth(nextLine.ToString()) + boxMinWidth;
+//logger.log("new floatingmaxWidth: " + floatingMaxWidth);
 line.Append(nextLine);
 //Logger.debug("child box width is: " + TextUtils.GetTextWidth(nextLine));
 }
@@ -6227,6 +6217,64 @@ Boxes.Clear();
 ClearCache();
 //Logger.DecLvl();
 }
+public override void CalculateDimensions(int maxWidth, int maxHeight)
+{
+//using (Logger logger = new Logger("RenderBoxTree.CalculateDynamicHeight(int)", Logger.Mode.LOG))
+//{
+//logger.log("Type: " + type, Logger.Mode.LOG);
+//logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
+//logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
+//logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
+//logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
+//logger.log("min width: " + MinWidth);
+maxWidth = Math.Min(maxWidth, MaxWidth);
+maxHeight = Math.Min(maxHeight, MaxHeight);
+int boxMinHeight;
+int boxHeight;
+int boxMaxHeight;
+//bool foundLine = false;
+if (Flow == IRenderBox.FlowDirection.HORIZONTAL)
+{
+int floatingMaxWidth = maxWidth - MinWidth - 1;
+int boxMinWidth;
+int boxMaxWidth;
+int boxWidth;
+foreach (IRenderBox box in Boxes)
+{
+boxMinWidth = box.MinWidth;
+boxMaxWidth = Math.Max(boxMinWidth, 1 + floatingMaxWidth + boxMinWidth);
+//logger.log("floating max width: " + floatingMaxWidth);
+//logger.log("boxminwidth: " + boxMinWidth);
+box.CalculateDimensions(boxMaxWidth, maxHeight);
+boxWidth = box.GetActualWidth(boxMaxWidth);
+floatingMaxWidth = floatingMaxWidth - boxWidth + boxMinWidth;
+}
+}
+else
+{
+int floatingMaxHeight = Math.Max(maxHeight - MinHeight, 0) - 1;
+//logger.log("floating max height: " + floatingMaxHeight, Logger.Mode.LOG);
+foreach (IRenderBox box in Boxes)
+{
+boxMinHeight = box.MinHeight;
+boxMaxHeight = floatingMaxHeight + boxMinHeight + 1;
+//logger.log("boxMaxHeight: " + boxMaxHeight, Logger.Mode.LOG);
+boxHeight = box.GetActualHeight(boxMaxHeight);
+//logger.log("maxWidth: " + maxWidth.ToString());
+box.CalculateDimensions(maxWidth, boxMaxHeight);
+floatingMaxHeight = Math.Max(0, floatingMaxHeight - boxHeight + boxMinHeight);
+}
+}
+//minWidthIsCached = false;
+//minHeightIsCached = false;
+//}
+}
+public override void Initialize(int maxWidth, int maxHeight)
+{
+// RecursivelyParseWidthDefinitions(maxWidth, maxHeight);
+CalculateDimensions(maxWidth, maxHeight);
+}
+
 }
 }
 //!EMBED SEScripts.Lib.SimpleProfiler

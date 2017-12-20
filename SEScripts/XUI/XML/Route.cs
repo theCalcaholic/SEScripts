@@ -15,7 +15,7 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib;
-using SEScripts.Lib.LoggerNS;
+//using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
@@ -58,9 +58,9 @@ namespace SEScripts.XUI.XML
 
         public void Follow(UIController controller)
         {
-            using (Logger logger = new Logger("Route.Follow(UIController)", Logger.Mode.LOG))
-            {
-                logger.log("route def: " + Definition, Logger.Mode.LOG);
+            //using (Logger logger = new Logger("Route.Follow(UIController)", Logger.Mode.LOG))
+            //{
+                //logger.log("route def: " + Definition, Logger.Mode.LOG);
                 //Logger.debug("Route.Follow()");
                 //Logger.IncLvl();
                 string[] DefTypeAndValue = Definition.Split(new char[] { ':' }, 2);
@@ -72,9 +72,9 @@ namespace SEScripts.XUI.XML
                 }
                 else
                 {
-                    logger.log("route not understood.", Logger.Mode.WARNING);
+                    //logger.log("route not understood.", Logger.Mode.WARNING);
                 }
-            }
+            //}
 
             //Logger.DecLvl();
         }

@@ -14,7 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib.LoggerNS;
+//using SEScripts.Lib.LoggerNS;
 using SEScripts.XUI.BoxRenderer;
 using SEScripts.Lib;
 
@@ -72,8 +72,8 @@ namespace SEScripts.XUI.XML
                 }
                 
             }
-            if (key == "value")
-                using (new Logger("set value: " + value)) { }
+            //if (key == "value")
+                //using (new Logger("set value: " + value)) { }
             base.SetAttribute(key, value);
         }
 
@@ -220,8 +220,8 @@ namespace SEScripts.XUI.XML
 
         public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
         {
-            using (Logger logger = new Logger("TextInput.GetRenderCache(int)", Logger.Mode.LOG))
-            {
+            //using (Logger logger = new Logger("TextInput.GetRenderCache(int)", Logger.Mode.LOG))
+            //{
                 RenderBoxTree cache = new RenderBoxTree();
                 UpdateRenderCacheProperties(cache, containerWidth, containerHeight);
                 RenderBoxLeaf content = new RenderBoxLeaf();
@@ -232,7 +232,7 @@ namespace SEScripts.XUI.XML
                 content.MinWidth = TextUtils.GetTextWidth(new string(new char[] { (char)187, ' ' }));
 
                 string value = GetAttribute("value");
-                logger.log("value: " + value, Logger.Mode.LOG);
+                //logger.log("value: " + value, Logger.Mode.LOG);
                 if (CursorPosition != -1)
                 {
                     content.Add(value.Substring(0, CursorPosition));
@@ -254,7 +254,7 @@ namespace SEScripts.XUI.XML
                 }*/
                 return cache;
             }
-        }
+        //}
     }
 
 

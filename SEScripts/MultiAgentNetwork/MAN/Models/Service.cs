@@ -42,5 +42,5 @@ namespace SEScripts.MultiAgentNetwork.MAN.Models
 
     //EMBED SEScripts.MultiAgentNetwork.MAN.Models.PlatformService
     //EMBED SEScripts.MultiAgentNetwork.MAN.Agents.Agent
-    //EMBED SEScripts.MultiAgentNetwork.MAN.Protocol.AgentProtocol
+    //EMBED SEScripts.MultiAgentNetwork.MAN.Protocols.AgentProtocol
 }

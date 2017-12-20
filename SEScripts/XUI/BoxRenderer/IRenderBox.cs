@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using SEScripts.Lib;
-using SEScripts.Lib.LoggerNS;
+//using SEScripts.Lib.LoggerNS;
 using SEScripts.Lib.Profilers;
 
 namespace SEScripts.XUI.BoxRenderer
@@ -57,60 +57,60 @@ namespace SEScripts.XUI.BoxRenderer
 
         public virtual int GetActualWidth(int maxWidth)
         {
-            using (Logger logger = new Logger("RenderBox.GetActualWidth(int)", Logger.Mode.LOG))
-            {
-                logger.log("Type: " + type, Logger.Mode.LOG);
-                if (this as RenderBoxLeaf != null)
-                    logger.log("content: |" + (this as RenderBoxLeaf).Content + "|", Logger.Mode.LOG);
-                logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
-                logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
-                logger.log("min width: " + MinWidth, Logger.Mode.LOG);
-                logger.log("desired width: " + DesiredWidth, Logger.Mode.LOG);
+            //using (Logger logger = new Logger("RenderBox.GetActualWidth(int)", Logger.Mode.LOG))
+            //{
+                //logger.log("Type: " + type, Logger.Mode.LOG);
+                //if (this as RenderBoxLeaf != null)
+                //    logger.log("content: |" + (this as RenderBoxLeaf).Content + "|", Logger.Mode.LOG);
+               // logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
+               // logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
+                //logger.log("min width: " + MinWidth, Logger.Mode.LOG);
+                //logger.log("desired width: " + DesiredWidth, Logger.Mode.LOG);
                 maxWidth = Math.Min(MaxWidth, maxWidth);
                 
                 int desired;
                 desired = Math.Max(DesiredWidth, MinWidth);
                 desired = Math.Min(desired, maxWidth);
                 return desired;
-            }
+            //}
 
         }
 
         public int GetIndependentWidth(int maxWidth)
         {
-            using (Logger logger = new Logger("RenderBoxTree.GetIndependentWidth(int)", Logger.Mode.LOG))
-            {
-                logger.log("Type: " + type, Logger.Mode.LOG);
-                logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
-                logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
-                logger.log("min width: " + _MinWidth, Logger.Mode.LOG);
-                logger.log("desired width: " + DesiredWidth, Logger.Mode.LOG);
+            //using (Logger logger = new Logger("RenderBoxTree.GetIndependentWidth(int)", Logger.Mode.LOG))
+            //{
+                //logger.log("Type: " + type, Logger.Mode.LOG);
+                //logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
+                //logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
+                //logger.log("min width: " + _MinWidth, Logger.Mode.LOG);
+                //logger.log("desired width: " + DesiredWidth, Logger.Mode.LOG);
                 maxWidth = Math.Min(MaxWidth, maxWidth);
 
                 int desired;
                 desired = Math.Max(DesiredWidth, _MinWidth);
                 desired = Math.Min(desired, maxWidth);
                 return desired;
-            }
+            //}
 
         }
         public int GetActualHeight(int maxHeight)
         {
-            using (Logger logger = new Logger("RenderBox.GetActualHeight(int)", Logger.Mode.LOG))
-            {
-                logger.log("Type: " + type, Logger.Mode.LOG);
-                logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
-                logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
+            //using (Logger logger = new Logger("RenderBox.GetActualHeight(int)", Logger.Mode.LOG))
+            //{
+                //logger.log("Type: " + type, Logger.Mode.LOG);
+                //logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
+                //logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
                 maxHeight = Math.Min(MaxHeight, maxHeight);
                 
                 int desired = DesiredHeight == -1 ? MinHeight : Math.Max(MinHeight, DesiredHeight);
                 //Logger.DecLvl();
-                logger.log("maxheight: " + maxHeight, Logger.Mode.LOG);
-                logger.log("minheight: " + MinHeight, Logger.Mode.LOG);
-                logger.log("Desired Height: " + DesiredHeight, Logger.Mode.LOG);
-                logger.log("actual height: " + Math.Min(desired, maxHeight) + " (min( " + desired + ", " + maxHeight + ")", Logger.Mode.LOG);
+                //logger.log("maxheight: " + maxHeight, Logger.Mode.LOG);
+                //logger.log("minheight: " + MinHeight, Logger.Mode.LOG);
+                //logger.log("Desired Height: " + DesiredHeight, Logger.Mode.LOG);
+                //logger.log("actual height: " + Math.Min(desired, maxHeight) + " (min( " + desired + ", " + maxHeight + ")", Logger.Mode.LOG);
                 return Math.Max(0, Math.Min(desired, maxHeight));
-            }
+            //}
 
         }
 
@@ -137,26 +137,12 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                /*using (new SimpleProfiler("RenderBox.MinWidth.get"))
-                //{
-                    //Logger.debug("NodeBox.MinWidth.get()");
-                    //Logger.IncLvl();
-                    //Logger.debug("minwidth = " + _MinWidth);
-                    //Logger.DecLvl();*/
                 return _MinWidth;
-                //}
             }
             set
             {
-                //using (new SimpleProfiler("RenderBox.MinWidth.get"))
-                //{
-                //Logger.debug("NodeBox.MinWidth.set()");
-                //Logger.IncLvl();
-                //Logger.debug("minwidth = " + value);
                 _MinWidth = Math.Max(0, value);
                 ClearCache();
-                //Logger.DecLvl();
-                //}
             }
         }
 
@@ -164,19 +150,11 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                //Logger.debug("NodeBox.DesiredWidth.get()");
-                //Logger.IncLvl();
-                //Logger.debug("desiredwidth = " + _DesiredWidth);
-                //Logger.DecLvl();
                 return _DesiredWidth;
             }
             set
             {
-                //Logger.debug("NodeBox.DesiredWidth.set()");
-                //Logger.IncLvl();
-                //Logger.debug("desiredwidth = " + value);
                 _DesiredWidth = value;
-                //Logger.DecLvl();
             }
         }
 
@@ -184,22 +162,14 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                //Logger.debug("NodeBox.MaxWidth.get()");
-                //Logger.IncLvl();
-                //Logger.debug("maxwidth = " + _MaxWidth);
-                //Logger.DecLvl();
                 return _MaxWidth;
             }
             set
             {
-                //Logger.debug("NodeBox.MaxWidth.set()");
-                //Logger.IncLvl();
-                //Logger.debug("maxwidth = " + value);
                 if (value < 0)
                     _MaxWidth = int.MaxValue;
                 else
                     _MaxWidth = value;
-                //Logger.DecLvl();
             }
         }
 
@@ -207,26 +177,12 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                //using (new SimpleProfiler("RenderBox.MinHeight.get"))
-                //{
-                //Logger.debug("NodeBox.MinHeight.get()");
-                //Logger.IncLvl();
-                //Logger.debug("minheight = " + _MinHeight);
-                //Logger.DecLvl();
                 return _MinHeight;
-                //}
             }
             set
             {
-                //using (new SimpleProfiler("RenderBox.MinHeight.set"))
-                //{
-                //Logger.debug("NodeBox.MinHeight.set()");
-                //Logger.IncLvl();
-                //Logger.debug("minheight = " + value);
                 _MinHeight = Math.Max(0, value);
                 ClearCache();
-                //Logger.DecLvl();
-                //}
             }
         }
 
@@ -234,19 +190,11 @@ namespace SEScripts.XUI.BoxRenderer
         {
             get
             {
-                //Logger.debug("NodeBox.DesiredHeight.get()");
-                //Logger.IncLvl();
-                //Logger.debug("desiredheight = " + _DesiredHeight);
-                //Logger.DecLvl();
                 return _DesiredHeight;
             }
             set
             {
-                //Logger.debug("NodeBox.DesiredHeight.set()");
-                //Logger.IncLvl();
-                //Logger.debug("desiredheight = " + value);
                 _DesiredHeight = value;
-                //Logger.DecLvl();
             }
         }
 
@@ -286,7 +234,7 @@ namespace SEScripts.XUI.BoxRenderer
 
         public bool IsRenderingInProgress()
         {
-            return RenderingInProcess || (Parent?.IsRenderingInProgress() ?? false);
+            return RenderingInProcess || (Parent == null ? false : Parent.IsRenderingInProgress());
         }
 
         public virtual IEnumerable<StringBuilder> GetLines(int maxWidth, int maxHeight)
@@ -323,23 +271,23 @@ namespace SEScripts.XUI.BoxRenderer
 
         protected void AlignLine(ref StringBuilder line, int maxWidth, IRenderBox.TextAlign Alignment, char padChar)
         {
-            using (Logger logger = new Logger("RenderBox.AlignLine(ref StringBuilder, int)", Logger.Mode.LOG))
-            {
-            logger.log("Type: " + type);
-            logger.log("pad char is: " + padChar);
-                logger.log("this.PadChar is: " + PadChar);
-            logger.log("max width is " + maxWidth, Logger.Mode.LOG);
+            //using (Logger logger = new Logger("RenderBox.AlignLine(ref StringBuilder, int)", Logger.Mode.LOG))
+            //{
+            //logger.log("Type: " + type);
+            //logger.log("pad char is: " + padChar);
+                //logger.log("this.PadChar is: " + PadChar);
+            //logger.log("max width is " + maxWidth, Logger.Mode.LOG);
             int actualWidth = GetActualWidth(maxWidth);
-            logger.log("actualWidth: " + actualWidth, Logger.Mode.LOG);
-            logger.log("line is: |" + line + "|", Logger.Mode.LOG);
-                logger.log("line width: " + TextUtils.GetTextWidth(line.ToString()));
+            //logger.log("actualWidth: " + actualWidth, Logger.Mode.LOG);
+            //logger.log("line is: |" + line + "|", Logger.Mode.LOG);
+                //logger.log("line width: " + TextUtils.GetTextWidth(line.ToString()));
             int remainingWidth = actualWidth - TextUtils.GetTextWidth(line.ToString());
-            logger.log("remaining width is " + remainingWidth, Logger.Mode.LOG);
-            logger.log("Aligning " + _Align.ToString() + "...");
+            //logger.log("remaining width is " + remainingWidth, Logger.Mode.LOG);
+            //logger.log("Aligning " + _Align.ToString() + "...");
 
             if (remainingWidth > 0) // line is not wide enough; padding necessary
             {
-                logger.log("padding...", Logger.Mode.LOG);
+                //logger.log("padding...", Logger.Mode.LOG);
                 switch (Alignment)
                 {
                     case TextAlign.CENTER:
@@ -355,7 +303,6 @@ namespace SEScripts.XUI.BoxRenderer
             }
             else if (remainingWidth < 0)
             {
-                logger.log("clipping", Logger.Mode.LOG);
                 line = new StringBuilder(line.ToString());
 
                 while (remainingWidth < 0)
@@ -364,12 +311,8 @@ namespace SEScripts.XUI.BoxRenderer
                     line.Remove(line.Length - 1, 1);
                 }
             }
-            else
-            {
-                logger.log("neither padding nor clipping...", Logger.Mode.LOG);
-            }
-            logger.log("aligned line is: {" + line + "}", Logger.Mode.LOG);
-            }
+            //logger.log("aligned line is: {" + line + "}", Logger.Mode.LOG);
+            //}
         }
 
         public string Render(int maxWidth, int maxHeight)
@@ -416,5 +359,5 @@ namespace SEScripts.XUI.BoxRenderer
         }
     }
     
-
+	//EMBED SEScripts.XUI.BoxRenderer.InitializationState
 }

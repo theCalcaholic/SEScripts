@@ -14,7 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib.LoggerNS;
+//using SEScripts.Lib.LoggerNS;
 
 namespace SEScripts.XUI.XML
 {
@@ -62,8 +62,8 @@ namespace SEScripts.XUI.XML
         public override void OnKeyPressed(string keyCode)
         {
             //Logger.debug(Type + ": OnKeyPressed():");
-            using (Logger logger = new Logger("MenuItem.OnKeyPressed(string)", Logger.Mode.LOG))
-            {
+            //using (Logger logger = new Logger("MenuItem.OnKeyPressed(string)", Logger.Mode.LOG))
+            //{
                 switch (keyCode)
                 {
                     case "RIGHT/SUBMIT":
@@ -74,7 +74,7 @@ namespace SEScripts.XUI.XML
                         }
                         else
                         {
-                            logger.log("target route is null!", Logger.Mode.WARNING);
+                            //logger.log("target route is null!", Logger.Mode.WARNING);
                             //Logger.debug("No route set!");
                         }
 
@@ -83,7 +83,7 @@ namespace SEScripts.XUI.XML
 
                 base.OnKeyPressed(keyCode);
                 //Logger.DecLvl();
-            }
+            //}
         }
 
         public void SetRoute(Route route)

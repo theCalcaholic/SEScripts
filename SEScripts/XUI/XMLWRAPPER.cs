@@ -15,13 +15,13 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
 using SEScripts.Lib;
-using SEScripts.Lib.LoggerNS;
+//using SEScripts.Lib.LoggerNS;
 using SEScripts.XUI.XML;
 
 namespace SEScripts.XUI
 {
-    //EMBED SEScripts.Lib.Logger
-    //EMBED SEScripts.Lib.Parser
+    //!EMBED SEScripts.Lib.Logger
+    //!EMBED SEScripts.Lib.Parser
     //EMBED SEScripts.Lib.TextUtils
 
     public static class XMLWRAPPER
@@ -156,7 +156,6 @@ namespace SEScripts.XUI
         //EMBED SEScripts.XUI.XML.Menu
         //EMBED SEScripts.XUI.XML.MenuItem
         //EMBED SEScripts.XUI.XML.ProgressBar
-        //!EMBED SEScripts.XUI.XML.Container
         //EMBED SEScripts.XUI.XML.HorizontalLine
         //EMBED SEScripts.XUI.XML.VerticalLine
         //EMBED SEScripts.XUI.XML.UIControls
@@ -169,7 +168,7 @@ namespace SEScripts.XUI
         //EMBED SEScripts.XUI.XML.MetaNode
 
         //EMBED SEScripts.XUI.XML.DataStore
-        //EMBED SEScripts.XUI.BoxRenderer.RenderBox
+        //EMBED SEScripts.XUI.BoxRenderer.IRenderBox
         //EMBED SEScripts.XUI.BoxRenderer.RenderBoxLeaf
         //EMBED SEScripts.XUI.BoxRenderer.RenderBoxTree
     }

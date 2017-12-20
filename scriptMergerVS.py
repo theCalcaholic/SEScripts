@@ -92,6 +92,8 @@ class ScriptProvider:
         content = self.build_rec(namespace)
         remove_regex = re.compile(r'^[^\n]*//REMOVE$', flags=re.UNICODE | re.MULTILINE)
         content = remove_regex.sub("", content)
+        comment_regex = re.compile(r'^//.*$', flags=re.MULTILINE | re.UNICODE)
+        #content = comment_regex.sub("", content)
         #content = ScriptProvider.inject_profiler(content)
         """wrapperRegex = re.compile(r'\w+WRAPPER', flags=re.UNICODE)
         if file_base_name != build_base_name:
@@ -194,29 +196,6 @@ def minify(text):
     minified_text = minified_text.replace("\n\r", "\n")
     return minified_text
 
-
-print("arg1: " + sys.argv[0])
-print("arg2: " + sys.argv[1])
-print("arg3: " + sys.argv[2])
-print("arg4: " + sys.argv[3])
-
-if not len(sys.argv) == 4:
-    print("You're doing it wrong!")
-else:
-    root_path = sys.argv[1]
-    root_namespace = sys.argv[2]
-    build_file = sys.argv[3].replace(os.path.dirname(os.path.normpath(root_path)), "").replace("\\", ".").strip(".")
-    if build_file[-3:] == ".cs" or build_file[-3:] == ".CS":
-        build_file = build_file[:-3]
-    print("root_path: " + root_path)
-    print("root_namespace: " + root_namespace)
-    print("build_file: " + build_file)
-
-    ScriptStore = ScriptProvider(root_namespace, root_path)
-    ScriptStore.build(build_file)
-    print("build finished")
-
-
 def get_minimum_geq_zero(x, y):
     if x == -1:
         return y
@@ -224,3 +203,27 @@ def get_minimum_geq_zero(x, y):
         return x
     else:
         return min(x, y)
+
+        
+if __name__ == "__main__":
+
+    print("arg1: " + sys.argv[0])
+    print("arg2: " + sys.argv[1])
+    print("arg3: " + sys.argv[2])
+    print("arg4: " + sys.argv[3])
+
+    if not len(sys.argv) == 4:
+        print("You're doing it wrong!")
+    else:
+        root_path = sys.argv[1]
+        root_namespace = sys.argv[2]
+        build_file = sys.argv[3].replace(os.path.dirname(os.path.normpath(root_path)), "").replace("\\", ".").strip(".")
+        if build_file[-3:] == ".cs" or build_file[-3:] == ".CS":
+            build_file = build_file[:-3]
+        print("root_path: " + root_path)
+        print("root_namespace: " + root_namespace)
+        print("build_file: " + build_file)
+
+        ScriptStore = ScriptProvider(root_namespace, root_path)
+        ScriptStore.build(build_file)
+        print("build finished")

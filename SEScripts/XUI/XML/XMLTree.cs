@@ -14,7 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib.LoggerNS;
+//using SEScripts.Lib.LoggerNS;
 using SEScripts.XUI.BoxRenderer;
 
 namespace SEScripts.XUI.XML
@@ -58,8 +58,8 @@ namespace SEScripts.XUI.XML
 
         public virtual IRenderBox GetRenderBox(int containerWidth, int containerHeight)
         {
-            using (Logger logger = new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)", Logger.Mode.LOG))
-            {
+            //using (Logger logger = new Logger("XMLTree<" + Type + ">.GetRenderBox(int, int)", Logger.Mode.LOG))
+            //{
                 //Logger.debug("XMLTree.GetRenderCache(int)");
                 //Logger.IncLvl();
                 /*if(_renderCache != null)
@@ -92,15 +92,15 @@ namespace SEScripts.XUI.XML
 
                 //_renderCache = cache;
                 return cache;
-            }
+            //}
         }
 
         protected void UpdateRenderCacheProperties(IRenderBox cache, int containerWidth, int containerHeight)
         {
-            using (Logger logger = new Logger("XMLTree<" + Type + ">.UpdateRenderCacheProperties(NodeBox, int)", Logger.Mode.LOG))
-            {
-                logger.log("containerWidth: " + containerWidth);
-                logger.log("containerHeight: " + containerHeight);
+            //using (Logger logger = new Logger("XMLTree<" + Type + ">.UpdateRenderCacheProperties(NodeBox, int)", Logger.Mode.LOG))
+            //{
+                //logger.log("containerWidth: " + containerWidth);
+                //logger.log("containerHeight: " + containerHeight);
                 cache.Flow = GetAttribute("flow") == "horizontal" ? IRenderBox.FlowDirection.HORIZONTAL : IRenderBox.FlowDirection.VERTICAL;
 
                 switch (GetAttribute("alignself"))
@@ -135,7 +135,7 @@ namespace SEScripts.XUI.XML
                     cache.MaxHeight = forcedHeight;
                 }
                 //cache.Height = CalculateWidth(GetAttribute("height"), -1);
-            }
+            //}
         }
 
         public static int? ResolveSize(string widthString, int containerWidth)
@@ -483,8 +483,6 @@ namespace SEScripts.XUI.XML
 
         public virtual void SetAttribute(string key, string value)
         {
-            //Logger.debug(Type + ": SetAttribute():");
-            //Logger.IncLvl();
             if (key == "selectable")
             {
                 bool shouldBeSelectable = value == "true";
@@ -510,46 +508,8 @@ namespace SEScripts.XUI.XML
                     Parent.HasUserInputBindings = true;
                 }
             }
-            else if (key == "flow")
-            {
-                if(value == "horizontal")
-                {
-                    //RenderCach.Flow = NodeBox.FlowDirection.HORIZONTAL;
-                }
-                else
-                {
-                    //base.Flow = NodeBox.FlowDirection.VERTICAL;
-                }
-                RerenderRequired = true;
-            }
-            else if (key == "align")
-            {
-                switch(value)
-                {
-                    case "right":
-                        //base.Align = NodeBox.TextAlign.RIGHT;
-                        break;
-                    case "center":
-                        //base.Align = NodeBox.TextAlign.CENTER;
-                        break;
-                    default:
-                        //base.Align = NodeBox.TextAlign.LEFT;
-                        break;
-                }
-                RerenderRequired = true;
-
-            }
-            else if (key == "width")
-            {
-                int width;
-                if(Int32.TryParse(value, out width))
-                {
-                    //base.DesiredWidth = width;
-                }
-            }
 
             Attributes[key] = value;
-            //Logger.DecLvl();
         }
 
         public XMLParentNode RetrieveRoot()
@@ -895,5 +855,5 @@ namespace SEScripts.XUI.XML
 
     //EMBED SEScripts.XUI.XML.XMLParentNode
     //EMBED SEScripts.Lib.TextUtils
-    //EMBED SEScripts.XUI.ScreenBuilder.NodeBox
+    //EMBED SEScripts.XUI.BoxRenderer.IRenderBox
 }

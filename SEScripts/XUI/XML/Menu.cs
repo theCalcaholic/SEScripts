@@ -14,7 +14,7 @@ using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 
-using SEScripts.Lib.LoggerNS;
+//using SEScripts.Lib.LoggerNS;
 using SEScripts.XUI.BoxRenderer;
 using SEScripts.Lib;
 
@@ -68,8 +68,8 @@ namespace SEScripts.XUI.XML
 
         public override IRenderBox GetRenderBox(int containerWidth, int containerHeight)
         {
-            using (new Logger("Menu.GetRenderBox(int, int)"))
-            {
+            //using (new Logger("Menu.GetRenderBox(int, int)"))
+            //{
                 RenderBoxTree prefix = new RenderBoxTree();
                 prefix.MinHeight = 1;
                 prefix.MaxHeight = 1;
@@ -109,7 +109,7 @@ namespace SEScripts.XUI.XML
                 }
                 return cache;
             }
-        }
+        //}
     }
 
     //EMBED SEScripts.XUI.XML.XMLTree
