@@ -1,13 +1,66 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SEScripts", "SEScripts\SEScripts.csproj", "{3CFC0D17-F514-459C-BA65-073EC0D5C836}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SEScriptsTests", "SEScriptsTests\SEScriptsTests.csproj", "{62718532-751B-4611-9D5A-2C5041D325D4}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "XUI", "XUI\XUI.shproj", "{371E87A8-4B2A-4462-9142-6E663A4B85C1}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "XMLParser", "XMLParser\XMLParser.shproj", "{687583E1-1442-496D-8A03-A39DF75685E4}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TextUtils", "TextUtils\TextUtils.shproj", "{8597D0DD-6E7F-4C7B-9A53-85C71112E164}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MultiAgentNetwork", "MultiAgentNetwork\MultiAgentNetwork.shproj", "{450856D3-1E1C-497F-AC33-3BD33382263D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MANTerminalAgent", "MANTerminalAgent\MANTerminalAgent.csproj", "{CDE03D56-441D-46C3-99F5-EAA343F2A01C}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DataStorage", "DataStorage\DataStorage.shproj", "{07C27AB1-B943-4336-909C-D97977EC1D97}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Logger", "Logger\Logger.shproj", "{7ADF0BC9-121F-45E0-A34B-F1E0AF1B5D5C}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ListExtensions", "Util\ListExtensions.shproj", "{15294AF5-609F-4511-B4BB-617B5A999F5D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GridMasterAgent", "GridMasterAgent\GridMasterAgent.csproj", "{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUITemplate", "XUITemplate\XUITemplate.csproj", "{70DABA97-EF30-49AB-A9E6-E04655908267}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUITests", "XUITests\XUITests.csproj", "{77AF93DF-176E-46D8-A48B-9974027EDF81}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		DataStorage\DataStorage.projitems*{07c27ab1-b943-4336-909c-d97977ec1d97}*SharedItemsImports = 13
+		Util\Util.projitems*{15294af5-609f-4511-b4bb-617b5a999f5d}*SharedItemsImports = 13
+		XUI\SharedProject1.projitems*{371e87a8-4b2a-4462-9142-6e663a4b85c1}*SharedItemsImports = 13
+		MultiAgentNetwork\MultiAgentNetwork.projitems*{450856d3-1e1c-497f-ac33-3bd33382263d}*SharedItemsImports = 13
+		DataStorage\DataStorage.projitems*{48e06c3d-23b9-43f0-bf18-e08c6e1acc26}*SharedItemsImports = 4
+		Logger\Logger.projitems*{48e06c3d-23b9-43f0-bf18-e08c6e1acc26}*SharedItemsImports = 4
+		MultiAgentNetwork\MultiAgentNetwork.projitems*{48e06c3d-23b9-43f0-bf18-e08c6e1acc26}*SharedItemsImports = 4
+		TextUtils\TextUtils.projitems*{48e06c3d-23b9-43f0-bf18-e08c6e1acc26}*SharedItemsImports = 4
+		Util\Util.projitems*{48e06c3d-23b9-43f0-bf18-e08c6e1acc26}*SharedItemsImports = 4
+		XMLParser\XMLParser.projitems*{48e06c3d-23b9-43f0-bf18-e08c6e1acc26}*SharedItemsImports = 4
+		XUI\SharedProject1.projitems*{48e06c3d-23b9-43f0-bf18-e08c6e1acc26}*SharedItemsImports = 4
+		XMLParser\XMLParser.projitems*{687583e1-1442-496d-8a03-a39df75685e4}*SharedItemsImports = 13
+		Logger\Logger.projitems*{70daba97-ef30-49ab-a9e6-e04655908267}*SharedItemsImports = 4
+		TextUtils\TextUtils.projitems*{70daba97-ef30-49ab-a9e6-e04655908267}*SharedItemsImports = 4
+		XMLParser\XMLParser.projitems*{70daba97-ef30-49ab-a9e6-e04655908267}*SharedItemsImports = 4
+		XUI\SharedProject1.projitems*{70daba97-ef30-49ab-a9e6-e04655908267}*SharedItemsImports = 4
+		Logger\Logger.projitems*{77af93df-176e-46d8-a48b-9974027edf81}*SharedItemsImports = 4
+		TextUtils\TextUtils.projitems*{77af93df-176e-46d8-a48b-9974027edf81}*SharedItemsImports = 4
+		XMLParser\XMLParser.projitems*{77af93df-176e-46d8-a48b-9974027edf81}*SharedItemsImports = 4
+		XUI\SharedProject1.projitems*{77af93df-176e-46d8-a48b-9974027edf81}*SharedItemsImports = 4
+		Logger\Logger.projitems*{7adf0bc9-121f-45e0-a34b-f1e0af1b5d5c}*SharedItemsImports = 13
+		TextUtils\TextUtils.projitems*{8597d0dd-6e7f-4c7b-9a53-85c71112e164}*SharedItemsImports = 13
+		DataStorage\DataStorage.projitems*{cde03d56-441d-46c3-99f5-eaa343f2a01c}*SharedItemsImports = 4
+		Logger\Logger.projitems*{cde03d56-441d-46c3-99f5-eaa343f2a01c}*SharedItemsImports = 4
+		MultiAgentNetwork\MultiAgentNetwork.projitems*{cde03d56-441d-46c3-99f5-eaa343f2a01c}*SharedItemsImports = 4
+		TextUtils\TextUtils.projitems*{cde03d56-441d-46c3-99f5-eaa343f2a01c}*SharedItemsImports = 4
+		Util\Util.projitems*{cde03d56-441d-46c3-99f5-eaa343f2a01c}*SharedItemsImports = 4
+		XMLParser\XMLParser.projitems*{cde03d56-441d-46c3-99f5-eaa343f2a01c}*SharedItemsImports = 4
+		XUI\SharedProject1.projitems*{cde03d56-441d-46c3-99f5-eaa343f2a01c}*SharedItemsImports = 4
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
@@ -41,8 +94,56 @@ Global
 		{62718532-751B-4611-9D5A-2C5041D325D4}.XUI DEBUG|Any CPU.Build.0 = XUI DEBUG|Any CPU
 		{62718532-751B-4611-9D5A-2C5041D325D4}.XUI DEBUG|x64.ActiveCfg = XUI DEBUG|Any CPU
 		{62718532-751B-4611-9D5A-2C5041D325D4}.XUI DEBUG|x64.Build.0 = XUI DEBUG|Any CPU
+		{CDE03D56-441D-46C3-99F5-EAA343F2A01C}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{CDE03D56-441D-46C3-99F5-EAA343F2A01C}.Debug|x64.ActiveCfg = Debug|x64
+		{CDE03D56-441D-46C3-99F5-EAA343F2A01C}.Debug|x64.Build.0 = Debug|x64
+		{CDE03D56-441D-46C3-99F5-EAA343F2A01C}.Release|Any CPU.ActiveCfg = Debug|x64
+		{CDE03D56-441D-46C3-99F5-EAA343F2A01C}.Release|Any CPU.Build.0 = Debug|x64
+		{CDE03D56-441D-46C3-99F5-EAA343F2A01C}.Release|x64.ActiveCfg = Debug|x64
+		{CDE03D56-441D-46C3-99F5-EAA343F2A01C}.Release|x64.Build.0 = Debug|x64
+		{CDE03D56-441D-46C3-99F5-EAA343F2A01C}.XUI DEBUG|Any CPU.ActiveCfg = Debug|x64
+		{CDE03D56-441D-46C3-99F5-EAA343F2A01C}.XUI DEBUG|Any CPU.Build.0 = Debug|x64
+		{CDE03D56-441D-46C3-99F5-EAA343F2A01C}.XUI DEBUG|x64.ActiveCfg = Debug|x64
+		{CDE03D56-441D-46C3-99F5-EAA343F2A01C}.XUI DEBUG|x64.Build.0 = Debug|x64
+		{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}.Debug|x64.ActiveCfg = Debug|x64
+		{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}.Debug|x64.Build.0 = Debug|x64
+		{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}.Release|Any CPU.ActiveCfg = Debug|x64
+		{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}.Release|Any CPU.Build.0 = Debug|x64
+		{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}.Release|x64.ActiveCfg = Debug|x64
+		{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}.Release|x64.Build.0 = Debug|x64
+		{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}.XUI DEBUG|Any CPU.ActiveCfg = Debug|x64
+		{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}.XUI DEBUG|Any CPU.Build.0 = Debug|x64
+		{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}.XUI DEBUG|x64.ActiveCfg = Debug|x64
+		{48E06C3D-23B9-43F0-BF18-E08C6E1ACC26}.XUI DEBUG|x64.Build.0 = Debug|x64
+		{70DABA97-EF30-49AB-A9E6-E04655908267}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{70DABA97-EF30-49AB-A9E6-E04655908267}.Debug|x64.ActiveCfg = Debug|x64
+		{70DABA97-EF30-49AB-A9E6-E04655908267}.Debug|x64.Build.0 = Debug|x64
+		{70DABA97-EF30-49AB-A9E6-E04655908267}.Release|Any CPU.ActiveCfg = Debug|x64
+		{70DABA97-EF30-49AB-A9E6-E04655908267}.Release|Any CPU.Build.0 = Debug|x64
+		{70DABA97-EF30-49AB-A9E6-E04655908267}.Release|x64.ActiveCfg = Debug|x64
+		{70DABA97-EF30-49AB-A9E6-E04655908267}.Release|x64.Build.0 = Debug|x64
+		{70DABA97-EF30-49AB-A9E6-E04655908267}.XUI DEBUG|Any CPU.ActiveCfg = Debug|x64
+		{70DABA97-EF30-49AB-A9E6-E04655908267}.XUI DEBUG|Any CPU.Build.0 = Debug|x64
+		{70DABA97-EF30-49AB-A9E6-E04655908267}.XUI DEBUG|x64.ActiveCfg = Debug|x64
+		{70DABA97-EF30-49AB-A9E6-E04655908267}.XUI DEBUG|x64.Build.0 = Debug|x64
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.Debug|x64.Build.0 = Debug|Any CPU
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.Release|x64.ActiveCfg = Release|Any CPU
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.Release|x64.Build.0 = Release|Any CPU
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.XUI DEBUG|Any CPU.ActiveCfg = Release|Any CPU
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.XUI DEBUG|Any CPU.Build.0 = Release|Any CPU
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.XUI DEBUG|x64.ActiveCfg = Release|Any CPU
+		{77AF93DF-176E-46D8-A48B-9974027EDF81}.XUI DEBUG|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A7428FF1-822F-4251-8E64-3656B4AEBA9E}
 	EndGlobalSection
 EndGlobal

@@ -302,3 +302,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 /SEScripts/Build
+/SEScripts/XUI/Build
+/SEScripts/XML/Build
+/SEScripts/MultiAgentNetwork/Build

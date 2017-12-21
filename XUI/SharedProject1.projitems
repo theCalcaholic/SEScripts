@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>371e87a8-4b2a-4462-9142-6e663a4b85c1</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>SharedProject1</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Renderer\InitializationState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Renderer\IRenderBox.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Renderer\RenderBoxLeaf.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Renderer\RenderBoxTree.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XML.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLLineBreak.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLDataStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLGeneric.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLHidden.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLHiddenData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLHorizontalLine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLMenu.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLMenuItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLMetaNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLProgressBar.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLRootNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XUIRoute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLSpace.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLSubmitButton.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLTextInput.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLTextNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UIController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLUIControls.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UIFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLVerticalLine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLParentNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XMLNodes\XMLTree.cs" />
+  </ItemGroup>
+</Project>

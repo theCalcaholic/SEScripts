@@ -73,87 +73,22 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
     <Compile Include="Lib\BasicVector.cs" />
     <Compile Include="Lib\DataStorage.cs" />
     <Compile Include="Lib\DataStorageMinificationPrepared.cs" />
     <Compile Include="Lib\BasicMatrix.cs" />
     <Compile Include="Lib\DimensionMismatchException.cs" />
-    <Compile Include="Lib\Logger.cs" />
-    <Compile Include="Lib\Parser.cs" />
     <Compile Include="Lib\Profiler.cs" />
     <Compile Include="Lib\SimpleProfiler.cs" />
     <Compile Include="Lib\SBExtensions.cs" />
-    <Compile Include="Lib\TextUtils.cs" />
-    <Compile Include="Lib\Util.cs" />
-    <Compile Include="MultiAgentNetwork\Class1.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Agents\GridPlatformAgent.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Agents\UITerminalAgent.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Models\PlatformService.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Models\Service.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Models\ServiceRegister.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Models\XMLService.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\UIServiceIndexServer.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\ReceiveMessageProtocol.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\SendLocalMessageProtocol.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\GetHangarDoorsProtocol.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\UIServerProtocol.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\RequestRouteProtocol.cs" />
-    <Compile Include="ParseLib\XML.cs" />
-    <Compile Include="MultiAgentNetwork\MANWRAPPER.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Agents\Agent.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Agents\PlatformAgent.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Agents\RegisteredAgent.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Models\AgentId.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Models\AgentMessage.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\AgentProtocol.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\MessageRoutingProtocol.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\PrintPlatformServicesProtocol.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\PrintProtocol.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\ProvideServiceInformationProtocol.cs" />
-    <Compile Include="MultiAgentNetwork\MAN\Protocols\ServiceRegistrationProtocol.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Programs\DockingManager.cs" />
     <Compile Include="Programs\DockingManagerApplication.cs" />
     <Compile Include="Programs\ArgillaGridMaster.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SirHamsteralotsNN\MLP.cs" />
-    <Compile Include="XUI\BoxRenderer\InitializationState.cs" />
-    <Compile Include="XUI\NodeRenderCache.cs" />
-    <Compile Include="XUI\BoxRenderer\IRenderBox.cs" />
-    <Compile Include="XUI\BoxRenderer\RenderBoxLeaf.cs" />
-    <Compile Include="XUI\BoxRenderer\RenderBoxTree.cs" />
-    <Compile Include="XUI\XMLExtensions\XMLMessage.cs" />
-    <Compile Include="XUI\XMLWRAPPER.cs" />
-    <Compile Include="XUI\XML\Break.cs" />
-    <Compile Include="XUI\XML\Container.cs" />
-    <Compile Include="XUI\XML\DataStore.cs" />
-    <Compile Include="XUI\XML\Generic.cs" />
-    <Compile Include="XUI\XML\Hidden.cs" />
-    <Compile Include="XUI\XML\HiddenData.cs" />
-    <Compile Include="XUI\XML\VerticalLine.cs" />
-    <Compile Include="XUI\XML\HorizontalLine.cs" />
-    <Compile Include="XUI\XML\Menu.cs" />
-    <Compile Include="XUI\XML\MenuItem.cs" />
-    <Compile Include="XUI\XML\MetaNode.cs" />
-    <Compile Include="XUI\XML\ProgressBar.cs" />
-    <Compile Include="XUI\XML\RootNode.cs" />
-    <Compile Include="XUI\XML\Route.cs" />
-    <Compile Include="XUI\XML\Space.cs" />
-    <Compile Include="XUI\XML\SubmitButton.cs" />
-    <Compile Include="XUI\XML\TextInput.cs" />
-    <Compile Include="XUI\XML\TextNode.cs" />
-    <Compile Include="XUI\XML\UIController.cs" />
-    <Compile Include="XUI\XML\UIControls.cs" />
-    <Compile Include="XUI\XML\UIFactory.cs" />
-    <Compile Include="XUI\XML\XMLParentNode.cs" />
-    <Compile Include="XUI\XML\XMLTree.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Lib\Build\" />
-    <Folder Include="MultiAgentNetwork\Build\" />
-    <Folder Include="MultiAgentNetwork\MAN\Models\Build\" />
-    <Folder Include="XUI\Build\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

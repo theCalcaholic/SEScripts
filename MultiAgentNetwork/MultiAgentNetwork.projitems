@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>450856d3-1e1c-497f-ac33-3bd33382263d</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>MultiAgentNetwork</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Models\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)MAN.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Agents\Agent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Agents\GridPlatformAgent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Agents\PlatformAgent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Agents\RegisteredAgent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Agents\UITerminalAgent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\AgentId.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\AgentMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\PlatformService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Service.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ServiceRegister.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\XMLService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\AgentProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\GetHangarDoorsProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\MessageRoutingProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\PrintPlatformServicesProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\PrintProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\ProvideServiceInformationProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\ReceiveMessageProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\RequestRouteProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\SendLocalMessageProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\ServiceRegistrationProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\UIServerProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Protocols\UIServiceIndexServer.cs" />
+  </ItemGroup>
+</Project>
