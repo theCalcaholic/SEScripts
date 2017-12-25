@@ -48,7 +48,7 @@ namespace IngameScript
 				{
 					//using (Logger logger = new Logger("RenderBoxTree.MinHeight.get", Logger.Mode.LOG))
 					//{
-					if (minHeightIsCached && false)
+					if (minHeightIsCached && CacheEnabled)
 						return minHeightCache;
 					//int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
 					int minHeight = 0;
@@ -85,7 +85,7 @@ namespace IngameScript
 					//using (var logger = new Logger("RenderBoxTree.MinWidth.Get", Logger.Mode.LOG))
 					//{
 					//logger.log("type: " + type);
-					if (minWidthIsCached && false)
+					if (minWidthIsCached && CacheEnabled)
 						return minWidthCache;
 					int minWidth = (Flow == IRenderBox.FlowDirection.HORIZONTAL ? 0 : _MinWidth);
 					int boxMinWidth;
@@ -121,7 +121,7 @@ namespace IngameScript
 			{
 				get
 				{
-					if (desiredWidthIsCached && false)
+					if (desiredWidthIsCached && CacheEnabled)
 						return desiredWidthCache;
 					int desiredWidth = (Flow == IRenderBox.FlowDirection.HORIZONTAL ? 0 : _DesiredWidth);
 					int boxDesWidth;
@@ -156,7 +156,7 @@ namespace IngameScript
 					//using (Logger logger = new Logger("RenderBoxTree.DesiredHeight.get", Logger.Mode.LOG))
 					//{
 					//logger.log("Type: " + type);
-					if (desiredHeightIsCached && false)
+					if (desiredHeightIsCached && CacheEnabled)
 						return desiredHeightCache;
 					//int minHeight = (Flow != FlowDirection.HORIZONTAL ? 0 : _MinHeight);
 					int desiredHeight = 0;

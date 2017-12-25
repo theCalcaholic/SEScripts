@@ -44,7 +44,7 @@ namespace IngameScript
 					//    Initialize(int.MaxValue, int.MaxValue);
 
 
-					if (minHeightIsCached && false)
+					if (minHeightIsCached && CacheEnabled)
 						return minHeightCache;
 
 					if (Content.Length > 0)
@@ -81,7 +81,7 @@ namespace IngameScript
 				{
 					//using (Logger logger = new Logger("RenderBoxLeaf.MinWidth.get", Logger.Mode.LOG))
 					//{
-					if (minWidthIsCached && false)
+					if (minWidthIsCached && CacheEnabled)
 						return minWidthCache;
 					minWidthCache = Math.Max(TextWidth,
 						Content.Length == 0 ?

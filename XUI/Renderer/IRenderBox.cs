@@ -31,6 +31,7 @@ namespace IngameScript
 			public bool DEBUG = false;
 			public char PadChar;
 			public InitializationState InitState;
+			public static bool CacheEnabled = true;
 			public enum TextAlign { LEFT, RIGHT, CENTER }
 			public enum FlowDirection { HORIZONTAL, VERTICAL }
 
@@ -56,12 +57,6 @@ namespace IngameScript
 			public IRenderBox Parent;
 			public string type;
 			private bool RenderingInProcess;
-			public string MinWidthDef;
-			public string MaxWidthDef;
-			public string MinHeightDef;
-			public string MaxHeightDef;
-			public string DesiredWidthDef;
-			public string DesiredHeightDef;
 
 			public virtual int GetActualWidth(int maxWidth)
 			{
