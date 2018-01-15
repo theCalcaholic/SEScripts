@@ -151,7 +151,7 @@ namespace IngameScript
 
 			public static string SubstringOfWidth(string str, int width, int offset = 0)
 			{
-				if (str.Length == 0)
+				if (str == null || str.Length == 0)
 					return str;
 
 				if (selectedFont == FONT.MONOSPACE)

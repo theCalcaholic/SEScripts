@@ -13,6 +13,7 @@ using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRageMath;
+using System.Text.RegularExpressions;
 
 namespace IngameScript
 {
@@ -23,9 +24,8 @@ namespace IngameScript
 			public string Content;
 			int DynamicHeight;
 			int TextWidth;
-			int offsetCache;
 			int lastIndex;
-			Dictionary<int, StringBuilder> LineCache;
+			StringBuilder[] LineCache;
 			private List<string> _renderedLines;
 
 			public override IRenderBox.FlowDirection Flow
@@ -38,25 +38,15 @@ namespace IngameScript
 			{
 				get
 				{
-					//using (new Logger("RenderBoxLeaf.MinHeight.get", Logger.Mode.LOG))
-					//{
-					//if (!InitState.Initialized)
-					//    Initialize(int.MaxValue, int.MaxValue);
-
 
 					if (minHeightIsCached && CacheEnabled)
 						return minHeightCache;
 
 					if (Content.Length > 0)
-					{
-						minHeightCache = Math.Max(_MinHeight, LineCache?.Count ?? (Content.Length == 0 ? 0 : 1));
-					}
+						minHeightCache = Math.Max(_MinHeight, LineCache?.Length ?? 1);
 					else
-					{
 						minHeightCache = _MinHeight;
-					}
 					return minHeightCache;
-					//}
 				}
 				set
 				{
@@ -104,8 +94,8 @@ namespace IngameScript
 			{
 				get
 				{
-					if (DynamicHeight == -1 || _DesiredHeight != -1)
-						return base.DesiredHeight;
+					if( _DesiredHeight != -1 )
+						return _DesiredHeight;
 					else
 						return DynamicHeight;
 				}
@@ -201,88 +191,14 @@ namespace IngameScript
 
 			public StringBuilder GetLine(int index, int maxWidth, int maxHeight, bool doAlign)
 			{
-				//using (Logger logger = new Logger("RenderBoxLeaf.GetLine(int, int, int)", Logger.Mode.LOG))
-				//{
-				//logger.log("type: " + type, Logger.Mode.LOG);
-				//logger.log("index: " + index, Logger.Mode.LOG);
-				//logger.log("maxwidth: " + maxWidth, Logger.Mode.LOG);
-				if (LineCache.ContainsKey(index))
-				{
+				if (index < LineCache.Length && LineCache[index] != null)
 					return LineCache[index];
-				}
-				StringBuilder line = new StringBuilder();
-				if ((DynamicHeight > 0 && index < DynamicHeight) || index < _MaxHeight)
+				else
 				{
-					int height = GetActualHeight(maxHeight);
-					int width = Math.Min(maxWidth, MaxWidth);
-					int offset = 0;
-					int spacePos = -1;
-					int i = 0;
-					/*if (index == lastIndex + 1)
-                    {
-                        offset = offsetCache;
-                        i = lastIndex;
-                    }*/
-					//using (Logger logger1 = new Logger("loop"))
-					for (; i < index; i++)
-					{
-						if (offset < Content.Length)
-						{
-							//logger1.log("old offset: " + offset);
-							string lineString = TextUtils.SubstringOfWidth(Content, width, offset);
-							int length = lineString.Length;
-							spacePos = Content.LastIndexOf(' ', Math.Min(Content.Length - 1, offset + length), length);
-							if (spacePos == -1 || offset + length == Content.Length)
-								offset += length;
-							else
-								offset = spacePos + 1;
-							//logger1.log("line string: " + lineString);
-							//logger.log("offset: " + offset);
-							//logger1.log("length: " + length);
-							//logger1.log("space pos: " + spacePos);
-							//offset += TextUtils.SubstringOfWidth(Content, width, offset).Length;
-
-						}
-					}
-					offsetCache = offset;
-					lastIndex = index;
-					if (offset < Content.Length)
-					{
-						string lineString = TextUtils.SubstringOfWidth(Content, width, offset).Trim();
-						//logger.log("line: " + lineString, Logger.Mode.LOG);
-						if (lineString.Length + offset < Content.Length)
-						{
-							spacePos = lineString.LastIndexOf(' ', lineString.Length - 1, lineString.Length);
-							if (spacePos != -1 && Content[offset + lineString.Length] != ' ')
-							{
-								lineString = lineString.Substring(0, spacePos);
-							}
-						}
-						//logger.log("result: " + lineString);
-						line = new StringBuilder(lineString);
-						if (doAlign) AlignLine(ref line, maxWidth);
-						if (line.Length > 0)
-							LineCache[index] = line;
-					}
-					else if (doAlign)
-					{
-						AlignLine(ref line, maxWidth);
-					}
+					var line = new StringBuilder();
+					AlignLine(ref line, GetActualWidth(MinWidth));
+					return line;
 				}
-				else if (doAlign)
-				{
-					AlignLine(ref line, MinWidth);
-				}
-
-
-
-				//logger.log("Content is: " + Content, Logger.Mode.LOG);
-				//logger.log("Line (" + index + ") is: " + line, Logger.Mode.LOG);
-				//logger.log("line is {" + line + "}", Logger.Mode.LOG);
-				//Logger.log("instructions: " + (P.Runtime.CurrentInstructionCount - instructions) + " -> " + P.Runtime.CurrentInstructionCount + "/" + P.Runtime.MaxInstructionCount)
-				//Logger.DecLvl();
-				return line;
-				//}
 			}
 
 			public override void Clear()
@@ -290,87 +206,97 @@ namespace IngameScript
 				Content = "";
 				DynamicHeight = -1;
 				TextWidth = 0;
-				LineCache = new Dictionary<int, StringBuilder>();
+				LineCache = null;
 				ClearCache();
 			}
 
 
 			public override void CalculateDimensions(int maxWidth, int maxHeight)
 			{
-				//using (Logger logger = new Logger("RenderBoxLeaf.CalculateDynamicHeight(int, int)", Logger.Mode.LOG))
-				//{
-
-				InitState.Initialized = true;
-				//logger.log("Type: " + type, Logger.Mode.LOG);
-				//logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
-				//logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
-				//logger.log("implicit max height: " + maxHeight, Logger.Mode.LOG);
-				//logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
-				//logger.log("min width: " + MinWidth);
-				//if(InitState.Initialized) logger.log("min height: " + MinHeight);
-
 
 				BuildLineCache(maxWidth, maxHeight);
-				//Console.WriteLine("linecache size: " + LineCache.Count);
 				TextWidth = 0;
 				int lineWidth;
-				foreach (StringBuilder currLine in LineCache.Values)
+				foreach (StringBuilder currLine in LineCache)
 				{
+					if (currLine == null)
+						break;
 					lineWidth = TextUtils.GetTextWidth(currLine.ToString());
 					TextWidth = Math.Max(lineWidth, TextWidth);
 
 				}
 				DynamicHeight = LineCache.Count();
-				InitState.MaxWidth = maxWidth;
-				InitState.MaxHeight = maxHeight;
 
-				for (int i = 0; i < LineCache.Count(); i++)
+				for (int i = 0; i < LineCache.Count() && LineCache[i] != null; i++)
 				{
 					StringBuilder line = LineCache[i];
-					AlignLine(ref line, maxWidth);
+					AlignLine(ref line, GetActualWidth(maxWidth));
 					LineCache[i] = line;
 				}
-
-				//logger.log("dynamic height:" + DynamicHeight);
-				//logger.log("text width: " + TextWidth);
-				//minWidthIsCached = false;
-				//minHeightIsCached = false;
-
-				//}
-
 			}
 
 			public override void Initialize(int maxWidth, int maxHeight)
 			{
-				//ParseWidthDefinitions(maxWidth, maxHeight);
 				CalculateDimensions(maxWidth, maxHeight);
+				Initialized = true;
 			}
 
 			private void BuildLineCache(int maxWidth, int maxHeight)
 			{
-				LineCache = new Dictionary<int, StringBuilder>();
 				StringBuilder line;
 				int index = -1;
 				if (maxWidth <= 0)
 				{
 					int height = GetActualHeight(maxHeight);
+					LineCache = new StringBuilder[height];
 					for (int i = 0; i < height; i++)
 						LineCache[i] = new StringBuilder();
 					return;
 				}
 				else
 				{
-					//Console.WriteLine("start loop");
+					LineCache = new StringBuilder[4];
+					
+					var lines = BuildLines(maxWidth, maxHeight);
 
-					do
-					{
-						line = GetLine(++index, maxWidth, maxHeight, false);
-						//Console.WriteLine("content length: " + Content.Length);
-						//Console.WriteLine("offsetcache: " + offsetCache);
-					}
-					while (LineCache.ContainsKey(index));
+					LineCache = lines.ToArray();
 				}
 			}
+
+			private List<StringBuilder> BuildLines(int maxWidth, int maxHeight)
+			{
+				List<StringBuilder> lines = new List<StringBuilder>();
+				int height = GetActualHeight(maxHeight);
+				int width = Math.Min(maxWidth, MaxWidth);
+				int offset = 0;
+				int spacePos = -1;
+
+				while( offset < Content.Length
+					&& ((DynamicHeight > 0 && lines.Count < DynamicHeight)
+						|| lines.Count < _MaxHeight) )
+				{	
+					string lineString = TextUtils.SubstringOfWidth(Content, width, offset);
+					string trimmedLine = lineString.Trim();
+					if (trimmedLine.Length + offset < Content.Length)
+					{
+						spacePos = trimmedLine.LastIndexOf(' ', trimmedLine.Length - 1, trimmedLine.Length);
+						if (spacePos != -1 && Content[offset + trimmedLine.Length] != ' ')
+							trimmedLine = trimmedLine.Substring(0, spacePos);
+					}
+					lines.Add(new StringBuilder(trimmedLine));
+					
+					
+					int length = lineString.Length;
+					spacePos = Content.LastIndexOf(' ', Math.Min(Content.Length - 1, offset + length), length);
+					if (spacePos == -1 || offset + length == Content.Length)
+						offset += length;
+					else
+						offset = spacePos + 1;
+				}
+				
+				return lines;
+			}
+			
 		}
 	}
 }

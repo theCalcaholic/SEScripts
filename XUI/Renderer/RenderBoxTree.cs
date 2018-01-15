@@ -265,7 +265,7 @@ namespace IngameScript
 						if (index < boxHeight)
 						{
 							line = box.GetLine(index, maxWidth, boxMaxHeight);
-							AlignLine(ref line, maxWidth, box.Align, box.PadChar);
+							AlignLine(ref line, GetActualWidth(maxWidth), box.Align, box.PadChar);
 							//Logger.debug("child box width is " + TextUtils.GetTextWidth(line));
 							//foundLine = true;
 							break;
@@ -297,7 +297,7 @@ namespace IngameScript
 					}
 					//foundLine = index < Height;
 				}
-				AlignLine(ref line, maxWidth);
+				AlignLine(ref line, GetActualWidth(maxWidth));
 				//Logger.debug("line is: {" + line + "}");
 				//Logger.DecLvl();
 				return line;

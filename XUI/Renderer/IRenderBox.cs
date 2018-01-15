@@ -30,8 +30,8 @@ namespace IngameScript
 			protected int desiredWidthCache;
 			public bool DEBUG = false;
 			public char PadChar;
-			public InitializationState InitState;
-			public static bool CacheEnabled = true;
+			public bool Initialized = false;
+			public static bool CacheEnabled = false;
 			public enum TextAlign { LEFT, RIGHT, CENTER }
 			public enum FlowDirection { HORIZONTAL, VERTICAL }
 
@@ -47,7 +47,7 @@ namespace IngameScript
 			public abstract void Initialize(int maxWidth, int maxHeight);
 			public abstract void CalculateDimensions(int maxWidth, int maxHeight);
 			private IRenderBox.FlowDirection _Flow;
-			private IRenderBox.TextAlign _Align;
+			public IRenderBox.TextAlign Align;
 			public int _MinWidth;
 			public int _MaxWidth;
 			public int _DesiredWidth;
@@ -78,25 +78,6 @@ namespace IngameScript
 				//}
 
 			}
-
-			public int GetIndependentWidth(int maxWidth)
-			{
-				//using (Logger logger = new Logger("RenderBoxTree.GetIndependentWidth(int)", Logger.Mode.LOG))
-				//{
-				//logger.log("Type: " + type, Logger.Mode.LOG);
-				//logger.log("implicit max width: " + maxWidth, Logger.Mode.LOG);
-				//logger.log("explicit max width: " + MaxWidth, Logger.Mode.LOG);
-				//logger.log("min width: " + _MinWidth, Logger.Mode.LOG);
-				//logger.log("desired width: " + DesiredWidth, Logger.Mode.LOG);
-				maxWidth = Math.Min(MaxWidth, maxWidth);
-
-				int desired;
-				desired = Math.Max(DesiredWidth, _MinWidth);
-				desired = Math.Min(desired, maxWidth);
-				return desired;
-				//}
-
-			}
 			public int GetActualHeight(int maxHeight)
 			{
 				//using (Logger logger = new Logger("RenderBox.GetActualHeight(int)", Logger.Mode.LOG))
@@ -106,7 +87,7 @@ namespace IngameScript
 				//logger.log("explicit max height: " + MaxHeight, Logger.Mode.LOG);
 				maxHeight = Math.Min(MaxHeight, maxHeight);
 
-				int desired = DesiredHeight == -1 ? MinHeight : Math.Max(MinHeight, DesiredHeight);
+				int desired = Math.Max(MinHeight, DesiredHeight);
 				//Logger.DecLvl();
 				//logger.log("maxheight: " + maxHeight, Logger.Mode.LOG);
 				//logger.log("minheight: " + MinHeight, Logger.Mode.LOG);
@@ -115,15 +96,6 @@ namespace IngameScript
 				return Math.Max(0, Math.Min(desired, maxHeight));
 				//}
 
-			}
-
-			public IRenderBox.TextAlign Align
-			{
-				get { return _Align; }
-				set
-				{
-					_Align = value;
-				}
 			}
 
 			public virtual IRenderBox.FlowDirection Flow
@@ -221,7 +193,7 @@ namespace IngameScript
 			{
 				PadChar = ' ';
 				_Flow = IRenderBox.FlowDirection.VERTICAL;
-				_Align = IRenderBox.TextAlign.LEFT;
+				Align = IRenderBox.TextAlign.LEFT;
 				_MinWidth = 0;
 				_MaxWidth = int.MaxValue;
 				_DesiredWidth = -1;
@@ -232,7 +204,6 @@ namespace IngameScript
 				minWidthIsCached = false;
 				desiredHeightIsCached = false;
 				desiredWidthIsCached = false;
-				InitState = new InitializationState();
 			}
 
 			public bool IsRenderingInProgress()
@@ -257,22 +228,12 @@ namespace IngameScript
 				}
 			}
 
-			protected void AlignLine(ref StringBuilder line)
+			protected void AlignLine(ref StringBuilder line, int actualWidth)
 			{
-				AlignLine(ref line, int.MaxValue);
+				AlignLine(ref line, actualWidth, Align, PadChar);
 			}
 
-			protected void AlignLine(ref StringBuilder line, int maxWidth)
-			{
-				AlignLine(ref line, maxWidth, Align, PadChar);
-			}
-
-			protected void AlignLine(ref StringBuilder line, IRenderBox.TextAlign Alignment)
-			{
-				AlignLine(ref line, int.MaxValue, Alignment, PadChar);
-			}
-
-			protected void AlignLine(ref StringBuilder line, int maxWidth, IRenderBox.TextAlign Alignment, char padChar)
+			protected void AlignLine(ref StringBuilder line, int actualWidth, IRenderBox.TextAlign Alignment, char padChar)
 			{
 				//using (Logger logger = new Logger("RenderBox.AlignLine(ref StringBuilder, int)", Logger.Mode.LOG))
 				//{
@@ -280,7 +241,7 @@ namespace IngameScript
 				//logger.log("pad char is: " + padChar);
 				//logger.log("this.PadChar is: " + PadChar);
 				//logger.log("max width is " + maxWidth, Logger.Mode.LOG);
-				int actualWidth = GetActualWidth(maxWidth);
+				//int actualWidth = GetActualWidth(maxWidth);
 				//logger.log("actualWidth: " + actualWidth, Logger.Mode.LOG);
 				//logger.log("line is: |" + line + "|", Logger.Mode.LOG);
 				//logger.log("line width: " + TextUtils.GetTextWidth(line.ToString()));
@@ -310,7 +271,7 @@ namespace IngameScript
 
 					while (remainingWidth < 0)
 					{
-						remainingWidth += TextUtils.GetTextWidth(new string(new char[] { line[line.Length - 1] })) + 1;
+						remainingWidth += TextUtils.GetCharWidth(line[line.Length - 1]) + 1;
 						line.Remove(line.Length - 1, 1);
 					}
 				}
@@ -337,30 +298,10 @@ namespace IngameScript
 			{
 				minHeightIsCached = false;
 				minWidthIsCached = false;
+				desiredWidthIsCached = false;
+				desiredHeightIsCached = false;
 				if (Parent != null)
 					Parent?.ClearCache();
-			}
-
-			public static int? ResolveSize(string widthString, int max)
-			{
-				if (widthString == null)
-					return null;
-
-				widthString = widthString?.Trim();
-				float fWidth;
-				if (widthString[widthString.Length - 1] == '%' && Single.TryParse(widthString.Substring(0, widthString.Length - 1), out fWidth))
-				{
-					if (max < 0 || max == int.MaxValue)
-						return null;
-					return (int)(fWidth / 100f * Math.Max(0, max));
-				}
-				else
-				{
-					int iWidth;
-					if (int.TryParse(widthString, out iWidth))
-						return iWidth;
-					return -1;
-				}
 			}
 		}
 
